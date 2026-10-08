@@ -2138,9 +2138,7 @@ body {
   .clip-player-info { grid-template-columns: repeat(2, 1fr); }
 }
 
-/* Map Cluster Overrides */
-.marker-cluster-small, .marker-cluster-medium, .marker-cluster-large { background: none !important; }
-.marker-cluster div { background: none !important; }
+/* Map Popup Overrides */
 .leaflet-popup-content-wrapper { background: #1a1a2e; color: #fff; border: 1px solid #333; }
 .leaflet-popup-tip { background: #1a1a2e; }
 .leaflet-popup-content { margin: 10px 14px; }

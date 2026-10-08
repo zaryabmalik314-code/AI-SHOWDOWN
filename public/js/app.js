@@ -814,28 +814,15 @@ function initMap() {
   }).addTo(map);
 
   const bounds = [];
-  const cluster = L.markerClusterGroup({
-    maxClusterRadius: 35,
-    spiderfyOnMaxZoom: true,
-    showCoverageOnHover: false,
-    iconCreateFunction: function(c) {
-      const count = c.getChildCount();
-      let size = count > 20 ? 50 : count > 10 ? 44 : 36;
-      return L.divIcon({
-        html: `<div style="background:rgba(16,185,129,0.85);width:${size}px;height:${size}px;border-radius:50%;border:3px solid #fff;display:flex;align-items:center;justify-content:center;color:#fff;font-weight:800;font-size:${size > 44 ? 16 : 14}px;box-shadow:0 0 16px rgba(16,185,129,0.6)">${count}</div>`,
-        className: '', iconSize: [size, size], iconAnchor: [size/2, size/2]
-      });
-    }
-  });
 
   orphanages.forEach(o => {
     bounds.push([o.lat, o.lng]);
     const color = o.risk_level === 'high' ? '#ef4444' : o.risk_level === 'medium' ? '#fbbf24' : '#10b981';
     const icon = L.divIcon({
-      html: `<div style="position:relative"><div style="background:${color};width:16px;height:16px;border-radius:50%;border:2px solid white;box-shadow:0 0 10px ${color}"></div><div style="position:absolute;top:20px;left:50%;transform:translateX(-50%);white-space:nowrap;font-size:9px;font-weight:700;color:white;text-shadow:0 0 3px #000,0 0 6px #000;pointer-events:none">${o.name.length > 25 ? o.name.substring(0,22) + '...' : o.name}</div></div>`,
-      className: '', iconSize: [16, 16], iconAnchor: [8, 8]
+      html: `<div style="background:${color};width:10px;height:10px;border-radius:50%;border:2px solid white;box-shadow:0 0 8px ${color},0 0 16px ${color}50"></div>`,
+      className: '', iconSize: [10, 10], iconAnchor: [5, 5]
     });
-    const marker = L.marker([o.lat, o.lng], { icon }).bindPopup(`
+    L.marker([o.lat, o.lng], { icon }).addTo(map).bindPopup(`
       <div style="min-width:220px">
         <strong style="font-size:14px">${o.name}</strong><br>
         <span style="color:#888">${o.address}</span><br><br>
@@ -850,36 +837,22 @@ function initMap() {
         </div>
       </div>
     `);
-    cluster.addLayer(marker);
-  });
-  map.addLayer(cluster);
-
-  const policeCluster = L.markerClusterGroup({
-    maxClusterRadius: 30,
-    iconCreateFunction: function(c) {
-      const count = c.getChildCount();
-      return L.divIcon({
-        html: `<div style="background:rgba(59,130,246,0.85);width:32px;height:32px;border-radius:6px;border:2px solid #fff;display:flex;align-items:center;justify-content:center;color:#fff;font-weight:800;font-size:13px;box-shadow:0 0 12px rgba(59,130,246,0.6)">${count}</div>`,
-        className: '', iconSize: [32, 32], iconAnchor: [16, 16]
-      });
-    }
   });
 
   fetch('/api/police-stations').then(r => r.json()).then(stations => {
     stations.forEach(s => {
       const icon = L.divIcon({
-        html: `<div style="background:#3b82f6;width:12px;height:12px;border-radius:3px;border:2px solid white;box-shadow:0 0 8px #3b82f6"></div>`,
-        className: '', iconSize: [12, 12], iconAnchor: [6, 6]
+        html: `<div style="background:#3b82f6;width:8px;height:8px;border-radius:2px;border:2px solid white;box-shadow:0 0 8px #3b82f6"></div>`,
+        className: '', iconSize: [8, 8], iconAnchor: [4, 4]
       });
-      policeCluster.addLayer(L.marker([s.lat, s.lng], { icon }).bindPopup(`
+      L.marker([s.lat, s.lng], { icon }).addTo(map).bindPopup(`
         <div style="min-width:180px">
           <strong>${s.name}</strong><br>
           <span style="color:#888">${s.address}</span><br>
           <span style="color:#3b82f6">Phone: ${s.phone}</span>
         </div>
-      `));
+      `);
     });
-    map.addLayer(policeCluster);
   });
 
   if (bounds.length > 1) map.fitBounds(bounds, { padding: [40, 40] });
@@ -892,9 +865,8 @@ function initMap() {
       `<span style="display:inline-block;width:10px;height:10px;border-radius:50%;background:#10b981;margin-right:6px"></span>Orphanage (Low Risk)<br>` +
       `<span style="display:inline-block;width:10px;height:10px;border-radius:50%;background:#fbbf24;margin-right:6px"></span>Orphanage (Medium Risk)<br>` +
       `<span style="display:inline-block;width:10px;height:10px;border-radius:50%;background:#ef4444;margin-right:6px"></span>Orphanage (High Risk)<br>` +
-      `<span style="display:inline-block;width:10px;height:10px;border-radius:3px;background:#3b82f6;margin-right:6px"></span>Police Station<br>` +
-      `<span style="display:inline-block;width:18px;height:18px;border-radius:50%;background:rgba(16,185,129,0.85);margin-right:4px;text-align:center;line-height:18px;font-size:9px;font-weight:700">5</span>Cluster (click to zoom)` +
-      `<br><span style="color:#10b981;font-weight:700">${orphanages.length}</span> Orphanages | <span style="color:#3b82f6;font-weight:700">30</span> Stations`;
+      `<span style="display:inline-block;width:10px;height:10px;border-radius:3px;background:#3b82f6;margin-right:6px"></span>Police Station` +
+      `<br><strong style="color:#10b981">${orphanages.length}</strong> Orphanages | <strong style="color:#3b82f6">30</strong> Stations`;
     return div;
   };
   legend.addTo(map);
