@@ -2170,7 +2170,7 @@ function renderDispatchCard(d) {
   const actions = d.status !== 'resolved' ? `
     <div class="dispatch-actions">
       <button class="btn btn-primary" onclick="updateDispatchStatus(${d.id}, '${nextStatus[d.status]}')">${nextLabel[d.status]}</button>
-      <a href="tel:${d.station_phone}" class="btn btn-outline">Call Station</a>
+      <button class="btn btn-outline" onclick="alert('DEMO MODE — No real call made.\\nStation: ${d.station_name}\\nPhone: ${d.station_phone}')">Call Station</button>
     </div>` : '';
 
   return `
