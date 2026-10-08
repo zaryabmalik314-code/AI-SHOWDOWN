@@ -73,6 +73,20 @@
     </div>
   </nav>
 
+  <!-- Global Search Overlay -->
+  <div class="search-overlay" id="search-overlay" onclick="if(event.target===this)closeGlobalSearch()">
+    <div class="search-modal">
+      <div class="search-modal-input">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="var(--accent)" stroke-width="2"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+        <input type="text" id="global-search-input" placeholder="Search orphanages, children, visitors, alerts..." oninput="runGlobalSearch(this.value)" autocomplete="off">
+        <kbd class="search-kbd">ESC</kbd>
+      </div>
+      <div class="search-results" id="global-search-results">
+        <div class="search-empty">Type to search across all data...</div>
+      </div>
+    </div>
+  </div>
+
   <div class="main">
 
     <!-- Command Center -->
@@ -99,6 +113,13 @@
           <span>Threat Level: <strong id="ssb-threat" style="color:var(--success)">Normal</strong></span>
         </div>
         <div class="ssb-item" style="margin-left:auto">
+          <button class="global-search-trigger" onclick="openGlobalSearch()" title="Search (Ctrl+K)">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+            <span>Search</span>
+            <kbd>Ctrl+K</kbd>
+          </button>
+        </div>
+        <div class="ssb-item">
           <div class="live-dot"></div>
           <span id="live-time">--</span>
         </div>
@@ -208,7 +229,11 @@
     <section class="page-section" id="page-incidents">
       <div class="page-header">
         <h2>AI Violence & Harassment Detection</h2>
-        <div style="display:flex;gap:8px">
+        <div style="display:flex;gap:8px;align-items:center">
+          <div class="search-box">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="var(--text-tertiary)" stroke-width="2"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+            <input type="text" id="incidents-search" placeholder="Search incidents..." oninput="filterIncidents(this.value)">
+          </div>
           <span class="badge-status detection-active">ViolenceNet v2.1 Active</span>
           <button class="btn btn-outline" onclick="loadIncidents()">Refresh</button>
         </div>
@@ -237,7 +262,13 @@
     <section class="page-section" id="page-children">
       <div class="page-header">
         <h2>Children Registry</h2>
-        <button class="btn btn-primary" onclick="openModal('child-modal')">+ Add Child</button>
+        <div style="display:flex;gap:10px;align-items:center">
+          <div class="search-box">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="var(--text-tertiary)" stroke-width="2"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+            <input type="text" id="children-search" placeholder="Search by name, age, orphanage..." oninput="filterChildren(this.value)">
+          </div>
+          <button class="btn btn-primary" onclick="openModal('child-modal')">+ Add Child</button>
+        </div>
       </div>
       <table class="data-table">
         <thead><tr><th>Name</th><th>Age</th><th>Gender</th><th>Orphanage</th><th>Admitted</th><th>Medical Notes</th><th>Actions</th></tr></thead>
@@ -249,7 +280,13 @@
     <section class="page-section" id="page-visitors">
       <div class="page-header">
         <h2>Visitor Management</h2>
-        <button class="btn btn-primary" onclick="openModal('visitor-modal')">+ Check In</button>
+        <div style="display:flex;gap:10px;align-items:center">
+          <div class="search-box">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="var(--text-tertiary)" stroke-width="2"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+            <input type="text" id="visitors-search" placeholder="Search by name, CNIC, phone..." oninput="filterVisitors(this.value)">
+          </div>
+          <button class="btn btn-primary" onclick="openModal('visitor-modal')">+ Check In</button>
+        </div>
       </div>
       <table class="data-table">
         <thead><tr><th>Name</th><th>CNIC</th><th>Phone</th><th>Purpose</th><th>Orphanage</th><th>Check In</th><th>Status</th><th>Actions</th></tr></thead>
@@ -261,7 +298,13 @@
     <section class="page-section" id="page-alerts">
       <div class="page-header">
         <h2>Security Alerts</h2>
-        <button class="btn btn-outline" onclick="loadAlerts()">Refresh</button>
+        <div style="display:flex;gap:10px;align-items:center">
+          <div class="search-box">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="var(--text-tertiary)" stroke-width="2"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+            <input type="text" id="alerts-search" placeholder="Search alerts..." oninput="filterAlerts(this.value)">
+          </div>
+          <button class="btn btn-outline" onclick="loadAlerts()">Refresh</button>
+        </div>
       </div>
       <div class="alerts-list" id="alerts-list"></div>
     </section>
@@ -286,7 +329,13 @@
 
     <!-- Activity -->
     <section class="page-section" id="page-activity">
-      <div class="page-header"><h2>Activity Log</h2></div>
+      <div class="page-header">
+        <h2>Activity Log</h2>
+        <div class="search-box">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="var(--text-tertiary)" stroke-width="2"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+          <input type="text" id="activity-search" placeholder="Search activity..." oninput="filterActivity(this.value)">
+        </div>
+      </div>
       <div class="activity-feed" id="activity-feed"></div>
     </section>
   </div>

@@ -5,6 +5,11 @@ let orphanages = [];
 let currentFilter = '';
 let ws;
 let map;
+let cachedChildren = [];
+let cachedVisitors = [];
+let cachedAlerts = [];
+let cachedIncidents = [];
+let cachedActivities = [];
 
 // WebSocket
 function connectWS() {
@@ -547,7 +552,10 @@ async function loadAlerts() {
   try {
     const res = await fetch('/api/alerts' + qs(currentFilter));
     const alerts = await res.json();
+    cachedAlerts = alerts;
     document.getElementById('alerts-list').innerHTML = alerts.map(renderAlertItem).join('');
+    const searchEl = document.getElementById('alerts-search');
+    if (searchEl) searchEl.value = '';
   } catch (e) { console.error(e); }
 }
 
@@ -614,8 +622,11 @@ async function loadIncidents() {
   try {
     const res = await fetch('/api/incidents' + qs(currentFilter));
     const incidents = await res.json();
+    cachedIncidents = incidents;
     document.getElementById('incidents-list').innerHTML = incidents.map(renderIncidentItem).join('') || '<p style="color:var(--text-secondary);padding:20px">No incidents detected yet.</p>';
     document.getElementById('command-incidents').innerHTML = incidents.slice(0, 5).map(renderIncidentItem).join('');
+    const searchEl = document.getElementById('incidents-search');
+    if (searchEl) searchEl.value = '';
 
     const types = {};
     incidents.forEach(i => { types[i.type] = (types[i.type] || 0) + 1; });
@@ -780,20 +791,25 @@ function initMap() {
 }
 
 // Children
+function renderChildRow(c) {
+  const getOrg = (id) => { const o = orphanages.find(x => x.id === id); return o ? o.name : '-'; };
+  return `<tr>
+    <td><strong>${c.name}</strong></td><td>${c.age}</td><td>${c.gender}</td>
+    <td>${getOrg(c.orphanage_id)}</td>
+    <td>${new Date(c.admitted_date).toLocaleDateString('en-PK')}</td>
+    <td>${c.medical_notes || '-'}</td>
+    <td><button class="btn btn-outline btn-sm" onclick="viewHealth(${c.id},'${c.name}')">Health</button></td>
+  </tr>`;
+}
+
 async function loadChildren() {
   try {
     const res = await fetch('/api/children' + qs(currentFilter));
     const children = await res.json();
-    const getOrg = (id) => { const o = orphanages.find(x => x.id === id); return o ? o.name : '-'; };
-    document.getElementById('children-table').innerHTML = children.map(c => `
-      <tr>
-        <td><strong>${c.name}</strong></td><td>${c.age}</td><td>${c.gender}</td>
-        <td>${getOrg(c.orphanage_id)}</td>
-        <td>${new Date(c.admitted_date).toLocaleDateString('en-PK')}</td>
-        <td>${c.medical_notes || '-'}</td>
-        <td><button class="btn btn-outline btn-sm" onclick="viewHealth(${c.id},'${c.name}')">Health</button></td>
-      </tr>
-    `).join('');
+    cachedChildren = children;
+    document.getElementById('children-table').innerHTML = children.map(renderChildRow).join('');
+    const searchEl = document.getElementById('children-search');
+    if (searchEl) searchEl.value = '';
   } catch (e) { console.error(e); }
 }
 
@@ -830,20 +846,25 @@ async function addHealthRecord(e) {
 }
 
 // Visitors
+function renderVisitorRow(v) {
+  const getOrg = (id) => { const o = orphanages.find(x => x.id === id); return o ? o.name : '-'; };
+  return `<tr>
+    <td><strong>${v.name}</strong></td><td>${v.cnic || '-'}</td><td>${v.phone || '-'}</td><td>${v.purpose}</td>
+    <td>${getOrg(v.orphanage_id)}</td>
+    <td>${new Date(v.check_in).toLocaleString('en-PK')}</td>
+    <td><span class="badge-status ${v.status}">${v.status.replace('_', ' ')}</span></td>
+    <td>${v.status === 'checked_in' ? `<button class="btn btn-outline btn-sm" onclick="checkoutVisitor(${v.id})">Check Out</button>` : ''}</td>
+  </tr>`;
+}
+
 async function loadVisitors() {
   try {
     const res = await fetch('/api/visitors' + qs(currentFilter));
     const visitors = await res.json();
-    const getOrg = (id) => { const o = orphanages.find(x => x.id === id); return o ? o.name : '-'; };
-    document.getElementById('visitors-table').innerHTML = visitors.map(v => `
-      <tr>
-        <td><strong>${v.name}</strong></td><td>${v.cnic || '-'}</td><td>${v.phone || '-'}</td><td>${v.purpose}</td>
-        <td>${getOrg(v.orphanage_id)}</td>
-        <td>${new Date(v.check_in).toLocaleString('en-PK')}</td>
-        <td><span class="badge-status ${v.status}">${v.status.replace('_', ' ')}</span></td>
-        <td>${v.status === 'checked_in' ? `<button class="btn btn-outline btn-sm" onclick="checkoutVisitor(${v.id})">Check Out</button>` : ''}</td>
-      </tr>
-    `).join('');
+    cachedVisitors = visitors;
+    document.getElementById('visitors-table').innerHTML = visitors.map(renderVisitorRow).join('');
+    const searchEl = document.getElementById('visitors-search');
+    if (searchEl) searchEl.value = '';
   } catch (e) { console.error(e); }
 }
 
@@ -1097,22 +1118,28 @@ function startDetectionSim() {
 }
 
 // Activity
+const activityIcons = {
+  visitor_entry: { icon: '&#128694;', bg: 'rgba(79,140,255,0.15)' },
+  ai_detection: { icon: '&#129302;', bg: 'rgba(239,68,68,0.15)' },
+  headcount_mismatch: { icon: '&#9888;', bg: 'rgba(251,191,36,0.15)' },
+  restricted_zone: { icon: '&#128683;', bg: 'rgba(248,113,113,0.15)' },
+  perimeter_breach: { icon: '&#128680;', bg: 'rgba(239,68,68,0.15)' },
+  child_missing: { icon: '&#128557;', bg: 'rgba(239,68,68,0.15)' },
+};
+
+function renderActivityItem(a) {
+  const cfg = activityIcons[a.event_type] || { icon: '&#128196;', bg: 'rgba(154,160,166,0.15)' };
+  return `<div class="activity-item"><div class="activity-icon" style="background:${cfg.bg}">${cfg.icon}</div><div>${a.description}</div><div class="activity-time">${new Date(a.created_at).toLocaleTimeString('en-PK')}</div></div>`;
+}
+
 async function loadActivity() {
   try {
     const res = await fetch('/api/activity' + qs(currentFilter));
     const activities = await res.json();
-    const icons = {
-      visitor_entry: { icon: '&#128694;', bg: 'rgba(79,140,255,0.15)' },
-      ai_detection: { icon: '&#129302;', bg: 'rgba(239,68,68,0.15)' },
-      headcount_mismatch: { icon: '&#9888;', bg: 'rgba(251,191,36,0.15)' },
-      restricted_zone: { icon: '&#128683;', bg: 'rgba(248,113,113,0.15)' },
-      perimeter_breach: { icon: '&#128680;', bg: 'rgba(239,68,68,0.15)' },
-      child_missing: { icon: '&#128557;', bg: 'rgba(239,68,68,0.15)' },
-    };
-    document.getElementById('activity-feed').innerHTML = activities.map(a => {
-      const cfg = icons[a.event_type] || { icon: '&#128196;', bg: 'rgba(154,160,166,0.15)' };
-      return `<div class="activity-item"><div class="activity-icon" style="background:${cfg.bg}">${cfg.icon}</div><div>${a.description}</div><div class="activity-time">${new Date(a.created_at).toLocaleTimeString('en-PK')}</div></div>`;
-    }).join('') || '<p style="color:var(--text-secondary);padding:20px">No activity yet.</p>';
+    cachedActivities = activities;
+    document.getElementById('activity-feed').innerHTML = activities.map(renderActivityItem).join('') || '<p style="color:var(--text-secondary);padding:20px">No activity yet.</p>';
+    const searchEl = document.getElementById('activity-search');
+    if (searchEl) searchEl.value = '';
   } catch (e) { console.error(e); }
 }
 
@@ -1427,7 +1454,263 @@ document.querySelectorAll('.modal-overlay').forEach(o => { o.addEventListener('c
 // Notifications
 if ('Notification' in window && Notification.permission === 'default') Notification.requestPermission();
 
-// Init
+// ====== PAGE FILTERS ======
+function filterChildren(query) {
+  const q = query.toLowerCase().trim();
+  if (!q) { document.getElementById('children-table').innerHTML = cachedChildren.map(renderChildRow).join(''); return; }
+  const getOrg = (id) => { const o = orphanages.find(x => x.id === id); return o ? o.name : '-'; };
+  const filtered = cachedChildren.filter(c =>
+    c.name.toLowerCase().includes(q) ||
+    String(c.age).includes(q) ||
+    c.gender.toLowerCase().includes(q) ||
+    getOrg(c.orphanage_id).toLowerCase().includes(q) ||
+    (c.medical_notes || '').toLowerCase().includes(q)
+  );
+  document.getElementById('children-table').innerHTML = filtered.map(renderChildRow).join('') ||
+    '<tr><td colspan="7" style="text-align:center;color:var(--text-tertiary);padding:24px">No children match your search</td></tr>';
+}
+
+function filterVisitors(query) {
+  const q = query.toLowerCase().trim();
+  if (!q) { document.getElementById('visitors-table').innerHTML = cachedVisitors.map(renderVisitorRow).join(''); return; }
+  const getOrg = (id) => { const o = orphanages.find(x => x.id === id); return o ? o.name : '-'; };
+  const filtered = cachedVisitors.filter(v =>
+    v.name.toLowerCase().includes(q) ||
+    (v.cnic || '').includes(q) ||
+    (v.phone || '').includes(q) ||
+    v.purpose.toLowerCase().includes(q) ||
+    getOrg(v.orphanage_id).toLowerCase().includes(q) ||
+    v.status.toLowerCase().includes(q)
+  );
+  document.getElementById('visitors-table').innerHTML = filtered.map(renderVisitorRow).join('') ||
+    '<tr><td colspan="8" style="text-align:center;color:var(--text-tertiary);padding:24px">No visitors match your search</td></tr>';
+}
+
+function filterAlerts(query) {
+  const q = query.toLowerCase().trim();
+  if (!q) { document.getElementById('alerts-list').innerHTML = cachedAlerts.map(renderAlertItem).join(''); return; }
+  const filtered = cachedAlerts.filter(a =>
+    a.message.toLowerCase().includes(q) ||
+    a.type.toLowerCase().includes(q) ||
+    a.severity.toLowerCase().includes(q)
+  );
+  document.getElementById('alerts-list').innerHTML = filtered.map(renderAlertItem).join('') ||
+    '<p style="color:var(--text-tertiary);padding:24px;text-align:center">No alerts match your search</p>';
+}
+
+function filterIncidents(query) {
+  const q = query.toLowerCase().trim();
+  if (!q) { document.getElementById('incidents-list').innerHTML = cachedIncidents.map(renderIncidentItem).join(''); return; }
+  const filtered = cachedIncidents.filter(i =>
+    i.label.toLowerCase().includes(q) ||
+    i.description.toLowerCase().includes(q) ||
+    i.type.toLowerCase().includes(q) ||
+    i.severity.toLowerCase().includes(q) ||
+    (i.zone || '').toLowerCase().includes(q) ||
+    (i.orphanage_name || '').toLowerCase().includes(q)
+  );
+  document.getElementById('incidents-list').innerHTML = filtered.map(renderIncidentItem).join('') ||
+    '<p style="color:var(--text-tertiary);padding:24px;text-align:center">No incidents match your search</p>';
+}
+
+function filterActivity(query) {
+  const q = query.toLowerCase().trim();
+  if (!q) { document.getElementById('activity-feed').innerHTML = cachedActivities.map(renderActivityItem).join(''); return; }
+  const filtered = cachedActivities.filter(a =>
+    a.description.toLowerCase().includes(q) ||
+    a.event_type.toLowerCase().includes(q)
+  );
+  document.getElementById('activity-feed').innerHTML = filtered.map(renderActivityItem).join('') ||
+    '<p style="color:var(--text-tertiary);padding:24px;text-align:center">No activity matches your search</p>';
+}
+
+// ====== GLOBAL SEARCH ======
+function openGlobalSearch() {
+  document.getElementById('search-overlay').classList.add('active');
+  const input = document.getElementById('global-search-input');
+  input.value = '';
+  input.focus();
+  document.getElementById('global-search-results').innerHTML = '<div class="search-empty">Type to search across all data...</div>';
+}
+
+function closeGlobalSearch() {
+  document.getElementById('search-overlay').classList.remove('active');
+}
+
+document.addEventListener('keydown', (e) => {
+  if ((e.ctrlKey || e.metaKey) && e.key === 'k') {
+    e.preventDefault();
+    openGlobalSearch();
+  }
+  if (e.key === 'Escape' && document.getElementById('search-overlay').classList.contains('active')) {
+    closeGlobalSearch();
+  }
+});
+
+function navigateToPage(page) {
+  closeGlobalSearch();
+  document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
+  document.querySelectorAll('.page-section').forEach(p => p.classList.remove('active'));
+  const navItem = document.querySelector(`.nav-item[data-page="${page}"]`);
+  if (navItem) navItem.classList.add('active');
+  document.getElementById('page-' + page).classList.add('active');
+  if (page === 'map') initMap();
+  if (page === 'cameras') initCameras();
+  if (page === 'children') loadChildren();
+  if (page === 'visitors') loadVisitors();
+  if (page === 'alerts') loadAlerts();
+  if (page === 'incidents') loadIncidents();
+  if (page === 'rankings') loadRankings();
+  if (page === 'portal') loadPortal();
+  if (page === 'activity') loadActivity();
+}
+
+function highlightMatch(text, query) {
+  if (!query) return text;
+  const idx = text.toLowerCase().indexOf(query.toLowerCase());
+  if (idx === -1) return text;
+  return text.slice(0, idx) + '<mark style="background:var(--accent);color:#000;border-radius:2px;padding:0 1px">' + text.slice(idx, idx + query.length) + '</mark>' + text.slice(idx + query.length);
+}
+
+function runGlobalSearch(query) {
+  const q = query.toLowerCase().trim();
+  const results = document.getElementById('global-search-results');
+
+  if (!q) {
+    results.innerHTML = '<div class="search-empty">Type to search across all data...</div>';
+    return;
+  }
+
+  let html = '';
+  let totalResults = 0;
+
+  // Search orphanages
+  const matchedOrphanages = orphanages.filter(o =>
+    o.name.toLowerCase().includes(q) ||
+    o.city.toLowerCase().includes(q) ||
+    o.district.toLowerCase().includes(q) ||
+    (o.address || '').toLowerCase().includes(q)
+  );
+  if (matchedOrphanages.length) {
+    html += '<div class="search-category">Orphanages</div>';
+    matchedOrphanages.slice(0, 5).forEach(o => {
+      const riskColor = o.risk_level === 'high' ? 'var(--danger)' : o.risk_level === 'medium' ? 'var(--warning)' : 'var(--success)';
+      html += `<div class="search-result-item" onclick="openOrphanageDetail(${o.id})">
+        <div class="search-result-icon" style="background:rgba(16,185,129,0.15)">&#127968;</div>
+        <div class="search-result-info">
+          <div class="search-result-title">${highlightMatch(o.name, q)}</div>
+          <div class="search-result-sub">${highlightMatch(o.city, q)} &middot; ${o.total_children} children &middot; ${o.cameras} cameras</div>
+        </div>
+        <span class="search-result-badge" style="background:${riskColor}20;color:${riskColor}">${o.risk_level || 'low'}</span>
+      </div>`;
+    });
+    totalResults += matchedOrphanages.length;
+  }
+
+  // Search children
+  const getOrg = (id) => { const o = orphanages.find(x => x.id === id); return o ? o.name : '-'; };
+  const matchedChildren = cachedChildren.filter(c =>
+    c.name.toLowerCase().includes(q) ||
+    String(c.age).includes(q) ||
+    getOrg(c.orphanage_id).toLowerCase().includes(q)
+  );
+  if (matchedChildren.length) {
+    html += '<div class="search-category">Children</div>';
+    matchedChildren.slice(0, 5).forEach(c => {
+      html += `<div class="search-result-item" onclick="navigateToPage('children')">
+        <div class="search-result-icon" style="background:rgba(79,140,255,0.15)">&#128118;</div>
+        <div class="search-result-info">
+          <div class="search-result-title">${highlightMatch(c.name, q)}</div>
+          <div class="search-result-sub">Age ${c.age} &middot; ${c.gender} &middot; ${getOrg(c.orphanage_id)}</div>
+        </div>
+      </div>`;
+    });
+    totalResults += matchedChildren.length;
+  }
+
+  // Search visitors
+  const matchedVisitors = cachedVisitors.filter(v =>
+    v.name.toLowerCase().includes(q) ||
+    (v.cnic || '').includes(q) ||
+    (v.phone || '').includes(q) ||
+    v.purpose.toLowerCase().includes(q)
+  );
+  if (matchedVisitors.length) {
+    html += '<div class="search-category">Visitors</div>';
+    matchedVisitors.slice(0, 5).forEach(v => {
+      const statusColor = v.status === 'checked_in' ? 'var(--success)' : 'var(--text-tertiary)';
+      html += `<div class="search-result-item" onclick="navigateToPage('visitors')">
+        <div class="search-result-icon" style="background:rgba(139,92,246,0.15)">&#128100;</div>
+        <div class="search-result-info">
+          <div class="search-result-title">${highlightMatch(v.name, q)}</div>
+          <div class="search-result-sub">${v.purpose} &middot; ${v.cnic || 'No CNIC'}</div>
+        </div>
+        <span class="search-result-badge" style="background:${statusColor}20;color:${statusColor}">${v.status.replace('_', ' ')}</span>
+      </div>`;
+    });
+    totalResults += matchedVisitors.length;
+  }
+
+  // Search alerts
+  const matchedAlerts = cachedAlerts.filter(a =>
+    a.message.toLowerCase().includes(q) ||
+    a.type.toLowerCase().includes(q)
+  );
+  if (matchedAlerts.length) {
+    html += '<div class="search-category">Alerts</div>';
+    matchedAlerts.slice(0, 5).forEach(a => {
+      const sevColor = a.severity === 'critical' ? 'var(--danger)' : a.severity === 'high' ? 'var(--warning)' : 'var(--accent)';
+      html += `<div class="search-result-item" onclick="navigateToPage('alerts')">
+        <div class="search-result-icon" style="background:rgba(239,68,68,0.15)">&#128276;</div>
+        <div class="search-result-info">
+          <div class="search-result-title">${highlightMatch(a.message.slice(0, 80), q)}</div>
+          <div class="search-result-sub">${a.type.replace(/_/g, ' ')} &middot; ${a.acknowledged ? 'Resolved' : 'Pending'}</div>
+        </div>
+        <span class="search-result-badge" style="background:${sevColor}20;color:${sevColor}">${a.severity}</span>
+      </div>`;
+    });
+    totalResults += matchedAlerts.length;
+  }
+
+  // Search incidents
+  const matchedIncidents = cachedIncidents.filter(i =>
+    i.label.toLowerCase().includes(q) ||
+    i.description.toLowerCase().includes(q) ||
+    i.type.toLowerCase().includes(q) ||
+    (i.orphanage_name || '').toLowerCase().includes(q)
+  );
+  if (matchedIncidents.length) {
+    html += '<div class="search-category">AI Incidents</div>';
+    matchedIncidents.slice(0, 5).forEach(i => {
+      const sevColor = i.severity === 'critical' ? 'var(--danger)' : i.severity === 'high' ? 'var(--warning)' : 'var(--accent)';
+      html += `<div class="search-result-item" onclick="navigateToPage('incidents')">
+        <div class="search-result-icon" style="background:rgba(239,68,68,0.15)">&#129302;</div>
+        <div class="search-result-info">
+          <div class="search-result-title">${highlightMatch(i.label, q)}</div>
+          <div class="search-result-sub">${i.type.replace(/_/g, ' ')} &middot; ${i.confidence}% confidence &middot; ${i.orphanage_name || ''}</div>
+        </div>
+        <span class="search-result-badge" style="background:${sevColor}20;color:${sevColor}">${i.severity}</span>
+      </div>`;
+    });
+    totalResults += matchedIncidents.length;
+  }
+
+  if (!totalResults) {
+    html = `<div class="search-no-results">
+      <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="var(--text-tertiary)" stroke-width="1.5"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+      <div>No results for "<strong>${query}</strong>"</div>
+      <div style="font-size:12px;margin-top:4px">Try searching by name, city, type, or status</div>
+    </div>`;
+  }
+
+  results.innerHTML = html;
+}
+
+// Init - load all data so global search works
 loadOrphanages();
 loadStats();
 loadIncidents();
+loadAlerts();
+loadChildren();
+loadVisitors();
+loadActivity();
