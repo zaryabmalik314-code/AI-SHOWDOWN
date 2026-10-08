@@ -218,27 +218,27 @@ async function openOrphanageDetail(id) {
   document.getElementById('detail-header-info').innerHTML = `
     <div class="detail-info-bar">
       <div class="detail-info-item">
-        <div class="dii-icon" style="background:rgba(79,140,255,0.15)">&#127968;</div>
+        <div class="dii-icon" style="background:rgba(79,140,255,0.15)"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="var(--blue)" stroke-width="2"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0118 0z"/><circle cx="12" cy="10" r="3"/></svg></div>
         <div><div class="dii-label">Location</div><div class="dii-value" style="font-size:14px">${o.address}</div></div>
       </div>
       <div class="detail-info-item">
-        <div class="dii-icon" style="background:rgba(52,211,153,0.15)">&#128118;</div>
+        <div class="dii-icon" style="background:rgba(52,211,153,0.15)"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="var(--success)" stroke-width="2"><path d="M17 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 00-3-3.87"/><path d="M16 3.13a4 4 0 010 7.75"/></svg></div>
         <div><div class="dii-label">Children</div><div class="dii-value" style="color:var(--success)">${o.total_children}</div></div>
       </div>
       <div class="detail-info-item">
-        <div class="dii-icon" style="background:rgba(167,139,250,0.15)">&#128101;</div>
+        <div class="dii-icon" style="background:rgba(167,139,250,0.15)"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="var(--purple)" stroke-width="2"><path d="M20 21v-2a4 4 0 00-4-4H8a4 4 0 00-4 4v2"/><circle cx="12" cy="7" r="4"/></svg></div>
         <div><div class="dii-label">Staff</div><div class="dii-value" style="color:var(--purple)">${o.staff_count}</div></div>
       </div>
       <div class="detail-info-item">
-        <div class="dii-icon" style="background:rgba(251,191,36,0.15)">&#128247;</div>
+        <div class="dii-icon" style="background:rgba(251,191,36,0.15)"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="var(--warning)" stroke-width="2"><path d="M23 7l-7 5 7 5V7z"/><rect x="1" y="5" width="15" height="14" rx="2" ry="2"/></svg></div>
         <div><div class="dii-label">Cameras</div><div class="dii-value" style="color:var(--warning)">${o.cameras}</div></div>
       </div>
       <div class="detail-info-item">
-        <div class="dii-icon" style="background:${o.risk_level === 'high' ? 'rgba(239,68,68,0.15)' : o.risk_level === 'medium' ? 'rgba(251,191,36,0.15)' : 'rgba(52,211,153,0.15)'}">&#9888;</div>
+        <div class="dii-icon" style="background:${o.risk_level === 'high' ? 'rgba(239,68,68,0.15)' : o.risk_level === 'medium' ? 'rgba(251,191,36,0.15)' : 'rgba(52,211,153,0.15)'}"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="${o.risk_level === 'high' ? 'var(--danger)' : o.risk_level === 'medium' ? 'var(--warning)' : 'var(--success)'}" stroke-width="2"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg></div>
         <div><div class="dii-label">Risk Level</div><div class="dii-value"><span class="risk-badge ${o.risk_level}" style="font-size:13px;padding:4px 12px">${o.risk_level.toUpperCase()}</span></div></div>
       </div>
       <div class="detail-info-item">
-        <div class="dii-icon" style="background:rgba(79,140,255,0.15)">&#127759;</div>
+        <div class="dii-icon" style="background:rgba(79,140,255,0.15)"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="var(--blue)" stroke-width="2"><polygon points="1 6 1 22 8 18 16 22 23 18 23 2 16 6 8 2 1 6"/><line x1="8" y1="2" x2="8" y2="18"/><line x1="16" y1="6" x2="16" y2="22"/></svg></div>
         <div><div class="dii-label">City / District</div><div class="dii-value" style="font-size:14px">${o.city}, ${o.district}</div></div>
       </div>
     </div>
@@ -483,16 +483,16 @@ async function loadDetailActivity(oid) {
   const res = await fetch('/api/activity?orphanage_id=' + oid);
   const activities = await res.json();
   const icons = {
-    visitor_entry: { icon: '&#128694;', bg: 'rgba(79,140,255,0.15)' },
-    ai_detection: { icon: '&#129302;', bg: 'rgba(239,68,68,0.15)' },
-    headcount_mismatch: { icon: '&#9888;', bg: 'rgba(251,191,36,0.15)' },
-    restricted_zone: { icon: '&#128683;', bg: 'rgba(248,113,113,0.15)' },
-    perimeter_breach: { icon: '&#128680;', bg: 'rgba(239,68,68,0.15)' },
-    child_missing: { icon: '&#128557;', bg: 'rgba(239,68,68,0.15)' },
+    visitor_entry: { icon: '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="var(--blue)" stroke-width="2"><path d="M20 21v-2a4 4 0 00-4-4H8a4 4 0 00-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>', bg: 'rgba(79,140,255,0.15)' },
+    ai_detection: { icon: '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="var(--danger)" stroke-width="2"><path d="M12 9v4m0 4h.01M3.26 19h17.48a1 1 0 0 0 .87-1.5L13.37 3.5a1 1 0 0 0-1.74 0L3.39 17.5a1 1 0 0 0 .87 1.5z"/></svg>', bg: 'rgba(239,68,68,0.15)' },
+    headcount_mismatch: { icon: '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="var(--warning)" stroke-width="2"><path d="M17 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2"/><circle cx="9" cy="7" r="4"/><line x1="19" y1="8" x2="19" y2="14"/><line x1="22" y1="11" x2="16" y2="11"/></svg>', bg: 'rgba(251,191,36,0.15)' },
+    restricted_zone: { icon: '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="var(--danger)" stroke-width="2"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0110 0v4"/></svg>', bg: 'rgba(248,113,113,0.15)' },
+    perimeter_breach: { icon: '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="var(--danger)" stroke-width="2"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>', bg: 'rgba(239,68,68,0.15)' },
+    child_missing: { icon: '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="var(--danger)" stroke-width="2"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/><line x1="8" y1="11" x2="14" y2="11"/></svg>', bg: 'rgba(239,68,68,0.15)' },
   };
   document.getElementById('dtab-activity').innerHTML = activities.length === 0 ? '<div class="detail-empty">No activity logged</div>' :
     `<div class="activity-feed">${activities.map(a => {
-      const cfg = icons[a.event_type] || { icon: '&#128196;', bg: 'rgba(154,160,166,0.15)' };
+      const cfg = icons[a.event_type] || { icon: '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="var(--text-tertiary)" stroke-width="2"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>', bg: 'rgba(154,160,166,0.15)' };
       return `<div class="activity-item"><div class="activity-icon" style="background:${cfg.bg}">${cfg.icon}</div><div style="flex:1">${a.description}</div><div class="activity-time">${new Date(a.created_at).toLocaleTimeString('en-PK')}</div></div>`;
     }).join('')}</div>`;
 }
@@ -587,14 +587,19 @@ function markAlertAcknowledged(id) {
 
 // Incidents (Violence/Harassment Detection)
 const incidentIcons = {
-  physical_violence: '&#9994;', verbal_abuse: '&#128483;', harassment: '&#9888;',
-  bullying: '&#128544;', neglect: '&#128557;', distress: '&#128546;',
-  rough_handling: '&#9995;', unauthorized_contact: '&#128683;'
+  physical_violence: '<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 9v4m0 4h.01M3.26 19h17.48a1 1 0 0 0 .87-1.5L13.37 3.5a1 1 0 0 0-1.74 0L3.39 17.5a1 1 0 0 0 .87 1.5z"/></svg>',
+  verbal_abuse: '<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>',
+  harassment: '<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="15" y1="9" x2="9" y2="15"/><line x1="9" y1="9" x2="15" y2="15"/></svg>',
+  bullying: '<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 9v4m0 4h.01M3.26 19h17.48a1 1 0 0 0 .87-1.5L13.37 3.5a1 1 0 0 0-1.74 0L3.39 17.5a1 1 0 0 0 .87 1.5z"/></svg>',
+  neglect: '<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>',
+  distress: '<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><path d="M16 16s-1.5-2-4-2-4 2-4 2"/><line x1="9" y1="9" x2="9.01" y2="9"/><line x1="15" y1="9" x2="15.01" y2="9"/></svg>',
+  rough_handling: '<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>',
+  unauthorized_contact: '<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0110 0v4"/></svg>'
 };
 
 function renderIncidentItem(i) {
   const time = new Date(i.detected_at).toLocaleString('en-PK');
-  const icon = incidentIcons[i.type] || '&#9888;';
+  const icon = incidentIcons[i.type] || '<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 9v4m0 4h.01M3.26 19h17.48a1 1 0 0 0 .87-1.5L13.37 3.5a1 1 0 0 0-1.74 0L3.39 17.5a1 1 0 0 0 .87 1.5z"/></svg>';
   const confColor = i.confidence > 85 ? 'var(--danger)' : i.confidence > 70 ? 'var(--warning)' : 'var(--accent)';
   return `<div class="incident-item ${i.severity} ${i.reviewed ? 'reviewed' : ''}" onclick="viewIncident(${i.id})">
     <div class="incident-icon ${i.severity}">${icon}</div>
@@ -602,10 +607,10 @@ function renderIncidentItem(i) {
       <div class="inc-label">${i.label}</div>
       <div class="inc-desc">${i.description}</div>
       <div class="inc-meta">
-        <span>&#128337; ${time}</span>
-        <span>&#129302; ${i.ai_model}</span>
+        <span>${time}</span>
+        <span>${i.ai_model}</span>
         <span>Confidence: <span class="confidence-bar"><span class="fill" style="width:${i.confidence}%;background:${confColor}"></span></span> ${i.confidence}%</span>
-        <span>&#127909; ${i.frame_count} frames</span>
+        <span>${i.frame_count} frames</span>
       </div>
     </div>
     <div style="text-align:right">
@@ -713,7 +718,7 @@ async function loadRankings() {
     document.getElementById('ranking-list').innerHTML = rankings.map(r => {
       const gradeColor = r.grade === 'A' ? 'var(--success)' : r.grade === 'B' ? 'var(--accent)' : r.grade === 'C' ? 'var(--warning)' : 'var(--danger)';
       const scoreBarColor = r.score >= 80 ? 'var(--success)' : r.score >= 60 ? 'var(--warning)' : 'var(--danger)';
-      const medalIcon = r.rank === 1 ? '&#129351;' : r.rank === 2 ? '&#129352;' : r.rank === 3 ? '&#129353;' : '';
+      const medalIcon = '';
       return `
       <div class="rank-card ${r.rank <= 3 ? 'top-rank' : ''}" onclick="openOrphanageDetail(${r.id})">
         <div class="rank-position">
@@ -952,7 +957,7 @@ async function initCameras() {
         ${i === 0 && z.orgStatus === 'online' ? '<video id="cam-live" autoplay muted playsinline></video>' :
           z.orgStatus === 'online' ?
             `<div class="sim-feed" id="sim-feed-${i}"><canvas class="sim-canvas" id="sim-canvas-${i}"></canvas></div>` :
-            '<div class="no-feed"><span style="font-size:28px">&#128683;</span><span>Feed Unavailable</span><span style="font-size:10px;color:var(--danger)">Orphanage Offline</span></div>'
+            '<div class="no-feed"><svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="var(--danger)" stroke-width="1.5"><line x1="1" y1="1" x2="23" y2="23"/><path d="M21 21H3a2 2 0 01-2-2V8a2 2 0 012-2h3l2-3h6"/><path d="M16.5 16.5a5 5 0 10-7.07-7.07"/></svg><span>Feed Unavailable</span><span style="font-size:10px;color:var(--danger)">Orphanage Offline</span></div>'
         }
         ${z.orgStatus === 'online' ? `<div class="feed-overlay"><span>AI: Active</span><span id="feed-count-${i}">Persons: 0</span></div>` : ''}
       </div>
@@ -1134,16 +1139,16 @@ function startDetectionSim() {
 
 // Activity
 const activityIcons = {
-  visitor_entry: { icon: '&#128694;', bg: 'rgba(79,140,255,0.15)' },
-  ai_detection: { icon: '&#129302;', bg: 'rgba(239,68,68,0.15)' },
-  headcount_mismatch: { icon: '&#9888;', bg: 'rgba(251,191,36,0.15)' },
-  restricted_zone: { icon: '&#128683;', bg: 'rgba(248,113,113,0.15)' },
-  perimeter_breach: { icon: '&#128680;', bg: 'rgba(239,68,68,0.15)' },
-  child_missing: { icon: '&#128557;', bg: 'rgba(239,68,68,0.15)' },
+  visitor_entry: { icon: '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="var(--blue)" stroke-width="2"><path d="M20 21v-2a4 4 0 00-4-4H8a4 4 0 00-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>', bg: 'rgba(79,140,255,0.15)' },
+  ai_detection: { icon: '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="var(--danger)" stroke-width="2"><path d="M12 9v4m0 4h.01M3.26 19h17.48a1 1 0 0 0 .87-1.5L13.37 3.5a1 1 0 0 0-1.74 0L3.39 17.5a1 1 0 0 0 .87 1.5z"/></svg>', bg: 'rgba(239,68,68,0.15)' },
+  headcount_mismatch: { icon: '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="var(--warning)" stroke-width="2"><path d="M17 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2"/><circle cx="9" cy="7" r="4"/><line x1="19" y1="8" x2="19" y2="14"/><line x1="22" y1="11" x2="16" y2="11"/></svg>', bg: 'rgba(251,191,36,0.15)' },
+  restricted_zone: { icon: '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="var(--danger)" stroke-width="2"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0110 0v4"/></svg>', bg: 'rgba(248,113,113,0.15)' },
+  perimeter_breach: { icon: '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="var(--danger)" stroke-width="2"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>', bg: 'rgba(239,68,68,0.15)' },
+  child_missing: { icon: '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="var(--danger)" stroke-width="2"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/><line x1="8" y1="11" x2="14" y2="11"/></svg>', bg: 'rgba(239,68,68,0.15)' },
 };
 
 function renderActivityItem(a) {
-  const cfg = activityIcons[a.event_type] || { icon: '&#128196;', bg: 'rgba(154,160,166,0.15)' };
+  const cfg = activityIcons[a.event_type] || { icon: '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="var(--text-tertiary)" stroke-width="2"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>', bg: 'rgba(154,160,166,0.15)' };
   return `<div class="activity-item"><div class="activity-icon" style="background:${cfg.bg}">${cfg.icon}</div><div>${a.description}</div><div class="activity-time">${new Date(a.created_at).toLocaleTimeString('en-PK')}</div></div>`;
 }
 
@@ -1241,14 +1246,14 @@ async function loadPortalDashboard() {
 
   const improvements = [];
   if (thisRank) {
-    if (thisRank.score < 90 && thisRank.cameraCoverage < 80) improvements.push({ icon: '&#128247;', title: 'Increase Camera Coverage', desc: `Current: ${thisRank.cameraCoverage}%. Add cameras to blind spots. Target: 80%+`, impact: '+5 points' });
-    if (thisRank.score < 90 && thisRank.staffRatio < 30) improvements.push({ icon: '&#128101;', title: 'Improve Staff Ratio', desc: `Current: ${thisRank.staffRatio}%. Hire additional caregivers. Target: 30%+`, impact: '+5 points' });
-    if (thisRank.score < 90 && thisRank.responseRate < 90) improvements.push({ icon: '&#9201;', title: 'Faster Incident Response', desc: `Current: ${thisRank.responseRate}%. Review incidents within 1 hour. Target: 90%+`, impact: '+5 points' });
-    if (thisRank.criticalIncidents > 0) improvements.push({ icon: '&#128680;', title: 'Resolve Critical Incidents', desc: `${thisRank.criticalIncidents} critical incidents need immediate review`, impact: `+${thisRank.criticalIncidents * 8} points` });
-    if (thisRank.openIncidents > 0) improvements.push({ icon: '&#9888;', title: 'Clear Open Incidents', desc: `${thisRank.openIncidents} incidents pending review`, impact: `+${thisRank.openIncidents * 4} points` });
-    if (o.risk_level === 'high') improvements.push({ icon: '&#128308;', title: 'Lower Risk Level', desc: 'Resolving incidents will automatically reduce risk', impact: '+15 points' });
-    if (o.status === 'offline') improvements.push({ icon: '&#128268;', title: 'Come Online', desc: 'Bring your surveillance system back online', impact: '+10 points' });
-    if (improvements.length === 0) improvements.push({ icon: '&#11088;', title: 'Keep It Up!', desc: 'Your orphanage is performing excellently. Maintain current standards.', impact: 'Top tier' });
+    if (thisRank.score < 90 && thisRank.cameraCoverage < 80) improvements.push({ icon: '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="var(--warning)" stroke-width="2"><path d="M23 7l-7 5 7 5V7z"/><rect x="1" y="5" width="15" height="14" rx="2" ry="2"/></svg>', title: 'Increase Camera Coverage', desc: `Current: ${thisRank.cameraCoverage}%. Add cameras to blind spots. Target: 80%+`, impact: '+5 points' });
+    if (thisRank.score < 90 && thisRank.staffRatio < 30) improvements.push({ icon: '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="var(--purple)" stroke-width="2"><path d="M17 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2"/><circle cx="9" cy="7" r="4"/><line x1="19" y1="8" x2="19" y2="14"/><line x1="22" y1="11" x2="16" y2="11"/></svg>', title: 'Improve Staff Ratio', desc: `Current: ${thisRank.staffRatio}%. Hire additional caregivers. Target: 30%+`, impact: '+5 points' });
+    if (thisRank.score < 90 && thisRank.responseRate < 90) improvements.push({ icon: '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="var(--cyan)" stroke-width="2"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>', title: 'Faster Incident Response', desc: `Current: ${thisRank.responseRate}%. Review incidents within 1 hour. Target: 90%+`, impact: '+5 points' });
+    if (thisRank.criticalIncidents > 0) improvements.push({ icon: '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="var(--danger)" stroke-width="2"><path d="M12 9v4m0 4h.01M3.26 19h17.48a1 1 0 0 0 .87-1.5L13.37 3.5a1 1 0 0 0-1.74 0L3.39 17.5a1 1 0 0 0 .87 1.5z"/></svg>', title: 'Resolve Critical Incidents', desc: `${thisRank.criticalIncidents} critical incidents need immediate review`, impact: `+${thisRank.criticalIncidents * 8} points` });
+    if (thisRank.openIncidents > 0) improvements.push({ icon: '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="var(--warning)" stroke-width="2"><path d="M12 9v4m0 4h.01M3.26 19h17.48a1 1 0 0 0 .87-1.5L13.37 3.5a1 1 0 0 0-1.74 0L3.39 17.5a1 1 0 0 0 .87 1.5z"/></svg>', title: 'Clear Open Incidents', desc: `${thisRank.openIncidents} incidents pending review`, impact: `+${thisRank.openIncidents * 4} points` });
+    if (o.risk_level === 'high') improvements.push({ icon: '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="var(--danger)" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="15" y1="9" x2="9" y2="15"/><line x1="9" y1="9" x2="15" y2="15"/></svg>', title: 'Lower Risk Level', desc: 'Resolving incidents will automatically reduce risk', impact: '+15 points' });
+    if (o.status === 'offline') improvements.push({ icon: '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="var(--text-tertiary)" stroke-width="2"><line x1="1" y1="1" x2="23" y2="23"/><path d="M16.72 11.06A10.94 10.94 0 0119 12.55"/><path d="M5 12.55a10.94 10.94 0 015.17-2.39"/></svg>', title: 'Come Online', desc: 'Bring your surveillance system back online', impact: '+10 points' });
+    if (improvements.length === 0) improvements.push({ icon: '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="var(--success)" stroke-width="2"><circle cx="12" cy="12" r="10"/><path d="M8 12l3 3 5-5"/></svg>', title: 'Keep It Up!', desc: 'Your orphanage is performing excellently. Maintain current standards.', impact: 'Top tier' });
   }
 
   const container = document.getElementById('portal-content');
@@ -1319,13 +1324,13 @@ async function loadPortalDashboard() {
     <div class="portal-grid">
       <div class="portal-section">
         <div class="portal-section-header">
-          <span>&#9989; Compliance Checklist</span>
+          <span>Compliance Checklist</span>
           <span class="portal-check-count">${passedChecks}/${compliance.length} passed</span>
         </div>
         <div class="portal-section-body">
           ${compliance.map(c => `
             <div class="portal-check-item ${c.ok ? 'pass' : 'fail'}">
-              <div class="portal-check-icon">${c.ok ? '&#9989;' : '&#10060;'}</div>
+              <div class="portal-check-icon">${c.ok ? '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="var(--success)" stroke-width="2.5"><path d="M20 6L9 17l-5-5"/></svg>' : '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="var(--danger)" stroke-width="2.5"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>'}</div>
               <div class="portal-check-info">
                 <div class="portal-check-label">${c.label}: <strong>${c.val}</strong></div>
                 <div class="portal-check-tip">${c.tip}</div>
@@ -1337,7 +1342,7 @@ async function loadPortalDashboard() {
 
       <div class="portal-section">
         <div class="portal-section-header">
-          <span>&#128200; Improvement Plan</span>
+          <span>Improvement Plan</span>
           <span class="portal-check-count" style="background:var(--accent-glow);color:var(--accent)">${improvements.length} items</span>
         </div>
         <div class="portal-section-body">
@@ -1356,24 +1361,24 @@ async function loadPortalDashboard() {
 
       <div class="portal-section">
         <div class="portal-section-header">
-          <span>&#9889; Quick Actions</span>
+          <span>Quick Actions</span>
         </div>
         <div class="portal-section-body" style="padding:16px">
           <div class="portal-actions-grid">
             <button class="portal-action-btn" onclick="portalAddChild()">
-              <span class="portal-action-icon" style="background:rgba(16,185,129,0.1);color:var(--success)">&#128118;</span>
+              <span class="portal-action-icon" style="background:rgba(16,185,129,0.1);color:var(--success)"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M16 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2"/><circle cx="8.5" cy="7" r="4"/><line x1="20" y1="8" x2="20" y2="14"/><line x1="23" y1="11" x2="17" y2="11"/></svg></span>
               <span>Add Child</span>
             </button>
             <button class="portal-action-btn" onclick="portalCheckInVisitor()">
-              <span class="portal-action-icon" style="background:rgba(139,92,246,0.1);color:var(--purple)">&#128100;</span>
+              <span class="portal-action-icon" style="background:rgba(139,92,246,0.1);color:var(--purple)"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 21v-2a4 4 0 00-4-4H8a4 4 0 00-4 4v2"/><circle cx="12" cy="7" r="4"/></svg></span>
               <span>Check In Visitor</span>
             </button>
             <button class="portal-action-btn" onclick="portalViewAlerts()">
-              <span class="portal-action-icon" style="background:rgba(239,68,68,0.1);color:var(--danger)">&#128276;</span>
+              <span class="portal-action-icon" style="background:rgba(239,68,68,0.1);color:var(--danger)"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 8A6 6 0 006 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 01-3.46 0"/></svg></span>
               <span>View Alerts</span>
             </button>
             <button class="portal-action-btn" onclick="portalViewIncidents()">
-              <span class="portal-action-icon" style="background:rgba(251,191,36,0.1);color:var(--warning)">&#9888;</span>
+              <span class="portal-action-icon" style="background:rgba(251,191,36,0.1);color:var(--warning)"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 9v4m0 4h.01M3.26 19h17.48a1 1 0 0 0 .87-1.5L13.37 3.5a1 1 0 0 0-1.74 0L3.39 17.5a1 1 0 0 0 .87 1.5z"/></svg></span>
               <span>AI Incidents</span>
             </button>
           </div>
@@ -1382,7 +1387,7 @@ async function loadPortalDashboard() {
 
       <div class="portal-section">
         <div class="portal-section-header">
-          <span>&#128205; Live Zones</span>
+          <span>Live Zones</span>
           <span class="portal-check-count">${zones.length} active</span>
         </div>
         <div class="portal-section-body">
@@ -1403,7 +1408,7 @@ async function loadPortalDashboard() {
     ${unresolvedAlerts.length > 0 ? `
     <div class="portal-section" style="margin-top:14px">
       <div class="portal-section-header" style="color:var(--danger)">
-        <span>&#128680; Pending Alerts</span>
+        <span>Pending Alerts</span>
         <span class="portal-check-count" style="background:var(--danger-glow);color:var(--danger)">${unresolvedAlerts.length}</span>
       </div>
       <div class="portal-section-body">
@@ -1415,7 +1420,7 @@ async function loadPortalDashboard() {
     ${openIncs.length > 0 ? `
     <div class="portal-section" style="margin-top:14px">
       <div class="portal-section-header" style="color:var(--critical)">
-        <span>&#129302; AI Detections Requiring Review</span>
+        <span>AI Detections Requiring Review</span>
         <span class="portal-check-count" style="background:var(--danger-glow);color:var(--critical)">${openIncs.length}</span>
       </div>
       <div class="portal-section-body">
@@ -1615,7 +1620,7 @@ function runGlobalSearch(query) {
     matchedOrphanages.slice(0, 5).forEach(o => {
       const riskColor = o.risk_level === 'high' ? 'var(--danger)' : o.risk_level === 'medium' ? 'var(--warning)' : 'var(--success)';
       html += `<div class="search-result-item" onclick="openOrphanageDetail(${o.id})">
-        <div class="search-result-icon" style="background:rgba(16,185,129,0.15)">&#127968;</div>
+        <div class="search-result-icon" style="background:rgba(16,185,129,0.15)"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="var(--success)" stroke-width="2"><path d="M3 9l9-7 9 7v11a2 2 0 01-2 2H5a2 2 0 01-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg></div>
         <div class="search-result-info">
           <div class="search-result-title">${highlightMatch(o.name, q)}</div>
           <div class="search-result-sub">${highlightMatch(o.city, q)} &middot; ${o.total_children} children &middot; ${o.cameras} cameras</div>
@@ -1637,7 +1642,7 @@ function runGlobalSearch(query) {
     html += '<div class="search-category">Children</div>';
     matchedChildren.slice(0, 5).forEach(c => {
       html += `<div class="search-result-item" onclick="navigateToPage('children')">
-        <div class="search-result-icon" style="background:rgba(79,140,255,0.15)">&#128118;</div>
+        <div class="search-result-icon" style="background:rgba(79,140,255,0.15)"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="var(--blue)" stroke-width="2"><path d="M17 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2"/><circle cx="9" cy="7" r="4"/></svg></div>
         <div class="search-result-info">
           <div class="search-result-title">${highlightMatch(c.name, q)}</div>
           <div class="search-result-sub">Age ${c.age} &middot; ${c.gender} &middot; ${getOrg(c.orphanage_id)}</div>
@@ -1659,7 +1664,7 @@ function runGlobalSearch(query) {
     matchedVisitors.slice(0, 5).forEach(v => {
       const statusColor = v.status === 'checked_in' ? 'var(--success)' : 'var(--text-tertiary)';
       html += `<div class="search-result-item" onclick="navigateToPage('visitors')">
-        <div class="search-result-icon" style="background:rgba(139,92,246,0.15)">&#128100;</div>
+        <div class="search-result-icon" style="background:rgba(139,92,246,0.15)"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="var(--purple)" stroke-width="2"><path d="M20 21v-2a4 4 0 00-4-4H8a4 4 0 00-4 4v2"/><circle cx="12" cy="7" r="4"/></svg></div>
         <div class="search-result-info">
           <div class="search-result-title">${highlightMatch(v.name, q)}</div>
           <div class="search-result-sub">${v.purpose} &middot; ${v.cnic || 'No CNIC'}</div>
@@ -1680,7 +1685,7 @@ function runGlobalSearch(query) {
     matchedAlerts.slice(0, 5).forEach(a => {
       const sevColor = a.severity === 'critical' ? 'var(--danger)' : a.severity === 'high' ? 'var(--warning)' : 'var(--accent)';
       html += `<div class="search-result-item" onclick="navigateToPage('alerts')">
-        <div class="search-result-icon" style="background:rgba(239,68,68,0.15)">&#128276;</div>
+        <div class="search-result-icon" style="background:rgba(239,68,68,0.15)"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="var(--danger)" stroke-width="2"><path d="M18 8A6 6 0 006 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 01-3.46 0"/></svg></div>
         <div class="search-result-info">
           <div class="search-result-title">${highlightMatch(a.message.slice(0, 80), q)}</div>
           <div class="search-result-sub">${a.type.replace(/_/g, ' ')} &middot; ${a.acknowledged ? 'Resolved' : 'Pending'}</div>
@@ -1703,7 +1708,7 @@ function runGlobalSearch(query) {
     matchedIncidents.slice(0, 5).forEach(i => {
       const sevColor = i.severity === 'critical' ? 'var(--danger)' : i.severity === 'high' ? 'var(--warning)' : 'var(--accent)';
       html += `<div class="search-result-item" onclick="navigateToPage('incidents')">
-        <div class="search-result-icon" style="background:rgba(239,68,68,0.15)">&#129302;</div>
+        <div class="search-result-icon" style="background:rgba(239,68,68,0.15)"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="var(--danger)" stroke-width="2"><path d="M12 9v4m0 4h.01M3.26 19h17.48a1 1 0 0 0 .87-1.5L13.37 3.5a1 1 0 0 0-1.74 0L3.39 17.5a1 1 0 0 0 .87 1.5z"/></svg></div>
         <div class="search-result-info">
           <div class="search-result-title">${highlightMatch(i.label, q)}</div>
           <div class="search-result-sub">${i.type.replace(/_/g, ' ')} &middot; ${i.confidence}% confidence &middot; ${i.orphanage_name || ''}</div>
@@ -1744,8 +1749,8 @@ async function loadNotifications() {
     }
     list.innerHTML = notifs.map(n => {
       const time = timeAgo(new Date(n.created_at));
-      const icons = { security_alert: '&#128680;', ai_detection: '&#129302;', emotion_alert: '&#128546;' };
-      const icon = icons[n.type] || '&#128276;';
+      const icons = { security_alert: '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="var(--danger)" stroke-width="2"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>', ai_detection: '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="var(--purple)" stroke-width="2"><path d="M12 9v4m0 4h.01M3.26 19h17.48a1 1 0 0 0 .87-1.5L13.37 3.5a1 1 0 0 0-1.74 0L3.39 17.5a1 1 0 0 0 .87 1.5z"/></svg>', emotion_alert: '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="var(--warning)" stroke-width="2"><circle cx="12" cy="12" r="10"/><path d="M16 16s-1.5-2-4-2-4 2-4 2"/><line x1="9" y1="9" x2="9.01" y2="9"/><line x1="15" y1="9" x2="15.01" y2="9"/></svg>' };
+      const icon = icons[n.type] || '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="var(--accent)" stroke-width="2"><path d="M18 8A6 6 0 006 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 01-3.46 0"/></svg>';
       const bgColors = { security_alert: 'rgba(239,68,68,0.15)', ai_detection: 'rgba(139,92,246,0.15)', emotion_alert: 'rgba(251,191,36,0.15)' };
       return `<div class="notif-item ${n.read ? '' : 'unread'} ${n.severity || ''}" onclick="markNotifRead(${n.id})">
         <div class="notif-icon" style="background:${bgColors[n.type] || 'rgba(16,185,129,0.15)'}">${icon}</div>
@@ -1970,9 +1975,15 @@ async function addGrowthRecord(e) {
 }
 
 // ====== EMOTION DETECTION ======
-const emotionEmojis = {
-  distressed: '&#128553;', crying: '&#128557;', anxious: '&#128552;', fearful: '&#128560;',
-  happy: '&#128522;', neutral: '&#128528;', excited: '&#129321;', sad: '&#128546;'
+const emotionLabels = {
+  distressed: '<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="var(--danger)" stroke-width="2"><circle cx="12" cy="12" r="10"/><path d="M16 16s-1.5-2-4-2-4 2-4 2"/><line x1="9" y1="9" x2="9.01" y2="9"/><line x1="15" y1="9" x2="15.01" y2="9"/></svg>',
+  crying: '<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="var(--danger)" stroke-width="2"><circle cx="12" cy="12" r="10"/><path d="M16 16s-1.5-2-4-2-4 2-4 2"/><line x1="9" y1="9" x2="9.01" y2="9"/><line x1="15" y1="9" x2="15.01" y2="9"/></svg>',
+  anxious: '<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="var(--warning)" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="8" y1="15" x2="16" y2="15"/><line x1="9" y1="9" x2="9.01" y2="9"/><line x1="15" y1="9" x2="15.01" y2="9"/></svg>',
+  fearful: '<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="var(--danger)" stroke-width="2"><circle cx="12" cy="12" r="10"/><circle cx="12" cy="15" r="2"/><line x1="9" y1="9" x2="9.01" y2="9"/><line x1="15" y1="9" x2="15.01" y2="9"/></svg>',
+  happy: '<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="var(--success)" stroke-width="2"><circle cx="12" cy="12" r="10"/><path d="M8 14s1.5 2 4 2 4-2 4-2"/><line x1="9" y1="9" x2="9.01" y2="9"/><line x1="15" y1="9" x2="15.01" y2="9"/></svg>',
+  neutral: '<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="var(--cyan)" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="8" y1="15" x2="16" y2="15"/><line x1="9" y1="9" x2="9.01" y2="9"/><line x1="15" y1="9" x2="15.01" y2="9"/></svg>',
+  excited: '<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="var(--success)" stroke-width="2"><circle cx="12" cy="12" r="10"/><path d="M8 14s1.5 2 4 2 4-2 4-2"/><line x1="9" y1="9" x2="9.01" y2="9"/><line x1="15" y1="9" x2="15.01" y2="9"/></svg>',
+  sad: '<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="var(--warning)" stroke-width="2"><circle cx="12" cy="12" r="10"/><path d="M16 16s-1.5-2-4-2-4 2-4 2"/><line x1="9" y1="9" x2="9.01" y2="9"/><line x1="15" y1="9" x2="15.01" y2="9"/></svg>'
 };
 
 async function loadEmotions() {
@@ -1988,14 +1999,14 @@ async function loadEmotions() {
     const concerned = (counts.anxious || 0) + (counts.sad || 0);
 
     document.getElementById('emotion-stats').innerHTML = `
-      <div class="emo-stat"><div class="emo-icon">&#128553;</div><div class="emo-val" style="color:var(--danger)">${distressed}</div><div class="emo-label">Distressed</div></div>
-      <div class="emo-stat"><div class="emo-icon">&#128546;</div><div class="emo-val" style="color:var(--warning)">${concerned}</div><div class="emo-label">Concerned</div></div>
-      <div class="emo-stat"><div class="emo-icon">&#128528;</div><div class="emo-val" style="color:var(--cyan)">${neutral}</div><div class="emo-label">Neutral</div></div>
-      <div class="emo-stat"><div class="emo-icon">&#128522;</div><div class="emo-val" style="color:var(--success)">${positive}</div><div class="emo-label">Positive</div></div>
+      <div class="emo-stat"><div class="emo-icon">${emotionLabels.distressed}</div><div class="emo-val" style="color:var(--danger)">${distressed}</div><div class="emo-label">Distressed</div></div>
+      <div class="emo-stat"><div class="emo-icon">${emotionLabels.sad}</div><div class="emo-val" style="color:var(--warning)">${concerned}</div><div class="emo-label">Concerned</div></div>
+      <div class="emo-stat"><div class="emo-icon">${emotionLabels.neutral}</div><div class="emo-val" style="color:var(--cyan)">${neutral}</div><div class="emo-label">Neutral</div></div>
+      <div class="emo-stat"><div class="emo-icon">${emotionLabels.happy}</div><div class="emo-val" style="color:var(--success)">${positive}</div><div class="emo-label">Positive</div></div>
     `;
 
     document.getElementById('emotion-feed').innerHTML = detections.map(d => {
-      const emoji = emotionEmojis[d.emotion] || '&#128528;';
+      const emoji = emotionLabels[d.emotion] || emotionLabels.neutral;
       const time = timeAgo(new Date(d.detected_at));
       const sevClass = d.severity === 'high' ? 'high' : d.severity === 'medium' ? 'medium' : '';
       return `<div class="emotion-item">
@@ -2079,7 +2090,7 @@ async function loadBriefing() {
 
     document.getElementById('briefing-content').innerHTML = `
       <div class="briefing-card">
-        <h3>&#128203; System Overview - ${new Date(b.date).toLocaleDateString('en-PK', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' })}</h3>
+        <h3>System Overview - ${new Date(b.date).toLocaleDateString('en-PK', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' })}</h3>
         <div class="briefing-grid">
           <div class="briefing-stat"><div class="bv" style="color:var(--accent)">${b.summary.total_orphanages}</div><div class="bl">Total Orphanages</div></div>
           <div class="briefing-stat"><div class="bv" style="color:var(--success)">${b.summary.online}</div><div class="bl">Online</div></div>
@@ -2089,7 +2100,7 @@ async function loadBriefing() {
       </div>
 
       <div class="briefing-card">
-        <h3>&#9888; Today's Activity</h3>
+        <h3>Today's Activity</h3>
         <div class="briefing-grid">
           <div class="briefing-stat"><div class="bv" style="color:var(--danger)">${b.today.incidents}</div><div class="bl">Incidents</div></div>
           <div class="briefing-stat"><div class="bv" style="color:var(--danger)">${b.today.critical_incidents}</div><div class="bl">Critical</div></div>
@@ -2100,17 +2111,17 @@ async function loadBriefing() {
 
       <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px">
         <div class="briefing-card">
-          <h3>&#128200; Incident Breakdown</h3>
+          <h3>Incident Breakdown</h3>
           ${breakdownHtml}
         </div>
         <div class="briefing-card">
-          <h3>&#128680; Critical Incidents</h3>
+          <h3>Critical Incidents</h3>
           ${criticalHtml}
         </div>
       </div>
 
       <div class="briefing-card">
-        <h3>&#127942; Performance</h3>
+        <h3>Performance</h3>
         <div class="briefing-highlight">
           ${b.top_performer ? `<div class="briefing-highlight-card good">
             <div class="bh-label">Top Performer</div>
@@ -2196,11 +2207,11 @@ function sendWAMessage() {
   if (!msg) return;
   const chat = document.getElementById('wa-chat');
   const now = new Date().toLocaleTimeString('en-PK', { hour: '2-digit', minute: '2-digit' });
-  chat.insertAdjacentHTML('beforeend', `<div class="wa-msg outgoing"><div class="wa-msg-body">${msg}</div><div class="wa-msg-time">${now} &#10003;&#10003;</div></div>`);
+  chat.insertAdjacentHTML('beforeend', `<div class="wa-msg outgoing"><div class="wa-msg-body">${msg}</div><div class="wa-msg-time">${now}</div></div>`);
   input.value = '';
   chat.scrollTop = chat.scrollHeight;
   setTimeout(() => {
-    chat.insertAdjacentHTML('beforeend', `<div class="wa-msg incoming"><div class="wa-msg-sender">OrphanGuard AI Bot</div><div class="wa-msg-body">&#9989; Message received. Forwarding to relevant district officer.</div><div class="wa-msg-time">${now}</div></div>`);
+    chat.insertAdjacentHTML('beforeend', `<div class="wa-msg incoming"><div class="wa-msg-sender">OrphanGuard AI Bot</div><div class="wa-msg-body"><strong>[OK]</strong> Message received. Forwarding to relevant district officer.</div><div class="wa-msg-time">${now}</div></div>`);
     chat.scrollTop = chat.scrollHeight;
   }, 1500);
 }
@@ -2242,7 +2253,7 @@ td{padding:8px 10px;border-bottom:1px solid #eee}.grade{font-weight:700;padding:
 @media print{body{padding:20px}@page{margin:1cm}}
 </style></head><body>
 <div class="header">
-<h1>&#128737; OrphanGuard AI</h1>
+<h1>OrphanGuard AI</h1>
 <p>Monthly Safety & Compliance Report — Punjab Province</p>
 <p style="font-size:12px;color:#888;margin-top:4px">Generated: ${new Date().toLocaleDateString('en-PK', { weekday:'long', year:'numeric', month:'long', day:'numeric' })}</p>
 <span class="badge">OFFICIAL — Government of Punjab</span>
