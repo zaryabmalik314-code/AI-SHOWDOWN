@@ -226,6 +226,40 @@ class Store {
     return event;
   }
 
+  // Rankings
+  getRankings() {
+    return this.data.orphanages.map(o => {
+      const incidents = this.data.incidents.filter(i => i.orphanage_id === o.id);
+      const alerts = this.data.alerts.filter(a => a.orphanage_id === o.id);
+      const openIncidents = incidents.filter(i => !i.reviewed).length;
+      const criticalIncidents = incidents.filter(i => i.severity === 'critical' && !i.reviewed).length;
+      const unresolvedAlerts = alerts.filter(a => !a.acknowledged).length;
+      const totalIncidents = incidents.length;
+      const reviewedIncidents = incidents.filter(i => i.reviewed).length;
+      const responseRate = totalIncidents > 0 ? Math.round((reviewedIncidents / totalIncidents) * 100) : 100;
+      const staffRatio = o.total_children > 0 ? (o.staff_count / o.total_children) : 0;
+      const cameraCoverage = o.cameras > 0 ? Math.min(100, Math.round((o.cameras / Math.max(1, Math.ceil(o.total_children / 8))) * 100)) : 0;
+
+      let score = 100;
+      score -= criticalIncidents * 8;
+      score -= openIncidents * 4;
+      score -= unresolvedAlerts * 2;
+      score -= (o.risk_level === 'high' ? 15 : o.risk_level === 'medium' ? 5 : 0);
+      score += (responseRate >= 90 ? 5 : responseRate >= 70 ? 2 : 0);
+      score += (staffRatio >= 0.3 ? 5 : staffRatio >= 0.2 ? 2 : 0);
+      score += (cameraCoverage >= 80 ? 5 : cameraCoverage >= 50 ? 2 : 0);
+      score -= (o.status === 'offline' ? 10 : 0);
+      score = Math.max(0, Math.min(100, Math.round(score)));
+
+      const grade = score >= 90 ? 'A' : score >= 80 ? 'B' : score >= 70 ? 'C' : score >= 50 ? 'D' : 'F';
+      return {
+        ...o, score, grade, responseRate, staffRatio: Math.round(staffRatio * 100),
+        cameraCoverage, openIncidents, criticalIncidents, unresolvedAlerts,
+        totalIncidents, reviewedIncidents
+      };
+    }).sort((a, b) => b.score - a.score).map((o, i) => ({ ...o, rank: i + 1 }));
+  }
+
   // Stats
   getStats(orphanageId) {
     const filter = orphanageId ? parseInt(orphanageId) : null;

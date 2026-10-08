@@ -41,6 +41,7 @@ document.querySelectorAll('.nav-item').forEach(item => {
     if (page === 'visitors') loadVisitors();
     if (page === 'alerts') loadAlerts();
     if (page === 'incidents') loadIncidents();
+    if (page === 'rankings') loadRankings();
     if (page === 'activity') loadActivity();
   });
 });
@@ -109,20 +110,24 @@ function updateStatusBar() {
 let orphanageAlertCounts = {};
 let orphanageIncidentCounts = {};
 
+let orphanageRankings = {};
+
 async function loadOrphanageIndicators() {
   try {
-    const [alertsRes, incidentsRes] = await Promise.all([
-      fetch('/api/alerts'), fetch('/api/incidents')
+    const [alertsRes, incidentsRes, rankingsRes] = await Promise.all([
+      fetch('/api/alerts'), fetch('/api/incidents'), fetch('/api/rankings')
     ]);
-    const [alerts, incidents] = await Promise.all([alertsRes.json(), incidentsRes.json()]);
+    const [alerts, incidents, rankings] = await Promise.all([alertsRes.json(), incidentsRes.json(), rankingsRes.json()]);
     orphanageAlertCounts = {};
     orphanageIncidentCounts = {};
+    orphanageRankings = {};
     alerts.filter(a => !a.acknowledged).forEach(a => {
       orphanageAlertCounts[a.orphanage_id] = (orphanageAlertCounts[a.orphanage_id] || 0) + 1;
     });
     incidents.filter(i => !i.reviewed).forEach(i => {
       orphanageIncidentCounts[i.orphanage_id] = (orphanageIncidentCounts[i.orphanage_id] || 0) + 1;
     });
+    rankings.forEach(r => { orphanageRankings[r.id] = r; });
   } catch (e) { /* ignore */ }
 }
 
@@ -137,6 +142,8 @@ function renderOrphanageGrid(filter) {
   grid.innerHTML = list.map(o => {
     const alertCount = orphanageAlertCounts[o.id] || 0;
     const incidentCount = orphanageIncidentCounts[o.id] || 0;
+    const rank = orphanageRankings[o.id];
+    const gradeColor = rank ? (rank.grade === 'A' ? 'var(--success)' : rank.grade === 'B' ? 'var(--accent)' : rank.grade === 'C' ? 'var(--warning)' : 'var(--danger)') : 'var(--text-secondary)';
     return `
     <div class="orphanage-card" onclick="openOrphanageDetail(${o.id})">
       <div class="oc-header">
@@ -144,8 +151,16 @@ function renderOrphanageGrid(filter) {
           <div class="oc-name"><span class="status-dot ${o.status}"></span> ${o.name}</div>
           <div class="oc-city">${o.city}, ${o.district}</div>
         </div>
-        <span class="risk-badge ${o.risk_level}">${o.risk_level} risk</span>
+        <div style="display:flex;align-items:center;gap:8px">
+          ${rank ? `<div class="oc-grade" style="color:${gradeColor};border-color:${gradeColor}">${rank.grade}</div>` : ''}
+          <span class="risk-badge ${o.risk_level}">${o.risk_level} risk</span>
+        </div>
       </div>
+      ${rank ? `<div class="oc-score-row">
+        <span class="oc-rank">#${rank.rank}</span>
+        <div class="oc-score-bar"><div class="oc-score-fill" style="width:${rank.score}%;background:${gradeColor}"></div></div>
+        <span class="oc-score-text" style="color:${gradeColor}">${rank.score}</span>
+      </div>` : ''}
       ${(alertCount > 0 || incidentCount > 0) ? `<div class="oc-indicators">
         ${alertCount > 0 ? `<span class="oc-indicator alerts"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/></svg> ${alertCount} alert${alertCount > 1 ? 's' : ''}</span>` : ''}
         ${incidentCount > 0 ? `<span class="oc-indicator incidents"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 9v4m0 4h.01M3.26 19h17.48a1 1 0 0 0 .87-1.5L13.37 3.5a1 1 0 0 0-1.74 0L3.39 17.5a1 1 0 0 0 .87 1.5z"/></svg> ${incidentCount} incident${incidentCount > 1 ? 's' : ''}</span>` : ''}
@@ -239,23 +254,52 @@ async function switchDetailTab(tab) {
 }
 
 async function loadDetailOverview(oid) {
-  const [statsRes, childrenRes, visitorsRes, alertsRes, incidentsRes, zonesRes] = await Promise.all([
+  const [statsRes, childrenRes, visitorsRes, alertsRes, incidentsRes, zonesRes, rankingsRes] = await Promise.all([
     fetch('/api/stats?orphanage_id=' + oid),
     fetch('/api/children?orphanage_id=' + oid),
     fetch('/api/visitors?orphanage_id=' + oid),
     fetch('/api/alerts?orphanage_id=' + oid),
     fetch('/api/incidents?orphanage_id=' + oid),
     fetch('/api/zones?orphanage_id=' + oid),
+    fetch('/api/rankings'),
   ]);
-  const [stats, children, visitors, alerts, incidents, zones] = await Promise.all([
-    statsRes.json(), childrenRes.json(), visitorsRes.json(), alertsRes.json(), incidentsRes.json(), zonesRes.json()
+  const [stats, children, visitors, alerts, incidents, zones, rankings] = await Promise.all([
+    statsRes.json(), childrenRes.json(), visitorsRes.json(), alertsRes.json(), incidentsRes.json(), zonesRes.json(), rankingsRes.json()
   ]);
 
+  const thisRank = rankings.find(r => r.id === oid);
   const activeVisitors = visitors.filter(v => v.status === 'checked_in');
   const unresolvedAlerts = alerts.filter(a => !a.acknowledged);
   const openIncs = incidents.filter(i => !i.reviewed);
 
+  const gradeColor = thisRank ? (thisRank.grade === 'A' ? 'var(--success)' : thisRank.grade === 'B' ? 'var(--accent)' : thisRank.grade === 'C' ? 'var(--warning)' : 'var(--danger)') : 'var(--text-secondary)';
+  const scoreBarColor = thisRank ? (thisRank.score >= 80 ? 'var(--success)' : thisRank.score >= 60 ? 'var(--warning)' : 'var(--danger)') : 'var(--text-secondary)';
+
   document.getElementById('dtab-overview').innerHTML = `
+    ${thisRank ? `
+    <div class="safety-scorecard">
+      <div class="ssc-main">
+        <div class="ssc-grade" style="color:${gradeColor};border-color:${gradeColor}">${thisRank.grade}</div>
+        <div class="ssc-info">
+          <div class="ssc-title">Safety Score</div>
+          <div class="ssc-score" style="color:${gradeColor}">${thisRank.score}<span>/100</span></div>
+          <div class="ssc-bar"><div class="ssc-bar-fill" style="width:${thisRank.score}%;background:${scoreBarColor}"></div></div>
+        </div>
+        <div class="ssc-rank">
+          <div class="ssc-rank-label">Provincial Rank</div>
+          <div class="ssc-rank-val">#${thisRank.rank}<span> of ${rankings.length}</span></div>
+        </div>
+      </div>
+      <div class="ssc-metrics">
+        <div class="ssc-metric"><div class="ssc-m-val">${thisRank.responseRate}%</div><div class="ssc-m-label">Response Rate</div></div>
+        <div class="ssc-metric"><div class="ssc-m-val">${thisRank.staffRatio}%</div><div class="ssc-m-label">Staff Ratio</div></div>
+        <div class="ssc-metric"><div class="ssc-m-val">${thisRank.cameraCoverage}%</div><div class="ssc-m-label">Camera Coverage</div></div>
+        <div class="ssc-metric"><div class="ssc-m-val" style="color:${thisRank.criticalIncidents > 0 ? 'var(--danger)' : 'var(--success)'}">${thisRank.criticalIncidents}</div><div class="ssc-m-label">Critical Open</div></div>
+        <div class="ssc-metric"><div class="ssc-m-val">${thisRank.totalIncidents}</div><div class="ssc-m-label">Total Incidents</div></div>
+        <div class="ssc-metric"><div class="ssc-m-val" style="color:var(--success)">${thisRank.reviewedIncidents}</div><div class="ssc-m-label">Reviewed</div></div>
+      </div>
+    </div>` : ''}
+
     <div class="stats-grid" style="grid-template-columns:repeat(4,1fr)">
       <div class="stat-card green"><div class="label">Children</div><div class="value">${stats.totalChildren}</div><div class="sub">Registered</div></div>
       <div class="stat-card yellow"><div class="label">Visitors</div><div class="value">${stats.activeVisitors}</div><div class="sub">Currently here</div></div>
@@ -620,6 +664,92 @@ async function viewIncident(id) {
     btn.disabled = i.reviewed;
     openModal('incident-modal');
   } catch (e) { console.error(e); }
+}
+
+// Rankings
+async function loadRankings() {
+  try {
+    const res = await fetch('/api/rankings');
+    const rankings = await res.json();
+    const avgScore = rankings.length > 0 ? Math.round(rankings.reduce((s, r) => s + r.score, 0) / rankings.length) : 0;
+    const topPerformers = rankings.filter(r => r.grade === 'A' || r.grade === 'B').length;
+    const needsAttention = rankings.filter(r => r.grade === 'D' || r.grade === 'F').length;
+
+    document.getElementById('ranking-summary').innerHTML = `
+      <div class="stats-grid" style="grid-template-columns:repeat(4,1fr)">
+        <div class="stat-card green"><div class="label">Avg Safety Score</div><div class="value">${avgScore}</div><div class="sub">Out of 100</div></div>
+        <div class="stat-card blue"><div class="label">Top Performers</div><div class="value">${topPerformers}</div><div class="sub">Grade A/B</div></div>
+        <div class="stat-card red"><div class="label">Needs Attention</div><div class="value">${needsAttention}</div><div class="sub">Grade D/F</div></div>
+        <div class="stat-card purple"><div class="label">Total Monitored</div><div class="value">${rankings.length}</div><div class="sub">Across Punjab</div></div>
+      </div>
+    `;
+
+    document.getElementById('ranking-list').innerHTML = rankings.map(r => {
+      const gradeColor = r.grade === 'A' ? 'var(--success)' : r.grade === 'B' ? 'var(--accent)' : r.grade === 'C' ? 'var(--warning)' : 'var(--danger)';
+      const scoreBarColor = r.score >= 80 ? 'var(--success)' : r.score >= 60 ? 'var(--warning)' : 'var(--danger)';
+      const medalIcon = r.rank === 1 ? '&#129351;' : r.rank === 2 ? '&#129352;' : r.rank === 3 ? '&#129353;' : '';
+      return `
+      <div class="rank-card ${r.rank <= 3 ? 'top-rank' : ''}" onclick="openOrphanageDetail(${r.id})">
+        <div class="rank-position">
+          <div class="rank-number">#${r.rank}</div>
+          ${medalIcon ? `<div class="rank-medal">${medalIcon}</div>` : ''}
+        </div>
+        <div class="rank-info">
+          <div class="rank-name">
+            <span class="status-dot ${r.status}"></span>
+            ${r.name}
+          </div>
+          <div class="rank-city">${r.city}, ${r.district}</div>
+        </div>
+        <div class="rank-metrics">
+          <div class="rank-metric">
+            <div class="rm-label">Children</div>
+            <div class="rm-val">${r.total_children}</div>
+          </div>
+          <div class="rank-metric">
+            <div class="rm-label">Staff Ratio</div>
+            <div class="rm-val">${r.staffRatio}%</div>
+          </div>
+          <div class="rank-metric">
+            <div class="rm-label">Camera</div>
+            <div class="rm-val">${r.cameraCoverage}%</div>
+          </div>
+          <div class="rank-metric">
+            <div class="rm-label">Response</div>
+            <div class="rm-val">${r.responseRate}%</div>
+          </div>
+          <div class="rank-metric">
+            <div class="rm-label">Open</div>
+            <div class="rm-val" style="color:${r.openIncidents > 0 ? 'var(--danger)' : 'var(--success)'}">${r.openIncidents}</div>
+          </div>
+        </div>
+        <div class="rank-score-area">
+          <div class="rank-grade" style="color:${gradeColor};border-color:${gradeColor}">${r.grade}</div>
+          <div class="rank-score-bar">
+            <div class="rank-score-fill" style="width:${r.score}%;background:${scoreBarColor}"></div>
+          </div>
+          <div class="rank-score-val" style="color:${gradeColor}">${r.score}/100</div>
+        </div>
+      </div>`;
+    }).join('');
+  } catch (e) { console.error(e); }
+}
+
+// Add Orphanage
+async function addOrphanage(e) {
+  e.preventDefault();
+  const form = e.target;
+  const data = Object.fromEntries(new FormData(form));
+  data.total_children = parseInt(data.total_children) || 0;
+  data.staff_count = parseInt(data.staff_count) || 0;
+  data.cameras = parseInt(data.cameras) || 0;
+  data.lat = parseFloat(data.lat) || 31.5;
+  data.lng = parseFloat(data.lng) || 74.3;
+  await fetch('/api/orphanages', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(data) });
+  form.reset();
+  closeModal('orphanage-modal');
+  loadOrphanages();
+  loadStats();
 }
 
 // Map

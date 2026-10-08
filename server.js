@@ -191,6 +191,9 @@ app.put('/api/incidents/:id', (req, res) => {
 // Activity
 app.get('/api/activity', (req, res) => res.json(store.getActivity(req.query.orphanage_id)));
 
+// Rankings
+app.get('/api/rankings', (req, res) => res.json(store.getRankings()));
+
 // Zones
 app.get('/api/zones', (req, res) => res.json(store.getZones(req.query.orphanage_id)));
 

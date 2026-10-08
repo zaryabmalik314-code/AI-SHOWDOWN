@@ -55,6 +55,9 @@
       <span class="nav-icon"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 0 1-3.46 0"/></svg></span> <span class="nav-text">Alerts</span>
       <span class="badge" id="alert-badge" style="display:none">0</span>
     </div>
+    <div class="nav-item" data-page="rankings">
+      <span class="nav-icon"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M8 21h8m-4-4v4M6 12H2v9h4V12zm8-4h4v13h-4V8zM10 2h4v19h-4V2z"/></svg></span> <span class="nav-text">Rankings</span>
+    </div>
     <div class="nav-item" data-page="activity">
       <span class="nav-icon"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></svg></span> <span class="nav-text">Activity Log</span>
     </div>
@@ -138,9 +141,12 @@
 
       <div class="section-header">
         <h3>Connected Orphanages</h3>
-        <div class="search-box">
-          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="var(--text-tertiary)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
-          <input type="text" id="orphanage-search" placeholder="Search orphanages..." oninput="filterOrphanageGrid(this.value)">
+        <div style="display:flex;gap:10px;align-items:center">
+          <div class="search-box">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="var(--text-tertiary)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+            <input type="text" id="orphanage-search" placeholder="Search orphanages..." oninput="filterOrphanageGrid(this.value)">
+          </div>
+          <button class="btn btn-primary btn-sm" onclick="openModal('orphanage-modal')">+ Add Orphanage</button>
         </div>
       </div>
       <div class="orphanage-grid" id="orphanage-grid"></div>
@@ -251,6 +257,19 @@
       <div class="alerts-list" id="alerts-list"></div>
     </section>
 
+    <!-- Rankings -->
+    <section class="page-section" id="page-rankings">
+      <div class="page-header">
+        <h2>Safety Rankings</h2>
+        <div class="header-time">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="var(--accent)" stroke-width="2"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
+          <span>AI Safety Score</span>
+        </div>
+      </div>
+      <div class="ranking-summary" id="ranking-summary"></div>
+      <div class="ranking-list" id="ranking-list"></div>
+    </section>
+
     <!-- Activity -->
     <section class="page-section" id="page-activity">
       <div class="page-header"><h2>Activity Log</h2></div>
@@ -330,6 +349,33 @@
         <button type="button" class="btn btn-outline" onclick="closeModal('incident-modal')">Close</button>
         <button type="button" class="btn btn-primary" id="btn-review-incident">Mark as Reviewed</button>
       </div>
+    </div>
+  </div>
+
+  <div class="modal-overlay" id="orphanage-modal">
+    <div class="modal">
+      <h3>Register New Orphanage</h3>
+      <form id="orphanage-form" onsubmit="addOrphanage(event)">
+        <div class="form-group"><label>Name</label><input type="text" name="name" placeholder="e.g. Hope Foundation Home" required></div>
+        <div class="form-row">
+          <div class="form-group"><label>City</label><input type="text" name="city" required></div>
+          <div class="form-group"><label>District</label><input type="text" name="district" required></div>
+        </div>
+        <div class="form-group"><label>Address</label><input type="text" name="address" required></div>
+        <div class="form-row">
+          <div class="form-group"><label>Total Children</label><input type="number" name="total_children" min="0" required></div>
+          <div class="form-group"><label>Staff Count</label><input type="number" name="staff_count" min="0" required></div>
+        </div>
+        <div class="form-row">
+          <div class="form-group"><label>Cameras</label><input type="number" name="cameras" min="0" required></div>
+          <div class="form-group"><label>Latitude</label><input type="text" name="lat" placeholder="31.5204"></div>
+        </div>
+        <div class="form-group"><label>Longitude</label><input type="text" name="lng" placeholder="74.3587"></div>
+        <div class="modal-actions">
+          <button type="button" class="btn btn-outline" onclick="closeModal('orphanage-modal')">Cancel</button>
+          <button type="submit" class="btn btn-primary">Register</button>
+        </div>
+      </form>
     </div>
   </div>
 
