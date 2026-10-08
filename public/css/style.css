@@ -1237,6 +1237,222 @@ body {
 .ssc-m-val { font-size: 20px; font-weight: 900; letter-spacing: -0.5px; }
 .ssc-m-label { font-size: 9px; color: var(--text-tertiary); text-transform: uppercase; letter-spacing: 0.6px; font-weight: 700; margin-top: 4px; }
 
+/* ====== ORPHANAGE PORTAL ====== */
+.portal-login {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 70vh;
+}
+
+.portal-login-card {
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  border-radius: 20px;
+  padding: 48px 40px;
+  max-width: 440px;
+  width: 100%;
+  text-align: center;
+  box-shadow: var(--shadow-lg);
+}
+
+.portal-login-icon {
+  margin-bottom: 24px;
+  animation: shield-glow 4s ease-in-out infinite;
+}
+
+.portal-login-card h2 {
+  font-size: 24px;
+  font-weight: 900;
+  letter-spacing: -0.5px;
+  margin-bottom: 8px;
+}
+
+.portal-login-card p {
+  color: var(--text-secondary);
+  font-size: 13px;
+  line-height: 1.6;
+}
+
+.portal-hero {
+  display: grid;
+  grid-template-columns: 1fr 1fr 2fr;
+  gap: 14px;
+  margin-bottom: 24px;
+}
+
+.portal-hero-score {
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 28px 24px;
+  display: flex;
+  align-items: center;
+  gap: 18px;
+}
+
+.portal-grade {
+  width: 72px; height: 72px; border-radius: 50%;
+  border: 3px solid; display: flex; align-items: center; justify-content: center;
+  font-size: 34px; font-weight: 900; flex-shrink: 0;
+}
+
+.portal-score-info { flex: 1; }
+.portal-score-label { font-size: 10px; color: var(--text-tertiary); text-transform: uppercase; letter-spacing: 1px; font-weight: 700; }
+.portal-score-num { font-size: 40px; font-weight: 900; letter-spacing: -2px; margin-top: 2px; }
+.portal-score-num span { font-size: 18px; color: var(--text-tertiary); font-weight: 600; }
+
+.portal-hero-rank {
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 28px 24px;
+  text-align: center;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+}
+
+.portal-rank-num { font-size: 48px; font-weight: 900; color: var(--accent); letter-spacing: -2px; }
+.portal-rank-label { font-size: 12px; color: var(--text-tertiary); font-weight: 600; margin-top: 2px; }
+.portal-rank-badge {
+  margin-top: 10px; padding: 4px 14px; border-radius: 20px; font-size: 10px; font-weight: 700;
+  text-transform: uppercase; letter-spacing: 0.5px;
+  background: var(--success-glow); color: var(--success);
+}
+.portal-rank-badge.avg { background: var(--accent-glow); color: var(--accent); }
+.portal-rank-badge.low { background: var(--danger-glow); color: var(--danger); }
+
+.portal-hero-compare {
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 20px 24px;
+}
+
+.portal-compare-title {
+  font-size: 11px; color: var(--text-tertiary); text-transform: uppercase; letter-spacing: 1px;
+  font-weight: 700; margin-bottom: 14px;
+}
+
+.portal-compare-row {
+  display: flex; align-items: center; gap: 10px; margin-bottom: 10px; font-size: 11px; color: var(--text-secondary); font-weight: 600;
+}
+.portal-compare-row > span:first-child { min-width: 55px; text-align: right; }
+.portal-compare-bar { flex: 1; height: 10px; border-radius: 5px; background: rgba(255,255,255,0.04); position: relative; overflow: hidden; }
+.portal-compare-fill { position: absolute; top: 0; left: 0; height: 100%; border-radius: 5px; }
+.portal-compare-fill.you { background: var(--accent); opacity: 0.8; z-index: 2; height: 5px; top: 0; }
+.portal-compare-fill.avg { background: var(--text-tertiary); opacity: 0.3; z-index: 1; height: 5px; top: 5px; }
+.portal-compare-vals { min-width: 80px; font-size: 11px; }
+
+.portal-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 14px;
+}
+
+.portal-section {
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  overflow: hidden;
+}
+
+.portal-section-header {
+  padding: 14px 18px;
+  border-bottom: 1px solid var(--border);
+  font-weight: 700;
+  font-size: 13px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  background: var(--bg-secondary);
+}
+
+.portal-section-body {
+  max-height: 400px;
+  overflow-y: auto;
+}
+
+.portal-check-count {
+  background: rgba(255,255,255,0.06);
+  padding: 3px 10px;
+  border-radius: 6px;
+  font-size: 11px;
+  font-weight: 700;
+}
+
+.portal-check-item {
+  display: flex;
+  align-items: flex-start;
+  gap: 12px;
+  padding: 14px 18px;
+  border-bottom: 1px solid var(--border);
+  transition: var(--transition);
+}
+.portal-check-item:last-child { border-bottom: none; }
+.portal-check-item:hover { background: rgba(255,255,255,0.02); }
+.portal-check-item.pass { border-left: 3px solid var(--success); }
+.portal-check-item.fail { border-left: 3px solid var(--danger); }
+
+.portal-check-icon { font-size: 16px; flex-shrink: 0; margin-top: 1px; }
+.portal-check-label { font-size: 13px; font-weight: 600; }
+.portal-check-tip { font-size: 11px; color: var(--text-tertiary); margin-top: 3px; font-weight: 500; }
+
+.portal-improve-item {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  padding: 14px 18px;
+  border-bottom: 1px solid var(--border);
+  transition: var(--transition);
+}
+.portal-improve-item:last-child { border-bottom: none; }
+.portal-improve-item:hover { background: rgba(255,255,255,0.02); }
+
+.portal-improve-icon {
+  width: 40px; height: 40px; border-radius: var(--radius-sm);
+  background: var(--accent-glow); display: flex; align-items: center; justify-content: center;
+  font-size: 18px; flex-shrink: 0;
+}
+.portal-improve-title { font-size: 13px; font-weight: 700; }
+.portal-improve-desc { font-size: 11px; color: var(--text-tertiary); margin-top: 2px; font-weight: 500; }
+.portal-improve-info { flex: 1; }
+.portal-improve-impact {
+  background: var(--accent-glow); color: var(--accent); padding: 4px 10px;
+  border-radius: 6px; font-size: 10px; font-weight: 800; white-space: nowrap;
+}
+
+.portal-actions-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 10px;
+}
+
+.portal-action-btn {
+  display: flex; flex-direction: column; align-items: center; gap: 10px;
+  padding: 20px 16px; border-radius: var(--radius); border: 1px solid var(--border);
+  background: var(--bg-secondary); color: var(--text-primary); cursor: pointer;
+  font-size: 12px; font-weight: 600; font-family: inherit; transition: var(--transition);
+}
+.portal-action-btn:hover { border-color: var(--accent); background: var(--accent-glow); transform: translateY(-2px); }
+.portal-action-icon {
+  width: 44px; height: 44px; border-radius: 50%;
+  display: flex; align-items: center; justify-content: center; font-size: 20px;
+}
+
+.portal-zone-row {
+  display: flex; align-items: center; gap: 12px; padding: 12px 18px;
+  border-bottom: 1px solid var(--border); font-size: 13px; font-weight: 600;
+}
+.portal-zone-row:last-child { border-bottom: none; }
+.portal-zone-name { min-width: 100px; }
+.portal-zone-bar { flex: 1; height: 6px; border-radius: 3px; background: rgba(255,255,255,0.06); overflow: hidden; }
+.portal-zone-fill { height: 100%; border-radius: 3px; transition: width 0.5s ease; }
+.portal-zone-count { font-size: 14px; font-weight: 800; color: var(--accent); min-width: 50px; text-align: right; }
+.portal-zone-count span { font-size: 11px; color: var(--text-tertiary); font-weight: 600; }
+
 /* ====== RESPONSIVE ====== */
 @media (max-width: 1200px) {
   .stats-grid-5 { grid-template-columns: repeat(3, 1fr); }
@@ -1250,6 +1466,9 @@ body {
   .detail-info-bar { grid-template-columns: repeat(2, 1fr); }
   .rank-metrics { gap: 10px; }
   .ssc-metrics { grid-template-columns: repeat(3, 1fr); }
+  .portal-hero { grid-template-columns: 1fr 1fr; }
+  .portal-hero-compare { grid-column: 1 / -1; }
+  .portal-grid { grid-template-columns: 1fr; }
 }
 @media (max-width: 768px) {
   .sidebar { width: 64px; }
@@ -1268,4 +1487,6 @@ body {
   .rank-metrics { width: 100%; justify-content: space-around; }
   .ssc-main { flex-wrap: wrap; }
   .ssc-metrics { grid-template-columns: repeat(2, 1fr); }
+  .portal-hero { grid-template-columns: 1fr; }
+  .portal-actions-grid { grid-template-columns: 1fr 1fr; }
 }

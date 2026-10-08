@@ -42,6 +42,7 @@ document.querySelectorAll('.nav-item').forEach(item => {
     if (page === 'alerts') loadAlerts();
     if (page === 'incidents') loadIncidents();
     if (page === 'rankings') loadRankings();
+    if (page === 'portal') loadPortal();
     if (page === 'activity') loadActivity();
   });
 });
@@ -915,6 +916,306 @@ async function loadActivity() {
       return `<div class="activity-item"><div class="activity-icon" style="background:${cfg.bg}">${cfg.icon}</div><div>${a.description}</div><div class="activity-time">${new Date(a.created_at).toLocaleTimeString('en-PK')}</div></div>`;
     }).join('') || '<p style="color:var(--text-secondary);padding:20px">No activity yet.</p>';
   } catch (e) { console.error(e); }
+}
+
+// === ORPHANAGE PORTAL ===
+let portalOrphanageId = null;
+
+function loadPortal() {
+  const container = document.getElementById('portal-content');
+  if (!portalOrphanageId) {
+    container.innerHTML = `
+      <div class="portal-login">
+        <div class="portal-login-card">
+          <div class="portal-login-icon">
+            <svg width="64" height="64" viewBox="0 0 24 24" fill="none" stroke="var(--accent)" stroke-width="1.5"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>
+          </div>
+          <h2>Orphanage Portal</h2>
+          <p>Select your orphanage to access your dedicated management dashboard</p>
+          <div class="form-group" style="margin-top:24px">
+            <label>Select Orphanage</label>
+            <select id="portal-select" style="width:100%;padding:14px 18px;border-radius:var(--radius);border:1px solid var(--border);background:var(--bg-primary);color:var(--text-primary);font-size:15px;font-family:inherit;cursor:pointer;outline:none">
+              <option value="">-- Choose your orphanage --</option>
+              ${orphanages.map(o => `<option value="${o.id}">${o.name} - ${o.city}</option>`).join('')}
+            </select>
+          </div>
+          <button class="btn btn-primary" style="width:100%;padding:14px;font-size:15px;margin-top:8px" onclick="enterPortal()">Enter Portal</button>
+        </div>
+      </div>
+    `;
+    return;
+  }
+  loadPortalDashboard();
+}
+
+function enterPortal() {
+  const sel = document.getElementById('portal-select');
+  if (!sel || !sel.value) return;
+  portalOrphanageId = parseInt(sel.value);
+  loadPortalDashboard();
+}
+
+function exitPortal() {
+  portalOrphanageId = null;
+  loadPortal();
+}
+
+async function loadPortalDashboard() {
+  const oid = portalOrphanageId;
+  const o = orphanages.find(x => x.id === oid);
+  if (!o) { exitPortal(); return; }
+
+  const [statsRes, childrenRes, visitorsRes, alertsRes, incidentsRes, zonesRes, rankingsRes] = await Promise.all([
+    fetch('/api/stats?orphanage_id=' + oid),
+    fetch('/api/children?orphanage_id=' + oid),
+    fetch('/api/visitors?orphanage_id=' + oid),
+    fetch('/api/alerts?orphanage_id=' + oid),
+    fetch('/api/incidents?orphanage_id=' + oid),
+    fetch('/api/zones?orphanage_id=' + oid),
+    fetch('/api/rankings'),
+  ]);
+  const [stats, children, visitors, alerts, incidents, zones, rankings] = await Promise.all([
+    statsRes.json(), childrenRes.json(), visitorsRes.json(), alertsRes.json(), incidentsRes.json(), zonesRes.json(), rankingsRes.json()
+  ]);
+
+  const thisRank = rankings.find(r => r.id === oid);
+  const avgScore = rankings.length > 0 ? Math.round(rankings.reduce((s, r) => s + r.score, 0) / rankings.length) : 0;
+  const avgResponse = rankings.length > 0 ? Math.round(rankings.reduce((s, r) => s + r.responseRate, 0) / rankings.length) : 0;
+  const avgStaff = rankings.length > 0 ? Math.round(rankings.reduce((s, r) => s + r.staffRatio, 0) / rankings.length) : 0;
+  const avgCamera = rankings.length > 0 ? Math.round(rankings.reduce((s, r) => s + r.cameraCoverage, 0) / rankings.length) : 0;
+  const activeVisitors = visitors.filter(v => v.status === 'checked_in');
+  const unresolvedAlerts = alerts.filter(a => !a.acknowledged);
+  const openIncs = incidents.filter(i => !i.reviewed);
+  const gradeColor = thisRank ? (thisRank.grade === 'A' ? 'var(--success)' : thisRank.grade === 'B' ? 'var(--accent)' : thisRank.grade === 'C' ? 'var(--warning)' : 'var(--danger)') : 'var(--text-secondary)';
+
+  const compliance = [];
+  if (thisRank) {
+    compliance.push({ label: 'Camera Coverage', ok: thisRank.cameraCoverage >= 80, val: thisRank.cameraCoverage + '%', tip: thisRank.cameraCoverage < 80 ? `Install ${Math.max(1, Math.ceil(o.total_children / 8) - o.cameras)} more cameras to reach 80% coverage` : 'Excellent coverage' });
+    compliance.push({ label: 'Staff-to-Child Ratio', ok: thisRank.staffRatio >= 30, val: thisRank.staffRatio + '%', tip: thisRank.staffRatio < 30 ? `Hire ${Math.max(1, Math.ceil(o.total_children * 0.3) - o.staff_count)} more staff to meet 1:3 ratio` : 'Meets standard' });
+    compliance.push({ label: 'Incident Response Rate', ok: thisRank.responseRate >= 90, val: thisRank.responseRate + '%', tip: thisRank.responseRate < 90 ? 'Review and resolve open incidents promptly' : 'Great response time' });
+    compliance.push({ label: 'System Status', ok: o.status === 'online', val: o.status.toUpperCase(), tip: o.status !== 'online' ? 'Bring cameras and sensors back online immediately' : 'All systems operational' });
+    compliance.push({ label: 'Risk Level', ok: o.risk_level === 'low', val: o.risk_level.toUpperCase(), tip: o.risk_level !== 'low' ? 'Address critical incidents to lower risk level' : 'No active threats' });
+    compliance.push({ label: 'Critical Incidents', ok: thisRank.criticalIncidents === 0, val: thisRank.criticalIncidents, tip: thisRank.criticalIncidents > 0 ? 'Review and resolve all critical incidents urgently' : 'No critical issues' });
+  }
+  const passedChecks = compliance.filter(c => c.ok).length;
+
+  const improvements = [];
+  if (thisRank) {
+    if (thisRank.score < 90 && thisRank.cameraCoverage < 80) improvements.push({ icon: '&#128247;', title: 'Increase Camera Coverage', desc: `Current: ${thisRank.cameraCoverage}%. Add cameras to blind spots. Target: 80%+`, impact: '+5 points' });
+    if (thisRank.score < 90 && thisRank.staffRatio < 30) improvements.push({ icon: '&#128101;', title: 'Improve Staff Ratio', desc: `Current: ${thisRank.staffRatio}%. Hire additional caregivers. Target: 30%+`, impact: '+5 points' });
+    if (thisRank.score < 90 && thisRank.responseRate < 90) improvements.push({ icon: '&#9201;', title: 'Faster Incident Response', desc: `Current: ${thisRank.responseRate}%. Review incidents within 1 hour. Target: 90%+`, impact: '+5 points' });
+    if (thisRank.criticalIncidents > 0) improvements.push({ icon: '&#128680;', title: 'Resolve Critical Incidents', desc: `${thisRank.criticalIncidents} critical incidents need immediate review`, impact: `+${thisRank.criticalIncidents * 8} points` });
+    if (thisRank.openIncidents > 0) improvements.push({ icon: '&#9888;', title: 'Clear Open Incidents', desc: `${thisRank.openIncidents} incidents pending review`, impact: `+${thisRank.openIncidents * 4} points` });
+    if (o.risk_level === 'high') improvements.push({ icon: '&#128308;', title: 'Lower Risk Level', desc: 'Resolving incidents will automatically reduce risk', impact: '+15 points' });
+    if (o.status === 'offline') improvements.push({ icon: '&#128268;', title: 'Come Online', desc: 'Bring your surveillance system back online', impact: '+10 points' });
+    if (improvements.length === 0) improvements.push({ icon: '&#11088;', title: 'Keep It Up!', desc: 'Your orphanage is performing excellently. Maintain current standards.', impact: 'Top tier' });
+  }
+
+  const container = document.getElementById('portal-content');
+  container.innerHTML = `
+    <div class="page-header">
+      <div style="display:flex;align-items:center;gap:12px">
+        <button class="btn btn-outline btn-sm" onclick="exitPortal()">&#8592; Switch</button>
+        <h2>${o.name}</h2>
+        <span class="risk-badge ${o.risk_level}" style="margin-left:4px">${o.risk_level} risk</span>
+      </div>
+      <div class="header-time">
+        <div class="live-dot" style="background:${o.status === 'online' ? 'var(--success)' : 'var(--danger)'}"></div>
+        <span>${o.status.toUpperCase()} &middot; ${o.city}, ${o.district}</span>
+      </div>
+    </div>
+
+    ${thisRank ? `
+    <div class="portal-hero">
+      <div class="portal-hero-score">
+        <div class="portal-grade" style="color:${gradeColor};border-color:${gradeColor}">${thisRank.grade}</div>
+        <div class="portal-score-info">
+          <div class="portal-score-label">Your Safety Score</div>
+          <div class="portal-score-num" style="color:${gradeColor}">${thisRank.score}<span>/100</span></div>
+        </div>
+      </div>
+      <div class="portal-hero-rank">
+        <div class="portal-rank-num">#${thisRank.rank}</div>
+        <div class="portal-rank-label">of ${rankings.length} in Punjab</div>
+        ${thisRank.rank <= 3 ? '<div class="portal-rank-badge">Top Performer</div>' : thisRank.rank <= Math.ceil(rankings.length / 2) ? '<div class="portal-rank-badge avg">Above Average</div>' : '<div class="portal-rank-badge low">Needs Improvement</div>'}
+      </div>
+      <div class="portal-hero-compare">
+        <div class="portal-compare-title">vs Provincial Average</div>
+        <div class="portal-compare-row">
+          <span>Score</span>
+          <div class="portal-compare-bar"><div class="portal-compare-fill you" style="width:${thisRank.score}%"></div><div class="portal-compare-fill avg" style="width:${avgScore}%"></div></div>
+          <span class="portal-compare-vals"><strong style="color:var(--accent)">${thisRank.score}</strong> / ${avgScore}</span>
+        </div>
+        <div class="portal-compare-row">
+          <span>Response</span>
+          <div class="portal-compare-bar"><div class="portal-compare-fill you" style="width:${thisRank.responseRate}%"></div><div class="portal-compare-fill avg" style="width:${avgResponse}%"></div></div>
+          <span class="portal-compare-vals"><strong style="color:var(--accent)">${thisRank.responseRate}%</strong> / ${avgResponse}%</span>
+        </div>
+        <div class="portal-compare-row">
+          <span>Staff</span>
+          <div class="portal-compare-bar"><div class="portal-compare-fill you" style="width:${Math.min(thisRank.staffRatio, 100)}%"></div><div class="portal-compare-fill avg" style="width:${Math.min(avgStaff, 100)}%"></div></div>
+          <span class="portal-compare-vals"><strong style="color:var(--accent)">${thisRank.staffRatio}%</strong> / ${avgStaff}%</span>
+        </div>
+        <div class="portal-compare-row">
+          <span>Camera</span>
+          <div class="portal-compare-bar"><div class="portal-compare-fill you" style="width:${thisRank.cameraCoverage}%"></div><div class="portal-compare-fill avg" style="width:${avgCamera}%"></div></div>
+          <span class="portal-compare-vals"><strong style="color:var(--accent)">${thisRank.cameraCoverage}%</strong> / ${avgCamera}%</span>
+        </div>
+        <div style="margin-top:8px;font-size:10px;color:var(--text-tertiary)">
+          <span style="display:inline-block;width:8px;height:8px;border-radius:2px;background:var(--accent);margin-right:4px;vertical-align:middle"></span>You
+          <span style="display:inline-block;width:8px;height:8px;border-radius:2px;background:var(--text-tertiary);margin:0 4px 0 12px;vertical-align:middle"></span>Avg
+        </div>
+      </div>
+    </div>` : ''}
+
+    <div class="stats-grid" style="grid-template-columns:repeat(5,minmax(0,1fr))">
+      <div class="stat-card green"><div class="label">Children</div><div class="value">${stats.totalChildren}</div><div class="sub">Registered</div></div>
+      <div class="stat-card yellow"><div class="label">Visitors</div><div class="value">${activeVisitors.length}</div><div class="sub">On premises</div></div>
+      <div class="stat-card red"><div class="label">Alerts</div><div class="value">${unresolvedAlerts.length}</div><div class="sub">Unresolved</div></div>
+      <div class="stat-card purple"><div class="label">AI Incidents</div><div class="value">${openIncs.length}</div><div class="sub">Open</div></div>
+      <div class="stat-card blue"><div class="label">Zones</div><div class="value">${zones.length}</div><div class="sub">Monitored</div></div>
+    </div>
+
+    <div class="portal-grid">
+      <div class="portal-section">
+        <div class="portal-section-header">
+          <span>&#9989; Compliance Checklist</span>
+          <span class="portal-check-count">${passedChecks}/${compliance.length} passed</span>
+        </div>
+        <div class="portal-section-body">
+          ${compliance.map(c => `
+            <div class="portal-check-item ${c.ok ? 'pass' : 'fail'}">
+              <div class="portal-check-icon">${c.ok ? '&#9989;' : '&#10060;'}</div>
+              <div class="portal-check-info">
+                <div class="portal-check-label">${c.label}: <strong>${c.val}</strong></div>
+                <div class="portal-check-tip">${c.tip}</div>
+              </div>
+            </div>
+          `).join('')}
+        </div>
+      </div>
+
+      <div class="portal-section">
+        <div class="portal-section-header">
+          <span>&#128200; Improvement Plan</span>
+          <span class="portal-check-count" style="background:var(--accent-glow);color:var(--accent)">${improvements.length} items</span>
+        </div>
+        <div class="portal-section-body">
+          ${improvements.map(imp => `
+            <div class="portal-improve-item">
+              <div class="portal-improve-icon">${imp.icon}</div>
+              <div class="portal-improve-info">
+                <div class="portal-improve-title">${imp.title}</div>
+                <div class="portal-improve-desc">${imp.desc}</div>
+              </div>
+              <div class="portal-improve-impact">${imp.impact}</div>
+            </div>
+          `).join('')}
+        </div>
+      </div>
+
+      <div class="portal-section">
+        <div class="portal-section-header">
+          <span>&#9889; Quick Actions</span>
+        </div>
+        <div class="portal-section-body" style="padding:16px">
+          <div class="portal-actions-grid">
+            <button class="portal-action-btn" onclick="portalAddChild()">
+              <span class="portal-action-icon" style="background:rgba(16,185,129,0.1);color:var(--success)">&#128118;</span>
+              <span>Add Child</span>
+            </button>
+            <button class="portal-action-btn" onclick="portalCheckInVisitor()">
+              <span class="portal-action-icon" style="background:rgba(139,92,246,0.1);color:var(--purple)">&#128100;</span>
+              <span>Check In Visitor</span>
+            </button>
+            <button class="portal-action-btn" onclick="portalViewAlerts()">
+              <span class="portal-action-icon" style="background:rgba(239,68,68,0.1);color:var(--danger)">&#128276;</span>
+              <span>View Alerts</span>
+            </button>
+            <button class="portal-action-btn" onclick="portalViewIncidents()">
+              <span class="portal-action-icon" style="background:rgba(251,191,36,0.1);color:var(--warning)">&#9888;</span>
+              <span>AI Incidents</span>
+            </button>
+          </div>
+        </div>
+      </div>
+
+      <div class="portal-section">
+        <div class="portal-section-header">
+          <span>&#128205; Live Zones</span>
+          <span class="portal-check-count">${zones.length} active</span>
+        </div>
+        <div class="portal-section-body">
+          ${zones.length === 0 ? '<div class="detail-empty">No zones configured</div>' :
+            zones.map(z => {
+              const pct = z.expected_count > 0 ? Math.min(100, (z.current_count / z.expected_count) * 100) : 0;
+              const barColor = pct > 100 ? 'var(--danger)' : pct > 80 ? 'var(--warning)' : 'var(--success)';
+              return `<div class="portal-zone-row">
+                <div class="portal-zone-name">${z.name}</div>
+                <div class="portal-zone-bar"><div class="portal-zone-fill" style="width:${Math.min(pct, 100)}%;background:${barColor}"></div></div>
+                <div class="portal-zone-count">${z.current_count}<span>/${z.expected_count}</span></div>
+              </div>`;
+            }).join('')}
+        </div>
+      </div>
+    </div>
+
+    ${unresolvedAlerts.length > 0 ? `
+    <div class="portal-section" style="margin-top:14px">
+      <div class="portal-section-header" style="color:var(--danger)">
+        <span>&#128680; Pending Alerts</span>
+        <span class="portal-check-count" style="background:var(--danger-glow);color:var(--danger)">${unresolvedAlerts.length}</span>
+      </div>
+      <div class="portal-section-body">
+        <div class="alerts-list">${unresolvedAlerts.slice(0, 5).map(renderAlertItem).join('')}</div>
+        ${unresolvedAlerts.length > 5 ? `<div style="text-align:center;padding:12px"><span style="color:var(--text-tertiary);font-size:12px">+${unresolvedAlerts.length - 5} more alerts</span></div>` : ''}
+      </div>
+    </div>` : ''}
+
+    ${openIncs.length > 0 ? `
+    <div class="portal-section" style="margin-top:14px">
+      <div class="portal-section-header" style="color:var(--critical)">
+        <span>&#129302; AI Detections Requiring Review</span>
+        <span class="portal-check-count" style="background:var(--danger-glow);color:var(--critical)">${openIncs.length}</span>
+      </div>
+      <div class="portal-section-body">
+        <div class="alerts-list">${openIncs.slice(0, 5).map(renderIncidentItem).join('')}</div>
+        ${openIncs.length > 5 ? `<div style="text-align:center;padding:12px"><span style="color:var(--text-tertiary);font-size:12px">+${openIncs.length - 5} more incidents</span></div>` : ''}
+      </div>
+    </div>` : ''}
+  `;
+}
+
+function portalAddChild() {
+  const selects = document.querySelectorAll('.orphanage-select');
+  selects.forEach(sel => { sel.value = portalOrphanageId; });
+  openModal('child-modal');
+}
+
+function portalCheckInVisitor() {
+  const selects = document.querySelectorAll('.orphanage-select');
+  selects.forEach(sel => { sel.value = portalOrphanageId; });
+  openModal('visitor-modal');
+}
+
+function portalViewAlerts() {
+  currentFilter = portalOrphanageId.toString();
+  document.getElementById('orphanage-filter').value = currentFilter;
+  document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
+  document.querySelectorAll('.page-section').forEach(p => p.classList.remove('active'));
+  document.querySelector('.nav-item[data-page="alerts"]').classList.add('active');
+  document.getElementById('page-alerts').classList.add('active');
+  loadAlerts();
+}
+
+function portalViewIncidents() {
+  currentFilter = portalOrphanageId.toString();
+  document.getElementById('orphanage-filter').value = currentFilter;
+  document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
+  document.querySelectorAll('.page-section').forEach(p => p.classList.remove('active'));
+  document.querySelector('.nav-item[data-page="incidents"]').classList.add('active');
+  document.getElementById('page-incidents').classList.add('active');
+  loadIncidents();
 }
 
 // Modals
