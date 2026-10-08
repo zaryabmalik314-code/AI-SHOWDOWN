@@ -1,31 +1,28 @@
-// WebSocket connection
-const ws = new WebSocket(`ws://${location.host}`);
+// WebSocket connection with auto-reconnect
 let pendingAlerts = 0;
+let ws;
 
-ws.onmessage = (event) => {
-  const data = JSON.parse(event.data);
+function connectWS() {
+  const proto = location.protocol === 'https:' ? 'wss:' : 'ws:';
+  ws = new WebSocket(`${proto}//${location.host}`);
 
-  switch (data.type) {
-    case 'zone_update':
-      updateZoneCard(data.zone, data.count);
-      break;
-    case 'alert':
-      handleNewAlert(data.alert);
-      break;
-    case 'alert_ack':
-      markAlertAcknowledged(data.alertId);
-      break;
-    case 'visitor_checkin':
-    case 'visitor_checkout':
-      loadVisitors();
-      loadStats();
-      break;
-    case 'child_added':
-      loadChildren();
-      loadStats();
-      break;
-  }
-};
+  ws.onmessage = (event) => {
+    const data = JSON.parse(event.data);
+    switch (data.type) {
+      case 'zone_update': updateZoneCard(data.zone, data.count); break;
+      case 'alert': handleNewAlert(data.alert); break;
+      case 'alert_ack': markAlertAcknowledged(data.alertId); break;
+      case 'visitor_checkin':
+      case 'visitor_checkout': loadVisitors(); loadStats(); break;
+      case 'child_added': loadChildren(); loadStats(); break;
+    }
+  };
+
+  ws.onclose = () => setTimeout(connectWS, 3000);
+  ws.onerror = () => ws.close();
+}
+
+connectWS();
 
 // Navigation
 document.querySelectorAll('.nav-item').forEach(item => {
