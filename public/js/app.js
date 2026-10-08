@@ -84,14 +84,60 @@ async function loadOrphanages() {
     document.querySelectorAll('.orphanage-select').forEach(sel => {
       sel.innerHTML = orphanages.map(o => `<option value="${o.id}">${o.name}</option>`).join('');
     });
+    await loadOrphanageIndicators();
     renderOrphanageGrid();
+    updateStatusBar();
   } catch (e) { console.error(e); }
 }
 
-function renderOrphanageGrid() {
+function updateStatusBar() {
+  const online = orphanages.filter(o => o.status === 'online').length;
+  const totalCameras = orphanages.reduce((s, o) => s + o.cameras, 0);
+  const highRisk = orphanages.filter(o => o.risk_level === 'high').length;
+  const el = document.getElementById('ssb-cameras');
+  if (el) el.textContent = totalCameras + ' active';
+  const onlineEl = document.getElementById('ssb-online-count');
+  if (onlineEl) onlineEl.textContent = online + '/' + orphanages.length + ' sites online';
+  const threatEl = document.getElementById('ssb-threat');
+  if (threatEl) {
+    if (highRisk > 2) { threatEl.textContent = 'Elevated'; threatEl.style.color = 'var(--danger)'; }
+    else if (highRisk > 0) { threatEl.textContent = 'Guarded'; threatEl.style.color = 'var(--warning)'; }
+    else { threatEl.textContent = 'Normal'; threatEl.style.color = 'var(--success)'; }
+  }
+}
+
+let orphanageAlertCounts = {};
+let orphanageIncidentCounts = {};
+
+async function loadOrphanageIndicators() {
+  try {
+    const [alertsRes, incidentsRes] = await Promise.all([
+      fetch('/api/alerts'), fetch('/api/incidents')
+    ]);
+    const [alerts, incidents] = await Promise.all([alertsRes.json(), incidentsRes.json()]);
+    orphanageAlertCounts = {};
+    orphanageIncidentCounts = {};
+    alerts.filter(a => !a.acknowledged).forEach(a => {
+      orphanageAlertCounts[a.orphanage_id] = (orphanageAlertCounts[a.orphanage_id] || 0) + 1;
+    });
+    incidents.filter(i => !i.reviewed).forEach(i => {
+      orphanageIncidentCounts[i.orphanage_id] = (orphanageIncidentCounts[i.orphanage_id] || 0) + 1;
+    });
+  } catch (e) { /* ignore */ }
+}
+
+function renderOrphanageGrid(filter) {
   const grid = document.getElementById('orphanage-grid');
   if (!grid) return;
-  grid.innerHTML = orphanages.map(o => `
+  let list = orphanages;
+  if (filter) {
+    const q = filter.toLowerCase();
+    list = orphanages.filter(o => o.name.toLowerCase().includes(q) || o.city.toLowerCase().includes(q) || o.district.toLowerCase().includes(q));
+  }
+  grid.innerHTML = list.map(o => {
+    const alertCount = orphanageAlertCounts[o.id] || 0;
+    const incidentCount = orphanageIncidentCounts[o.id] || 0;
+    return `
     <div class="orphanage-card" onclick="openOrphanageDetail(${o.id})">
       <div class="oc-header">
         <div>
@@ -100,13 +146,21 @@ function renderOrphanageGrid() {
         </div>
         <span class="risk-badge ${o.risk_level}">${o.risk_level} risk</span>
       </div>
+      ${(alertCount > 0 || incidentCount > 0) ? `<div class="oc-indicators">
+        ${alertCount > 0 ? `<span class="oc-indicator alerts"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/></svg> ${alertCount} alert${alertCount > 1 ? 's' : ''}</span>` : ''}
+        ${incidentCount > 0 ? `<span class="oc-indicator incidents"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 9v4m0 4h.01M3.26 19h17.48a1 1 0 0 0 .87-1.5L13.37 3.5a1 1 0 0 0-1.74 0L3.39 17.5a1 1 0 0 0 .87 1.5z"/></svg> ${incidentCount} incident${incidentCount > 1 ? 's' : ''}</span>` : ''}
+      </div>` : ''}
       <div class="oc-stats">
         <div class="oc-stat"><div class="oc-stat-val">${o.total_children}</div><div class="oc-stat-label">Children</div></div>
         <div class="oc-stat"><div class="oc-stat-val">${o.staff_count}</div><div class="oc-stat-label">Staff</div></div>
         <div class="oc-stat"><div class="oc-stat-val">${o.cameras}</div><div class="oc-stat-label">Cameras</div></div>
       </div>
-    </div>
-  `).join('');
+    </div>`;
+  }).join('');
+}
+
+function filterOrphanageGrid(query) {
+  renderOrphanageGrid(query);
 }
 
 // Orphanage Detail View
@@ -381,7 +435,7 @@ async function loadDetailActivity(oid) {
 
 function updateOrphanageRisk(id, level) {
   const o = orphanages.find(x => x.id === id);
-  if (o) { o.risk_level = level; renderOrphanageGrid(); }
+  if (o) { o.risk_level = level; renderOrphanageGrid(); updateStatusBar(); }
 }
 
 // Stats
@@ -434,6 +488,8 @@ function renderAlertItem(a) {
 }
 
 function handleNewAlert(alert) {
+  orphanageAlertCounts[alert.orphanage_id] = (orphanageAlertCounts[alert.orphanage_id] || 0) + 1;
+  renderOrphanageGrid();
   if (currentFilter && alert.orphanage_id !== parseInt(currentFilter)) return;
   pendingAlerts++;
   updateBadges();
@@ -493,6 +549,9 @@ function renderIncidentItem(i) {
 }
 
 function handleNewIncident(incident) {
+  orphanageIncidentCounts[incident.orphanage_id] = (orphanageIncidentCounts[incident.orphanage_id] || 0) + 1;
+  renderOrphanageGrid();
+  updateStatusBar();
   if (currentFilter && incident.orphanage_id !== parseInt(currentFilter)) return;
   openIncidents++;
   updateBadges();
