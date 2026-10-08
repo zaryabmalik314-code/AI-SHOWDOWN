@@ -35,27 +35,35 @@ function connectWS() {
 connectWS();
 
 // Navigation
+function navigateTo(page) {
+  document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
+  document.querySelectorAll('.page-section').forEach(p => p.classList.remove('active'));
+  const navItem = document.querySelector(`.nav-item[data-page="${page}"]`);
+  if (navItem) navItem.classList.add('active');
+  const pageEl = document.getElementById('page-' + page);
+  if (pageEl) pageEl.classList.add('active');
+  if (page === 'map') initMap();
+  if (page === 'cameras') initCameras();
+  if (page === 'children') loadChildren();
+  if (page === 'visitors') loadVisitors();
+  if (page === 'alerts') loadAlerts();
+  if (page === 'incidents') loadIncidents();
+  if (page === 'rankings') loadRankings();
+  if (page === 'portal') loadPortal();
+  if (page === 'activity') loadActivity();
+  if (page === 'analytics') loadAnalytics();
+  if (page === 'emotions') loadEmotions();
+  if (page === 'anomalies') loadAnomalies();
+  if (page === 'briefing') loadBriefing();
+}
+
+function viewOrphanage(id) {
+  portalOrphanageId = id;
+  navigateTo('portal');
+}
+
 document.querySelectorAll('.nav-item').forEach(item => {
-  item.addEventListener('click', () => {
-    document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
-    document.querySelectorAll('.page-section').forEach(p => p.classList.remove('active'));
-    item.classList.add('active');
-    document.getElementById('page-' + item.dataset.page).classList.add('active');
-    const page = item.dataset.page;
-    if (page === 'map') initMap();
-    if (page === 'cameras') initCameras();
-    if (page === 'children') loadChildren();
-    if (page === 'visitors') loadVisitors();
-    if (page === 'alerts') loadAlerts();
-    if (page === 'incidents') loadIncidents();
-    if (page === 'rankings') loadRankings();
-    if (page === 'portal') loadPortal();
-    if (page === 'activity') loadActivity();
-    if (page === 'analytics') loadAnalytics();
-    if (page === 'emotions') loadEmotions();
-    if (page === 'anomalies') loadAnomalies();
-    if (page === 'briefing') loadBriefing();
-  });
+  item.addEventListener('click', () => navigateTo(item.dataset.page));
 });
 
 // Orphanage filter
@@ -785,11 +793,12 @@ function initMap() {
       className: '', iconSize: [14, 14], iconAnchor: [7, 7]
     });
     L.marker([o.lat, o.lng], { icon }).addTo(map).bindPopup(`
-      <strong>${o.name}</strong><br>
-      ${o.city}, ${o.district}<br>
-      <span style="color:${o.status === 'online' ? '#34d399' : '#ef4444'}">${o.status.toUpperCase()}</span><br>
-      Children: ${o.total_children} | Staff: ${o.staff_count} | Cameras: ${o.cameras}<br>
-      Risk: <span style="color:${color};font-weight:700">${o.risk_level.toUpperCase()}</span>
+      <strong style="font-size:14px">${o.name}</strong><br>
+      <span style="color:#888">${o.city}, ${o.district}</span><br>
+      <span style="color:${o.status === 'online' ? '#34d399' : '#ef4444'}">${o.status.toUpperCase()}</span> &bull;
+      Risk: <span style="color:${color};font-weight:700">${o.risk_level.toUpperCase()}</span><br>
+      <span style="font-size:12px">Children: ${o.total_children} | Staff: ${o.staff_count} | Cameras: ${o.cameras}</span><br>
+      <button onclick="viewOrphanage(${o.id})" style="margin-top:6px;padding:6px 16px;background:#34d399;color:#000;border:none;border-radius:6px;cursor:pointer;font-weight:600;font-size:13px;width:100%">View Details &rarr;</button>
     `);
   });
 
