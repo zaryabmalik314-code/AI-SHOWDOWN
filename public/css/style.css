@@ -12,6 +12,8 @@
   --warning: #fbbf24;
   --danger: #f87171;
   --critical: #ef4444;
+  --purple: #a78bfa;
+  --purple-glow: rgba(167, 139, 250, 0.15);
   --border: #2d3148;
   --radius: 12px;
 }
@@ -574,17 +576,128 @@ body {
   white-space: nowrap;
 }
 
-/* Responsive */
-@media (max-width: 1024px) {
-  .stats-grid { grid-template-columns: repeat(2, 1fr); }
-  .camera-grid { grid-template-columns: 1fr; }
+/* 5-col stats */
+.stats-grid-5 { grid-template-columns: repeat(5, 1fr); }
+
+/* Purple card */
+.stat-card.purple::after { background: var(--purple); }
+.stat-card.purple .value { color: var(--purple); }
+
+/* Orphanage grid */
+.orphanage-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+  gap: 14px;
 }
 
+.orphanage-card {
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 16px;
+  cursor: pointer;
+  transition: all 0.2s;
+  position: relative;
+}
+.orphanage-card:hover { border-color: var(--accent); transform: translateY(-2px); }
+
+.orphanage-card .oc-header {
+  display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 10px;
+}
+.orphanage-card .oc-name { font-weight: 600; font-size: 14px; }
+.orphanage-card .oc-city { font-size: 12px; color: var(--text-secondary); margin-top: 2px; }
+.orphanage-card .oc-stats {
+  display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; margin-top: 10px;
+}
+.orphanage-card .oc-stat { text-align: center; }
+.orphanage-card .oc-stat-val { font-size: 18px; font-weight: 700; color: var(--accent); }
+.orphanage-card .oc-stat-label { font-size: 10px; color: var(--text-secondary); text-transform: uppercase; }
+
+.risk-badge {
+  padding: 3px 8px; border-radius: 10px; font-size: 10px; font-weight: 700; text-transform: uppercase;
+}
+.risk-badge.low { background: rgba(52,211,153,0.15); color: var(--success); }
+.risk-badge.medium { background: rgba(251,191,36,0.15); color: var(--warning); }
+.risk-badge.high { background: rgba(239,68,68,0.15); color: var(--danger); animation: pulse 1.5s infinite; }
+
+.status-dot {
+  width: 8px; height: 8px; border-radius: 50%; display: inline-block;
+}
+.status-dot.online { background: var(--success); }
+.status-dot.offline { background: var(--danger); }
+
+/* Detection stats bar */
+.detection-stats {
+  display: grid; grid-template-columns: repeat(4, 1fr); gap: 12px; margin-bottom: 20px;
+}
+.det-stat {
+  background: var(--bg-card); border: 1px solid var(--border); border-radius: var(--radius);
+  padding: 14px; text-align: center;
+}
+.det-stat .det-val { font-size: 24px; font-weight: 700; }
+.det-stat .det-label { font-size: 11px; color: var(--text-secondary); margin-top: 4px; text-transform: uppercase; }
+
+/* Incident item */
+.incident-item {
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  border-left: 4px solid var(--danger);
+  border-radius: var(--radius);
+  padding: 16px;
+  display: flex; align-items: flex-start; gap: 14px;
+  cursor: pointer; transition: all 0.2s;
+}
+.incident-item:hover { border-color: var(--accent); }
+.incident-item.critical { border-left-color: var(--critical); }
+.incident-item.high { border-left-color: var(--danger); }
+.incident-item.medium { border-left-color: var(--warning); }
+.incident-item.reviewed { opacity: 0.5; }
+
+.incident-icon {
+  width: 44px; height: 44px; border-radius: 10px;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 20px; flex-shrink: 0;
+}
+.incident-icon.critical { background: rgba(239,68,68,0.15); }
+.incident-icon.high { background: rgba(248,113,113,0.15); }
+.incident-icon.medium { background: rgba(251,191,36,0.15); }
+
+.incident-content { flex: 1; }
+.incident-content .inc-label { font-weight: 600; font-size: 14px; }
+.incident-content .inc-desc { font-size: 13px; color: var(--text-secondary); margin-top: 3px; }
+.incident-content .inc-meta { font-size: 11px; color: var(--text-secondary); margin-top: 6px; display: flex; gap: 12px; flex-wrap: wrap; }
+.incident-content .inc-meta span { display: flex; align-items: center; gap: 4px; }
+
+.confidence-bar {
+  width: 60px; height: 6px; border-radius: 3px; background: var(--border); overflow: hidden; display: inline-block; vertical-align: middle;
+}
+.confidence-bar .fill { height: 100%; border-radius: 3px; }
+
+.badge-status.detection-active { background: rgba(52,211,153,0.15); color: var(--success); }
+
+/* Leaflet map dark theme */
+#punjab-map { background: var(--bg-card); }
+.leaflet-tile-pane { filter: invert(1) hue-rotate(180deg) brightness(0.8) contrast(1.2); }
+.leaflet-popup-content-wrapper { background: var(--bg-secondary); color: var(--text-primary); border: 1px solid var(--border); border-radius: 8px; }
+.leaflet-popup-tip { background: var(--bg-secondary); }
+.leaflet-popup-content { margin: 12px; font-size: 13px; }
+
+/* Responsive */
+@media (max-width: 1200px) {
+  .stats-grid-5 { grid-template-columns: repeat(3, 1fr); }
+}
+@media (max-width: 1024px) {
+  .stats-grid { grid-template-columns: repeat(2, 1fr); }
+  .stats-grid-5 { grid-template-columns: repeat(2, 1fr); }
+  .camera-grid { grid-template-columns: 1fr; }
+  .detection-stats { grid-template-columns: repeat(2, 1fr); }
+}
 @media (max-width: 768px) {
   .sidebar { width: 60px; }
   .sidebar .nav-text, .sidebar-brand p { display: none; }
   .sidebar-brand h1 { font-size: 14px; }
   .main { margin-left: 60px; }
-  .stats-grid { grid-template-columns: 1fr 1fr; }
+  .stats-grid, .stats-grid-5 { grid-template-columns: 1fr 1fr; }
   .form-row { grid-template-columns: 1fr; }
+  .orphanage-grid { grid-template-columns: 1fr; }
 }

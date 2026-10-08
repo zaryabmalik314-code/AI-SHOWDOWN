@@ -3,61 +3,75 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>OrphanGuard AI - Surveillance & Care System</title>
+  <title>OrphanGuard AI - Punjab Command Center</title>
   <link rel="stylesheet" href="/css/style.css">
+  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+  <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
 </head>
 <body>
 
-  <!-- Sidebar -->
   <nav class="sidebar">
     <div class="sidebar-brand">
-      <h1>&#128737; OrphanGuard</h1>
-      <p>AI Surveillance & Care</p>
+      <h1>OrphanGuard AI</h1>
+      <p>Punjab Command Center</p>
     </div>
-    <div class="nav-item active" data-page="dashboard">
-      <span>&#128202;</span> <span class="nav-text">Dashboard</span>
+    <div class="nav-item active" data-page="command">
+      <span class="nav-icon">&#9678;</span> <span class="nav-text">Command Center</span>
+    </div>
+    <div class="nav-item" data-page="map">
+      <span class="nav-icon">&#127758;</span> <span class="nav-text">Punjab Map</span>
+    </div>
+    <div class="nav-item" data-page="incidents">
+      <span class="nav-icon">&#9888;</span> <span class="nav-text">AI Detection</span>
+      <span class="badge" id="incident-badge" style="display:none">0</span>
     </div>
     <div class="nav-item" data-page="cameras">
-      <span>&#128247;</span> <span class="nav-text">Live Cameras</span>
+      <span class="nav-icon">&#128247;</span> <span class="nav-text">Live Cameras</span>
     </div>
     <div class="nav-item" data-page="children">
-      <span>&#128118;</span> <span class="nav-text">Children</span>
+      <span class="nav-icon">&#128118;</span> <span class="nav-text">Children</span>
     </div>
     <div class="nav-item" data-page="visitors">
-      <span>&#128100;</span> <span class="nav-text">Visitors</span>
+      <span class="nav-icon">&#128100;</span> <span class="nav-text">Visitors</span>
     </div>
     <div class="nav-item" data-page="alerts">
-      <span>&#128680;</span> <span class="nav-text">Alerts</span>
+      <span class="nav-icon">&#128680;</span> <span class="nav-text">Alerts</span>
       <span class="badge" id="alert-badge" style="display:none">0</span>
     </div>
     <div class="nav-item" data-page="activity">
-      <span>&#128196;</span> <span class="nav-text">Activity Log</span>
+      <span class="nav-icon">&#128196;</span> <span class="nav-text">Activity Log</span>
+    </div>
+
+    <div style="margin-top:auto;padding:16px 20px;border-top:1px solid var(--border)">
+      <label style="font-size:11px;color:var(--text-secondary);text-transform:uppercase;letter-spacing:0.5px">Filter Orphanage</label>
+      <select id="orphanage-filter" style="width:100%;margin-top:6px;padding:8px;border-radius:6px;border:1px solid var(--border);background:var(--bg-primary);color:var(--text-primary);font-size:12px">
+        <option value="">All Orphanages</option>
+      </select>
     </div>
   </nav>
 
-  <!-- Main Content -->
   <div class="main">
 
-    <!-- Dashboard -->
-    <section class="page-section active" id="page-dashboard">
+    <!-- Command Center -->
+    <section class="page-section active" id="page-command">
       <div class="page-header">
-        <h2>Dashboard Overview</h2>
+        <h2>Provincial Command Center</h2>
         <div class="header-time">
           <div class="live-dot"></div>
           <span id="live-time">--</span>
         </div>
       </div>
 
-      <div class="stats-grid">
+      <div class="stats-grid stats-grid-5">
         <div class="stat-card blue">
-          <div class="label">Total Children</div>
-          <div class="value" id="stat-children">--</div>
-          <div class="sub">Active residents</div>
+          <div class="label">Orphanages</div>
+          <div class="value" id="stat-orphanages">--</div>
+          <div class="sub"><span id="stat-online">--</span> online</div>
         </div>
         <div class="stat-card green">
-          <div class="label">Zones Monitored</div>
-          <div class="value" id="stat-zones">7</div>
-          <div class="sub">All cameras online</div>
+          <div class="label">Total Children</div>
+          <div class="value" id="stat-children">--</div>
+          <div class="sub">Across Punjab</div>
         </div>
         <div class="stat-card yellow">
           <div class="label">Active Visitors</div>
@@ -69,27 +83,51 @@
           <div class="value" id="stat-alerts">--</div>
           <div class="sub">Require attention</div>
         </div>
+        <div class="stat-card purple">
+          <div class="label">AI Incidents</div>
+          <div class="value" id="stat-incidents">--</div>
+          <div class="sub">Open detections</div>
+        </div>
       </div>
 
-      <div class="section-header">
-        <h3>Zone Monitoring</h3>
-      </div>
-      <div class="zone-grid" id="zone-grid"></div>
+      <div class="section-header"><h3>Connected Orphanages</h3></div>
+      <div class="orphanage-grid" id="orphanage-grid"></div>
 
-      <div class="section-header">
-        <h3>Recent Alerts</h3>
+      <div style="margin-top:24px" class="section-header"><h3>Recent AI Detections</h3></div>
+      <div class="alerts-list" id="command-incidents"></div>
+    </section>
+
+    <!-- Punjab Map -->
+    <section class="page-section" id="page-map">
+      <div class="page-header">
+        <h2>Punjab Orphanage Map</h2>
+        <div class="header-time">
+          <div class="live-dot"></div>
+          <span>Real-time Status</span>
+        </div>
       </div>
-      <div class="alerts-list" id="dashboard-alerts"></div>
+      <div id="punjab-map" style="height:calc(100vh - 120px);border-radius:12px;border:1px solid var(--border)"></div>
+    </section>
+
+    <!-- AI Violence Detection -->
+    <section class="page-section" id="page-incidents">
+      <div class="page-header">
+        <h2>AI Violence & Harassment Detection</h2>
+        <div style="display:flex;gap:8px">
+          <span class="badge-status detection-active">ViolenceNet v2.1 Active</span>
+          <button class="btn btn-outline" onclick="loadIncidents()">Refresh</button>
+        </div>
+      </div>
+
+      <div class="detection-stats" id="detection-stats"></div>
+      <div class="alerts-list" id="incidents-list"></div>
     </section>
 
     <!-- Live Cameras -->
     <section class="page-section" id="page-cameras">
       <div class="page-header">
         <h2>Live Camera Feeds</h2>
-        <div class="header-time">
-          <div class="live-dot"></div>
-          <span>AI Detection Active</span>
-        </div>
+        <div class="header-time"><div class="live-dot"></div><span>AI Detection Active</span></div>
       </div>
       <div class="camera-grid" id="camera-grid"></div>
     </section>
@@ -101,17 +139,7 @@
         <button class="btn btn-primary" onclick="openModal('child-modal')">+ Add Child</button>
       </div>
       <table class="data-table">
-        <thead>
-          <tr>
-            <th>Name</th>
-            <th>Age</th>
-            <th>Gender</th>
-            <th>Admitted</th>
-            <th>Medical Notes</th>
-            <th>Status</th>
-            <th>Actions</th>
-          </tr>
-        </thead>
+        <thead><tr><th>Name</th><th>Age</th><th>Gender</th><th>Orphanage</th><th>Admitted</th><th>Medical Notes</th><th>Actions</th></tr></thead>
         <tbody id="children-table"></tbody>
       </table>
     </section>
@@ -120,21 +148,10 @@
     <section class="page-section" id="page-visitors">
       <div class="page-header">
         <h2>Visitor Management</h2>
-        <button class="btn btn-primary" onclick="openModal('visitor-modal')">+ Check In Visitor</button>
+        <button class="btn btn-primary" onclick="openModal('visitor-modal')">+ Check In</button>
       </div>
       <table class="data-table">
-        <thead>
-          <tr>
-            <th>Name</th>
-            <th>CNIC</th>
-            <th>Phone</th>
-            <th>Purpose</th>
-            <th>Check In</th>
-            <th>Check Out</th>
-            <th>Status</th>
-            <th>Actions</th>
-          </tr>
-        </thead>
+        <thead><tr><th>Name</th><th>CNIC</th><th>Phone</th><th>Purpose</th><th>Orphanage</th><th>Check In</th><th>Status</th><th>Actions</th></tr></thead>
         <tbody id="visitors-table"></tbody>
       </table>
     </section>
@@ -148,46 +165,28 @@
       <div class="alerts-list" id="alerts-list"></div>
     </section>
 
-    <!-- Activity Log -->
+    <!-- Activity -->
     <section class="page-section" id="page-activity">
-      <div class="page-header">
-        <h2>Activity Log</h2>
-      </div>
+      <div class="page-header"><h2>Activity Log</h2></div>
       <div class="activity-feed" id="activity-feed"></div>
     </section>
-
   </div>
 
-  <!-- Add Child Modal -->
+  <!-- Modals -->
   <div class="modal-overlay" id="child-modal">
     <div class="modal">
       <h3>Add New Child</h3>
       <form id="child-form" onsubmit="addChild(event)">
+        <div class="form-group">
+          <label>Orphanage</label>
+          <select name="orphanage_id" class="orphanage-select" required></select>
+        </div>
         <div class="form-row">
-          <div class="form-group">
-            <label>Name</label>
-            <input type="text" name="name" required>
-          </div>
-          <div class="form-group">
-            <label>Age</label>
-            <input type="number" name="age" min="0" max="18" required>
-          </div>
+          <div class="form-group"><label>Name</label><input type="text" name="name" required></div>
+          <div class="form-group"><label>Age</label><input type="number" name="age" min="0" max="18" required></div>
         </div>
-        <div class="form-group">
-          <label>Gender</label>
-          <select name="gender">
-            <option value="Male">Male</option>
-            <option value="Female">Female</option>
-          </select>
-        </div>
-        <div class="form-group">
-          <label>Medical Notes</label>
-          <textarea name="medical_notes" rows="3"></textarea>
-        </div>
-        <div class="form-group">
-          <label>Photo</label>
-          <input type="file" name="photo" accept="image/*">
-        </div>
+        <div class="form-group"><label>Gender</label><select name="gender"><option value="Male">Male</option><option value="Female">Female</option></select></div>
+        <div class="form-group"><label>Medical Notes</label><textarea name="medical_notes" rows="3"></textarea></div>
         <div class="modal-actions">
           <button type="button" class="btn btn-outline" onclick="closeModal('child-modal')">Cancel</button>
           <button type="submit" class="btn btn-primary">Add Child</button>
@@ -196,37 +195,20 @@
     </div>
   </div>
 
-  <!-- Visitor Modal -->
   <div class="modal-overlay" id="visitor-modal">
     <div class="modal">
       <h3>Check In Visitor</h3>
       <form id="visitor-form" onsubmit="addVisitor(event)">
         <div class="form-group">
-          <label>Full Name</label>
-          <input type="text" name="name" required>
+          <label>Orphanage</label>
+          <select name="orphanage_id" class="orphanage-select" required></select>
         </div>
+        <div class="form-group"><label>Full Name</label><input type="text" name="name" required></div>
         <div class="form-row">
-          <div class="form-group">
-            <label>CNIC</label>
-            <input type="text" name="cnic" placeholder="XXXXX-XXXXXXX-X">
-          </div>
-          <div class="form-group">
-            <label>Phone</label>
-            <input type="text" name="phone" placeholder="03XX-XXXXXXX">
-          </div>
+          <div class="form-group"><label>CNIC</label><input type="text" name="cnic" placeholder="XXXXX-XXXXXXX-X"></div>
+          <div class="form-group"><label>Phone</label><input type="text" name="phone" placeholder="03XX-XXXXXXX"></div>
         </div>
-        <div class="form-group">
-          <label>Purpose of Visit</label>
-          <textarea name="purpose" rows="2" required></textarea>
-        </div>
-        <div class="form-group">
-          <label>Photo (Webcam Capture)</label>
-          <div style="margin-bottom:10px">
-            <video id="visitor-cam" width="100%" autoplay style="border-radius:8px;background:#111;max-height:200px"></video>
-          </div>
-          <button type="button" class="btn btn-outline btn-sm" onclick="captureVisitorPhoto()">Capture Photo</button>
-          <canvas id="visitor-canvas" style="display:none"></canvas>
-        </div>
+        <div class="form-group"><label>Purpose</label><textarea name="purpose" rows="2" required></textarea></div>
         <div class="modal-actions">
           <button type="button" class="btn btn-outline" onclick="closeModal('visitor-modal')">Cancel</button>
           <button type="submit" class="btn btn-primary">Check In</button>
@@ -235,42 +217,33 @@
     </div>
   </div>
 
-  <!-- Health Record Modal -->
   <div class="modal-overlay" id="health-modal">
     <div class="modal">
-      <h3>Add Health Record</h3>
+      <h3>Health Records</h3>
       <form id="health-form" onsubmit="addHealthRecord(event)">
         <input type="hidden" name="child_id" id="health-child-id">
-        <div class="form-group">
-          <label>Record Type</label>
-          <select name="record_type">
-            <option value="Vaccination">Vaccination</option>
-            <option value="Checkup">General Checkup</option>
-            <option value="Dental">Dental</option>
-            <option value="Eye Exam">Eye Exam</option>
-            <option value="Emergency">Emergency</option>
-            <option value="Medication">Medication</option>
-          </select>
-        </div>
-        <div class="form-group">
-          <label>Description</label>
-          <textarea name="description" rows="3" required></textarea>
-        </div>
+        <div class="form-group"><label>Type</label><select name="record_type"><option>Vaccination</option><option>Checkup</option><option>Dental</option><option>Eye Exam</option><option>Emergency</option><option>Medication</option></select></div>
+        <div class="form-group"><label>Description</label><textarea name="description" rows="3" required></textarea></div>
         <div class="form-row">
-          <div class="form-group">
-            <label>Doctor Name</label>
-            <input type="text" name="doctor_name">
-          </div>
-          <div class="form-group">
-            <label>Next Due Date</label>
-            <input type="date" name="next_due">
-          </div>
+          <div class="form-group"><label>Doctor</label><input type="text" name="doctor_name"></div>
+          <div class="form-group"><label>Next Due</label><input type="date" name="next_due"></div>
         </div>
         <div class="modal-actions">
           <button type="button" class="btn btn-outline" onclick="closeModal('health-modal')">Cancel</button>
-          <button type="submit" class="btn btn-primary">Save Record</button>
+          <button type="submit" class="btn btn-primary">Save</button>
         </div>
       </form>
+    </div>
+  </div>
+
+  <div class="modal-overlay" id="incident-modal">
+    <div class="modal">
+      <h3>Incident Details</h3>
+      <div id="incident-detail"></div>
+      <div class="modal-actions">
+        <button type="button" class="btn btn-outline" onclick="closeModal('incident-modal')">Close</button>
+        <button type="button" class="btn btn-primary" id="btn-review-incident">Mark as Reviewed</button>
+      </div>
     </div>
   </div>
 
