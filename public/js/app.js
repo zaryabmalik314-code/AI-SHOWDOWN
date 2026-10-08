@@ -814,15 +814,30 @@ function initMap() {
   }).addTo(map);
 
   const bounds = [];
+  const cityCount = {};
+  orphanages.forEach(o => {
+    const key = o.city;
+    if (!cityCount[key]) cityCount[key] = { n: 0 };
+    o._idx = cityCount[key].n++;
+    o._total = 0;
+  });
+  orphanages.forEach(o => { o._total = cityCount[o.city].n; });
 
   orphanages.forEach(o => {
-    bounds.push([o.lat, o.lng]);
+    let lat = o.lat, lng = o.lng;
+    if (o._total > 1) {
+      const angle = (o._idx / o._total) * 2 * Math.PI;
+      const spread = 0.06 + (o._total > 5 ? 0.03 : 0);
+      lat += Math.cos(angle) * spread;
+      lng += Math.sin(angle) * spread;
+    }
+    bounds.push([lat, lng]);
     const color = o.risk_level === 'high' ? '#ef4444' : o.risk_level === 'medium' ? '#fbbf24' : '#10b981';
     const icon = L.divIcon({
       html: `<div style="background:${color};width:10px;height:10px;border-radius:50%;border:2px solid white;box-shadow:0 0 8px ${color},0 0 16px ${color}50"></div>`,
       className: '', iconSize: [10, 10], iconAnchor: [5, 5]
     });
-    L.marker([o.lat, o.lng], { icon }).addTo(map).bindPopup(`
+    L.marker([lat, lng], { icon }).addTo(map).bindPopup(`
       <div style="min-width:220px">
         <strong style="font-size:14px">${o.name}</strong><br>
         <span style="color:#888">${o.address}</span><br><br>
