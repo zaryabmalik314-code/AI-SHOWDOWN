@@ -97,6 +97,40 @@
       <div class="alerts-list" id="command-incidents"></div>
     </section>
 
+    <!-- Orphanage Detail View -->
+    <section class="page-section" id="page-detail">
+      <div class="page-header">
+        <div style="display:flex;align-items:center;gap:12px">
+          <button class="btn btn-outline btn-sm" onclick="closeDetail()">&#8592; Back</button>
+          <h2 id="detail-title">Orphanage Detail</h2>
+        </div>
+        <div class="header-time">
+          <div class="live-dot" id="detail-status-dot"></div>
+          <span id="detail-status-text">Online</span>
+        </div>
+      </div>
+
+      <div id="detail-header-info"></div>
+
+      <div class="detail-tabs">
+        <button class="detail-tab active" data-tab="overview" onclick="switchDetailTab('overview')">Overview</button>
+        <button class="detail-tab" data-tab="children" onclick="switchDetailTab('children')">Children</button>
+        <button class="detail-tab" data-tab="visitors" onclick="switchDetailTab('visitors')">Visitors</button>
+        <button class="detail-tab" data-tab="zones" onclick="switchDetailTab('zones')">Live Zones</button>
+        <button class="detail-tab" data-tab="alerts" onclick="switchDetailTab('alerts')">Alerts</button>
+        <button class="detail-tab" data-tab="incidents" onclick="switchDetailTab('incidents')">AI Incidents</button>
+        <button class="detail-tab" data-tab="activity" onclick="switchDetailTab('activity')">Activity</button>
+      </div>
+
+      <div class="detail-tab-content active" id="dtab-overview"></div>
+      <div class="detail-tab-content" id="dtab-children"></div>
+      <div class="detail-tab-content" id="dtab-visitors"></div>
+      <div class="detail-tab-content" id="dtab-zones"></div>
+      <div class="detail-tab-content" id="dtab-alerts"></div>
+      <div class="detail-tab-content" id="dtab-incidents"></div>
+      <div class="detail-tab-content" id="dtab-activity"></div>
+    </section>
+
     <!-- Punjab Map -->
     <section class="page-section" id="page-map">
       <div class="page-header">

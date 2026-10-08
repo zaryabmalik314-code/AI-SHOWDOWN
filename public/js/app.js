@@ -92,7 +92,7 @@ function renderOrphanageGrid() {
   const grid = document.getElementById('orphanage-grid');
   if (!grid) return;
   grid.innerHTML = orphanages.map(o => `
-    <div class="orphanage-card" onclick="document.getElementById('orphanage-filter').value='${o.id}';document.getElementById('orphanage-filter').dispatchEvent(new Event('change'))">
+    <div class="orphanage-card" onclick="openOrphanageDetail(${o.id})">
       <div class="oc-header">
         <div>
           <div class="oc-name"><span class="status-dot ${o.status}"></span> ${o.name}</div>
@@ -107,6 +107,276 @@ function renderOrphanageGrid() {
       </div>
     </div>
   `).join('');
+}
+
+// Orphanage Detail View
+let currentDetailOrphanage = null;
+
+async function openOrphanageDetail(id) {
+  const o = orphanages.find(x => x.id === id);
+  if (!o) return;
+  currentDetailOrphanage = o;
+
+  document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
+  document.querySelectorAll('.page-section').forEach(p => p.classList.remove('active'));
+  document.getElementById('page-detail').classList.add('active');
+
+  document.getElementById('detail-title').textContent = o.name;
+  const dot = document.getElementById('detail-status-dot');
+  dot.style.background = o.status === 'online' ? 'var(--success)' : 'var(--danger)';
+  document.getElementById('detail-status-text').textContent = o.status.toUpperCase();
+
+  document.getElementById('detail-header-info').innerHTML = `
+    <div class="detail-info-bar">
+      <div class="detail-info-item">
+        <div class="dii-icon" style="background:rgba(79,140,255,0.15)">&#127968;</div>
+        <div><div class="dii-label">Location</div><div class="dii-value" style="font-size:14px">${o.address}</div></div>
+      </div>
+      <div class="detail-info-item">
+        <div class="dii-icon" style="background:rgba(52,211,153,0.15)">&#128118;</div>
+        <div><div class="dii-label">Children</div><div class="dii-value" style="color:var(--success)">${o.total_children}</div></div>
+      </div>
+      <div class="detail-info-item">
+        <div class="dii-icon" style="background:rgba(167,139,250,0.15)">&#128101;</div>
+        <div><div class="dii-label">Staff</div><div class="dii-value" style="color:var(--purple)">${o.staff_count}</div></div>
+      </div>
+      <div class="detail-info-item">
+        <div class="dii-icon" style="background:rgba(251,191,36,0.15)">&#128247;</div>
+        <div><div class="dii-label">Cameras</div><div class="dii-value" style="color:var(--warning)">${o.cameras}</div></div>
+      </div>
+      <div class="detail-info-item">
+        <div class="dii-icon" style="background:${o.risk_level === 'high' ? 'rgba(239,68,68,0.15)' : o.risk_level === 'medium' ? 'rgba(251,191,36,0.15)' : 'rgba(52,211,153,0.15)'}">&#9888;</div>
+        <div><div class="dii-label">Risk Level</div><div class="dii-value"><span class="risk-badge ${o.risk_level}" style="font-size:13px;padding:4px 12px">${o.risk_level.toUpperCase()}</span></div></div>
+      </div>
+      <div class="detail-info-item">
+        <div class="dii-icon" style="background:rgba(79,140,255,0.15)">&#127759;</div>
+        <div><div class="dii-label">City / District</div><div class="dii-value" style="font-size:14px">${o.city}, ${o.district}</div></div>
+      </div>
+    </div>
+  `;
+
+  switchDetailTab('overview');
+}
+
+function closeDetail() {
+  currentDetailOrphanage = null;
+  document.querySelectorAll('.page-section').forEach(p => p.classList.remove('active'));
+  document.getElementById('page-command').classList.add('active');
+  document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
+  document.querySelector('.nav-item[data-page="command"]').classList.add('active');
+}
+
+async function switchDetailTab(tab) {
+  document.querySelectorAll('.detail-tab').forEach(t => t.classList.toggle('active', t.dataset.tab === tab));
+  document.querySelectorAll('.detail-tab-content').forEach(c => c.classList.remove('active'));
+  document.getElementById('dtab-' + tab).classList.add('active');
+
+  const o = currentDetailOrphanage;
+  if (!o) return;
+  const oid = o.id;
+
+  if (tab === 'overview') await loadDetailOverview(oid);
+  else if (tab === 'children') await loadDetailChildren(oid);
+  else if (tab === 'visitors') await loadDetailVisitors(oid);
+  else if (tab === 'zones') await loadDetailZones(oid);
+  else if (tab === 'alerts') await loadDetailAlerts(oid);
+  else if (tab === 'incidents') await loadDetailIncidents(oid);
+  else if (tab === 'activity') await loadDetailActivity(oid);
+}
+
+async function loadDetailOverview(oid) {
+  const [statsRes, childrenRes, visitorsRes, alertsRes, incidentsRes, zonesRes] = await Promise.all([
+    fetch('/api/stats?orphanage_id=' + oid),
+    fetch('/api/children?orphanage_id=' + oid),
+    fetch('/api/visitors?orphanage_id=' + oid),
+    fetch('/api/alerts?orphanage_id=' + oid),
+    fetch('/api/incidents?orphanage_id=' + oid),
+    fetch('/api/zones?orphanage_id=' + oid),
+  ]);
+  const [stats, children, visitors, alerts, incidents, zones] = await Promise.all([
+    statsRes.json(), childrenRes.json(), visitorsRes.json(), alertsRes.json(), incidentsRes.json(), zonesRes.json()
+  ]);
+
+  const activeVisitors = visitors.filter(v => v.status === 'checked_in');
+  const unresolvedAlerts = alerts.filter(a => !a.acknowledged);
+  const openIncs = incidents.filter(i => !i.reviewed);
+
+  document.getElementById('dtab-overview').innerHTML = `
+    <div class="stats-grid" style="grid-template-columns:repeat(4,1fr)">
+      <div class="stat-card green"><div class="label">Children</div><div class="value">${stats.totalChildren}</div><div class="sub">Registered</div></div>
+      <div class="stat-card yellow"><div class="label">Visitors</div><div class="value">${stats.activeVisitors}</div><div class="sub">Currently here</div></div>
+      <div class="stat-card red"><div class="label">Alerts</div><div class="value">${stats.pendingAlerts}</div><div class="sub">Unresolved</div></div>
+      <div class="stat-card purple"><div class="label">AI Incidents</div><div class="value">${stats.openIncidents}</div><div class="sub">Open</div></div>
+    </div>
+
+    <div class="detail-overview-grid">
+      <div class="detail-panel">
+        <div class="detail-panel-header">Children <span class="count">${children.length}</span></div>
+        <div class="detail-panel-body">
+          ${children.length === 0 ? '<div class="detail-empty">No children registered</div>' :
+            children.slice(0, 10).map(c => `
+              <div class="detail-child-row">
+                <div class="detail-child-avatar">${c.name.charAt(0)}</div>
+                <div class="detail-child-info">
+                  <div class="dci-name">${c.name}</div>
+                  <div class="dci-meta">Age ${c.age} &middot; ${c.gender} &middot; ${c.medical_notes || 'No notes'}</div>
+                </div>
+              </div>
+            `).join('')}
+          ${children.length > 10 ? `<div style="text-align:center;padding:8px"><button class="btn btn-outline btn-sm" onclick="switchDetailTab('children')">View all ${children.length}</button></div>` : ''}
+        </div>
+      </div>
+
+      <div class="detail-panel">
+        <div class="detail-panel-header">Active Visitors <span class="count">${activeVisitors.length}</span></div>
+        <div class="detail-panel-body">
+          ${activeVisitors.length === 0 ? '<div class="detail-empty">No visitors on premises</div>' :
+            activeVisitors.map(v => `
+              <div class="detail-visitor-row">
+                <div class="detail-child-avatar" style="background:rgba(167,139,250,0.15);color:var(--purple)">${v.name.charAt(0)}</div>
+                <div class="detail-child-info">
+                  <div class="dci-name">${v.name}</div>
+                  <div class="dci-meta">${v.purpose} &middot; Since ${new Date(v.check_in).toLocaleTimeString('en-PK')}</div>
+                </div>
+              </div>
+            `).join('')}
+        </div>
+      </div>
+
+      <div class="detail-panel">
+        <div class="detail-panel-header">Live Zones <span class="count">${zones.length}</span></div>
+        <div class="detail-panel-body">
+          ${zones.length === 0 ? '<div class="detail-empty">No zones configured</div>' :
+            zones.map(z => {
+              const pct = z.expected_count > 0 ? Math.min(100, (z.current_count / z.expected_count) * 100) : 0;
+              const barColor = pct > 100 ? 'var(--danger)' : pct > 80 ? 'var(--warning)' : 'var(--success)';
+              return `<div class="detail-zone-card">
+                <div class="dz-info"><div class="dz-name">${z.name}</div><div class="dz-desc">${z.description}</div></div>
+                <div class="dz-count">
+                  <div class="dz-count-val">${z.current_count}</div>
+                  <div class="dz-count-exp">/ ${z.expected_count} expected</div>
+                  <div class="dz-bar"><div class="dz-bar-fill" style="width:${Math.min(pct, 100)}%;background:${barColor}"></div></div>
+                </div>
+              </div>`;
+            }).join('')}
+        </div>
+      </div>
+
+      <div class="detail-panel">
+        <div class="detail-panel-header" style="color:var(--danger)">Recent Alerts <span class="count" style="background:rgba(239,68,68,0.15);color:var(--danger)">${unresolvedAlerts.length}</span></div>
+        <div class="detail-panel-body">
+          ${unresolvedAlerts.length === 0 ? '<div class="detail-empty">No pending alerts</div>' :
+            unresolvedAlerts.slice(0, 8).map(a => `
+              <div class="detail-mini-alert">
+                <div class="alert-severity ${a.severity}"></div>
+                <div style="flex:1;font-size:13px">${a.message.replace(currentDetailOrphanage.name + ' - ', '').replace(' - ' + currentDetailOrphanage.name, '')}</div>
+                <div class="dma-time">${new Date(a.created_at).toLocaleTimeString('en-PK')}</div>
+              </div>
+            `).join('')}
+        </div>
+      </div>
+    </div>
+
+    ${openIncs.length > 0 ? `
+      <div style="margin-top:16px">
+        <div class="detail-panel">
+          <div class="detail-panel-header" style="color:var(--critical)">AI Detections <span class="count" style="background:rgba(239,68,68,0.15);color:var(--critical)">${openIncs.length} open</span></div>
+          <div class="detail-panel-body" style="max-height:400px">
+            <div class="alerts-list">${openIncs.slice(0, 5).map(renderIncidentItem).join('')}</div>
+            ${openIncs.length > 5 ? `<div style="text-align:center;padding:12px"><button class="btn btn-outline btn-sm" onclick="switchDetailTab('incidents')">View all ${openIncs.length} incidents</button></div>` : ''}
+          </div>
+        </div>
+      </div>
+    ` : ''}
+  `;
+}
+
+async function loadDetailChildren(oid) {
+  const res = await fetch('/api/children?orphanage_id=' + oid);
+  const children = await res.json();
+  document.getElementById('dtab-children').innerHTML = children.length === 0 ? '<div class="detail-empty">No children registered at this orphanage</div>' : `
+    <table class="data-table">
+      <thead><tr><th>Name</th><th>Age</th><th>Gender</th><th>Admitted</th><th>Medical Notes</th><th>Actions</th></tr></thead>
+      <tbody>${children.map(c => `
+        <tr>
+          <td><div style="display:flex;align-items:center;gap:8px"><div class="detail-child-avatar">${c.name.charAt(0)}</div><strong>${c.name}</strong></div></td>
+          <td>${c.age}</td><td>${c.gender}</td>
+          <td>${new Date(c.admitted_date).toLocaleDateString('en-PK')}</td>
+          <td>${c.medical_notes || '-'}</td>
+          <td><button class="btn btn-outline btn-sm" onclick="viewHealth(${c.id},'${c.name}')">Health</button></td>
+        </tr>
+      `).join('')}</tbody>
+    </table>
+  `;
+}
+
+async function loadDetailVisitors(oid) {
+  const res = await fetch('/api/visitors?orphanage_id=' + oid);
+  const visitors = await res.json();
+  document.getElementById('dtab-visitors').innerHTML = visitors.length === 0 ? '<div class="detail-empty">No visitor records</div>' : `
+    <table class="data-table">
+      <thead><tr><th>Name</th><th>CNIC</th><th>Phone</th><th>Purpose</th><th>Check In</th><th>Status</th><th>Actions</th></tr></thead>
+      <tbody>${visitors.map(v => `
+        <tr>
+          <td><strong>${v.name}</strong></td><td>${v.cnic || '-'}</td><td>${v.phone || '-'}</td><td>${v.purpose}</td>
+          <td>${new Date(v.check_in).toLocaleString('en-PK')}</td>
+          <td><span class="badge-status ${v.status}">${v.status.replace('_', ' ')}</span></td>
+          <td>${v.status === 'checked_in' ? `<button class="btn btn-outline btn-sm" onclick="checkoutVisitor(${v.id});switchDetailTab('visitors')">Check Out</button>` : ''}</td>
+        </tr>
+      `).join('')}</tbody>
+    </table>
+  `;
+}
+
+async function loadDetailZones(oid) {
+  const res = await fetch('/api/zones?orphanage_id=' + oid);
+  const zones = await res.json();
+  document.getElementById('dtab-zones').innerHTML = zones.length === 0 ? '<div class="detail-empty">No zones configured for this orphanage</div>' : `
+    <div class="zone-grid">${zones.map(z => {
+      const pct = z.expected_count > 0 ? Math.min(150, (z.current_count / z.expected_count) * 100) : 0;
+      const status = pct > 120 ? 'danger' : pct > 90 ? 'warning' : '';
+      return `<div class="zone-card">
+        <div class="zone-status ${status}"></div>
+        <div class="zone-name">${z.name}</div>
+        <div style="font-size:12px;color:var(--text-secondary);margin-bottom:8px">${z.description}</div>
+        <div class="zone-count">${z.current_count}</div>
+        <div class="zone-expected">Expected: ${z.expected_count}</div>
+        <div class="dz-bar" style="margin-top:8px;width:100%"><div class="dz-bar-fill" style="width:${Math.min(pct, 100)}%;background:${pct > 120 ? 'var(--danger)' : pct > 90 ? 'var(--warning)' : 'var(--success)'}"></div></div>
+      </div>`;
+    }).join('')}</div>
+  `;
+}
+
+async function loadDetailAlerts(oid) {
+  const res = await fetch('/api/alerts?orphanage_id=' + oid);
+  const alerts = await res.json();
+  document.getElementById('dtab-alerts').innerHTML = alerts.length === 0 ? '<div class="detail-empty">No alerts for this orphanage</div>' :
+    `<div class="alerts-list">${alerts.map(renderAlertItem).join('')}</div>`;
+}
+
+async function loadDetailIncidents(oid) {
+  const res = await fetch('/api/incidents?orphanage_id=' + oid);
+  const incidents = await res.json();
+  document.getElementById('dtab-incidents').innerHTML = incidents.length === 0 ? '<div class="detail-empty">No AI detections for this orphanage</div>' :
+    `<div class="alerts-list">${incidents.map(renderIncidentItem).join('')}</div>`;
+}
+
+async function loadDetailActivity(oid) {
+  const res = await fetch('/api/activity?orphanage_id=' + oid);
+  const activities = await res.json();
+  const icons = {
+    visitor_entry: { icon: '&#128694;', bg: 'rgba(79,140,255,0.15)' },
+    ai_detection: { icon: '&#129302;', bg: 'rgba(239,68,68,0.15)' },
+    headcount_mismatch: { icon: '&#9888;', bg: 'rgba(251,191,36,0.15)' },
+    restricted_zone: { icon: '&#128683;', bg: 'rgba(248,113,113,0.15)' },
+    perimeter_breach: { icon: '&#128680;', bg: 'rgba(239,68,68,0.15)' },
+    child_missing: { icon: '&#128557;', bg: 'rgba(239,68,68,0.15)' },
+  };
+  document.getElementById('dtab-activity').innerHTML = activities.length === 0 ? '<div class="detail-empty">No activity logged</div>' :
+    `<div class="activity-feed">${activities.map(a => {
+      const cfg = icons[a.event_type] || { icon: '&#128196;', bg: 'rgba(154,160,166,0.15)' };
+      return `<div class="activity-item"><div class="activity-icon" style="background:${cfg.bg}">${cfg.icon}</div><div style="flex:1">${a.description}</div><div class="activity-time">${new Date(a.created_at).toLocaleTimeString('en-PK')}</div></div>`;
+    }).join('')}</div>`;
 }
 
 function updateOrphanageRisk(id, level) {
