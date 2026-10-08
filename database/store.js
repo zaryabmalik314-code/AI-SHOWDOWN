@@ -6,8 +6,8 @@ const DB_FILE = path.join(__dirname, 'data.json');
 const defaultData = {
   orphanages: [
     // SOS Children's Villages (6)
-    { id: 1, name: "SOS Children's Village", city: 'Lahore', district: 'Lahore', address: 'Johar Town, Lahore', lat: 31.4697, lng: 74.2728, total_children: 120, staff_count: 35, cameras: 24, status: 'online', risk_level: 'low' },
-    { id: 2, name: "SOS Children's Village", city: 'Rawalpindi', district: 'Rawalpindi', address: 'G.T. Road, opposite High Court, Rawalpindi', lat: 33.5651, lng: 73.0169, total_children: 95, staff_count: 28, cameras: 20, status: 'online', risk_level: 'low' },
+    { id: 1, name: "SOS Children's Village", city: 'Lahore', district: 'Lahore', address: 'Johar Town, Lahore', lat: 31.4697, lng: 74.2728, total_children: 120, staff_count: 35, cameras: 24, status: 'online', risk_level: 'low', compliance_score: 96, last_inspection: '2026-09-28' },
+    { id: 2, name: "SOS Children's Village", city: 'Rawalpindi', district: 'Rawalpindi', address: 'G.T. Road, opposite High Court, Rawalpindi', lat: 33.5651, lng: 73.0169, total_children: 95, staff_count: 28, cameras: 20, status: 'online', risk_level: 'low', compliance_score: 94, last_inspection: '2026-09-15' },
     { id: 3, name: "SOS Children's Village", city: 'Faisalabad', district: 'Faisalabad', address: 'Faisalabad', lat: 31.4500, lng: 73.1100, total_children: 85, staff_count: 24, cameras: 18, status: 'online', risk_level: 'low' },
     { id: 4, name: "SOS Children's Village", city: 'Multan', district: 'Multan', address: 'Multan', lat: 30.2100, lng: 71.4700, total_children: 78, staff_count: 22, cameras: 17, status: 'online', risk_level: 'low' },
     { id: 5, name: "SOS Children's Village", city: 'Sargodha', district: 'Sargodha', address: 'Sargodha', lat: 32.0850, lng: 72.6700, total_children: 70, staff_count: 20, cameras: 14, status: 'online', risk_level: 'low' },
@@ -111,19 +111,185 @@ const defaultData = {
     { id: 85, name: 'Edhi Foundation Child Home', city: 'Pakpattan', district: 'Pakpattan', address: 'Pakpattan', lat: 30.3500, lng: 73.3900, total_children: 16, staff_count: 4, cameras: 2, status: 'online', risk_level: 'low' },
   ],
   children: [
-    { id: 1, orphanage_id: 1, name: 'Ahmed Khan', age: 8, gender: 'Male', photo_url: null, admitted_date: '2024-01-15', medical_notes: 'Healthy, regular checkups', status: 'active', created_at: new Date().toISOString() },
-    { id: 2, orphanage_id: 1, name: 'Fatima Ali', age: 6, gender: 'Female', photo_url: null, admitted_date: '2024-03-20', medical_notes: 'Mild asthma, inhaler prescribed', status: 'active', created_at: new Date().toISOString() },
-    { id: 3, orphanage_id: 1, name: 'Hassan Raza', age: 10, gender: 'Male', photo_url: null, admitted_date: '2023-11-01', medical_notes: 'No known conditions', status: 'active', created_at: new Date().toISOString() },
-    { id: 4, orphanage_id: 2, name: 'Ayesha Bibi', age: 7, gender: 'Female', photo_url: null, admitted_date: '2024-05-10', medical_notes: 'Allergic to peanuts', status: 'active', created_at: new Date().toISOString() },
-    { id: 5, orphanage_id: 2, name: 'Usman Tariq', age: 9, gender: 'Male', photo_url: null, admitted_date: '2023-08-22', medical_notes: 'Wears glasses, annual eye checkup', status: 'active', created_at: new Date().toISOString() },
-    { id: 6, orphanage_id: 3, name: 'Zainab Noor', age: 5, gender: 'Female', photo_url: null, admitted_date: '2024-07-01', medical_notes: 'Vaccinations up to date', status: 'active', created_at: new Date().toISOString() },
-    { id: 7, orphanage_id: 4, name: 'Bilal Ahmed', age: 11, gender: 'Male', photo_url: null, admitted_date: '2023-06-15', medical_notes: 'Fractured arm (healed)', status: 'active', created_at: new Date().toISOString() },
-    { id: 8, orphanage_id: 5, name: 'Sana Malik', age: 8, gender: 'Female', photo_url: null, admitted_date: '2024-02-28', medical_notes: 'Regular dental checkups needed', status: 'active', created_at: new Date().toISOString() },
+    // SOS Lahore (id:1)
+    { id: 1, orphanage_id: 1, name: 'Ahmed Khan', age: 8, gender: 'Male', photo_url: null, admitted_date: '2024-01-15', medical_notes: 'Healthy, regular checkups', status: 'active', created_at: '2024-01-15T09:00:00Z' },
+    { id: 2, orphanage_id: 1, name: 'Fatima Ali', age: 6, gender: 'Female', photo_url: null, admitted_date: '2024-03-20', medical_notes: 'Mild asthma, inhaler prescribed', status: 'active', created_at: '2024-03-20T09:00:00Z' },
+    { id: 3, orphanage_id: 1, name: 'Hassan Raza', age: 10, gender: 'Male', photo_url: null, admitted_date: '2023-11-01', medical_notes: 'No known conditions', status: 'active', created_at: '2023-11-01T09:00:00Z' },
+    { id: 4, orphanage_id: 1, name: 'Maryam Shahid', age: 7, gender: 'Female', photo_url: null, admitted_date: '2024-06-12', medical_notes: 'Iron supplement prescribed', status: 'active', created_at: '2024-06-12T09:00:00Z' },
+    { id: 5, orphanage_id: 1, name: 'Abdullah Farooq', age: 12, gender: 'Male', photo_url: null, admitted_date: '2023-04-08', medical_notes: 'Dental braces, quarterly review', status: 'active', created_at: '2023-04-08T09:00:00Z' },
+    // SOS Rawalpindi (id:2)
+    { id: 6, orphanage_id: 2, name: 'Ayesha Bibi', age: 7, gender: 'Female', photo_url: null, admitted_date: '2024-05-10', medical_notes: 'Allergic to peanuts', status: 'active', created_at: '2024-05-10T09:00:00Z' },
+    { id: 7, orphanage_id: 2, name: 'Usman Tariq', age: 9, gender: 'Male', photo_url: null, admitted_date: '2023-08-22', medical_notes: 'Wears glasses, annual eye checkup', status: 'active', created_at: '2023-08-22T09:00:00Z' },
+    { id: 8, orphanage_id: 2, name: 'Rabia Naz', age: 5, gender: 'Female', photo_url: null, admitted_date: '2025-01-10', medical_notes: 'Vaccinations up to date', status: 'active', created_at: '2025-01-10T09:00:00Z' },
+    { id: 9, orphanage_id: 2, name: 'Kamran Javed', age: 11, gender: 'Male', photo_url: null, admitted_date: '2023-09-15', medical_notes: 'Eczema treatment ongoing', status: 'active', created_at: '2023-09-15T09:00:00Z' },
+    // SOS Faisalabad (id:3)
+    { id: 10, orphanage_id: 3, name: 'Zainab Noor', age: 5, gender: 'Female', photo_url: null, admitted_date: '2024-07-01', medical_notes: 'Vaccinations up to date', status: 'active', created_at: '2024-07-01T09:00:00Z' },
+    { id: 11, orphanage_id: 3, name: 'Hamza Iqbal', age: 9, gender: 'Male', photo_url: null, admitted_date: '2024-02-14', medical_notes: 'Mild hearing loss (left ear), hearing aid fitted', status: 'active', created_at: '2024-02-14T09:00:00Z' },
+    { id: 12, orphanage_id: 3, name: 'Nadia Parveen', age: 8, gender: 'Female', photo_url: null, admitted_date: '2023-12-20', medical_notes: 'No known conditions', status: 'active', created_at: '2023-12-20T09:00:00Z' },
+    // SOS Multan (id:4)
+    { id: 13, orphanage_id: 4, name: 'Bilal Ahmed', age: 11, gender: 'Male', photo_url: null, admitted_date: '2023-06-15', medical_notes: 'Fractured arm (healed)', status: 'active', created_at: '2023-06-15T09:00:00Z' },
+    { id: 14, orphanage_id: 4, name: 'Hira Batool', age: 6, gender: 'Female', photo_url: null, admitted_date: '2024-08-05', medical_notes: 'Underweight, nutritional plan active', status: 'active', created_at: '2024-08-05T09:00:00Z' },
+    { id: 15, orphanage_id: 4, name: 'Owais Rauf', age: 10, gender: 'Male', photo_url: null, admitted_date: '2023-03-18', medical_notes: 'Asthma, inhaler and nebulizer', status: 'active', created_at: '2023-03-18T09:00:00Z' },
+    // SOS Sargodha (id:5)
+    { id: 16, orphanage_id: 5, name: 'Sana Malik', age: 8, gender: 'Female', photo_url: null, admitted_date: '2024-02-28', medical_notes: 'Regular dental checkups needed', status: 'active', created_at: '2024-02-28T09:00:00Z' },
+    { id: 17, orphanage_id: 5, name: 'Talha Mehmood', age: 13, gender: 'Male', photo_url: null, admitted_date: '2022-11-10', medical_notes: 'Healthy, sports physical cleared', status: 'active', created_at: '2022-11-10T09:00:00Z' },
+    // Punjab Model Boys Lahore (id:7)
+    { id: 18, orphanage_id: 7, name: 'Arslan Shahzad', age: 9, gender: 'Male', photo_url: null, admitted_date: '2024-04-22', medical_notes: 'Vitamin D deficiency, supplement prescribed', status: 'active', created_at: '2024-04-22T09:00:00Z' },
+    { id: 19, orphanage_id: 7, name: 'Faizan Haider', age: 7, gender: 'Male', photo_url: null, admitted_date: '2024-09-01', medical_notes: 'No known conditions', status: 'active', created_at: '2024-09-01T09:00:00Z' },
+    { id: 20, orphanage_id: 7, name: 'Rizwan Abbas', age: 12, gender: 'Male', photo_url: null, admitted_date: '2023-02-15', medical_notes: 'Corrective lenses, annual review', status: 'active', created_at: '2023-02-15T09:00:00Z' },
+    // Punjab Model Girls Lahore (id:8)
+    { id: 21, orphanage_id: 8, name: 'Amna Khalid', age: 6, gender: 'Female', photo_url: null, admitted_date: '2024-11-05', medical_notes: 'Recent tonsillectomy, follow-up in 3 months', status: 'active', created_at: '2024-11-05T09:00:00Z' },
+    { id: 22, orphanage_id: 8, name: 'Sadia Anwar', age: 10, gender: 'Female', photo_url: null, admitted_date: '2023-07-20', medical_notes: 'Healthy', status: 'active', created_at: '2023-07-20T09:00:00Z' },
+    // CPWB Lahore (id:28)
+    { id: 23, orphanage_id: 28, name: 'Imran Yousaf', age: 8, gender: 'Male', photo_url: null, admitted_date: '2024-01-30', medical_notes: 'Hepatitis B vaccinated', status: 'active', created_at: '2024-01-30T09:00:00Z' },
+    { id: 24, orphanage_id: 28, name: 'Kiran Aslam', age: 5, gender: 'Female', photo_url: null, admitted_date: '2025-02-14', medical_notes: 'Developmental delay monitoring', status: 'active', created_at: '2025-02-14T09:00:00Z' },
+    { id: 25, orphanage_id: 28, name: 'Shoaib Akhtar', age: 14, gender: 'Male', photo_url: null, admitted_date: '2022-06-01', medical_notes: 'Healthy, athletic', status: 'active', created_at: '2022-06-01T09:00:00Z' },
+    { id: 26, orphanage_id: 28, name: 'Nimra Fatima', age: 9, gender: 'Female', photo_url: null, admitted_date: '2023-10-10', medical_notes: 'Iron deficiency, monthly blood test', status: 'active', created_at: '2023-10-10T09:00:00Z' },
+    // Edhi Lahore (id:42)
+    { id: 27, orphanage_id: 42, name: 'Taimoor Shah', age: 7, gender: 'Male', photo_url: null, admitted_date: '2024-05-20', medical_notes: 'No known conditions', status: 'active', created_at: '2024-05-20T09:00:00Z' },
+    { id: 28, orphanage_id: 42, name: 'Misbah Qadir', age: 11, gender: 'Female', photo_url: null, admitted_date: '2023-08-15', medical_notes: 'Mild scoliosis, physiotherapy', status: 'active', created_at: '2023-08-15T09:00:00Z' },
+    { id: 29, orphanage_id: 42, name: 'Waqas Hussain', age: 6, gender: 'Male', photo_url: null, admitted_date: '2024-12-01', medical_notes: 'Healthy', status: 'active', created_at: '2024-12-01T09:00:00Z' },
+    // Aghosh Attock (id:50)
+    { id: 30, orphanage_id: 50, name: 'Danish Nawaz', age: 10, gender: 'Male', photo_url: null, admitted_date: '2023-05-05', medical_notes: 'TB treatment completed, follow-up clear', status: 'active', created_at: '2023-05-05T09:00:00Z' },
+    { id: 31, orphanage_id: 50, name: 'Arooj Zahra', age: 8, gender: 'Female', photo_url: null, admitted_date: '2024-03-10', medical_notes: 'Epilepsy medication (Levetiracetam)', status: 'active', created_at: '2024-03-10T09:00:00Z' },
+    // Kashana Lahore (id:57)
+    { id: 32, orphanage_id: 57, name: 'Mehwish Saleem', age: 13, gender: 'Female', photo_url: null, admitted_date: '2022-09-01', medical_notes: 'Healthy, counseling sessions weekly', status: 'active', created_at: '2022-09-01T09:00:00Z' },
+    { id: 33, orphanage_id: 57, name: 'Laiba Aftab', age: 7, gender: 'Female', photo_url: null, admitted_date: '2024-07-18', medical_notes: 'Lactose intolerant', status: 'active', created_at: '2024-07-18T09:00:00Z' },
+    { id: 34, orphanage_id: 57, name: 'Iqra Bibi', age: 9, gender: 'Female', photo_url: null, admitted_date: '2023-12-01', medical_notes: 'Vaccinations up to date', status: 'active', created_at: '2023-12-01T09:00:00Z' },
+    // Pakistan Sweet Home Rwp (id:58)
+    { id: 35, orphanage_id: 58, name: 'Saad Rehman', age: 10, gender: 'Male', photo_url: null, admitted_date: '2023-01-20', medical_notes: 'No known conditions', status: 'active', created_at: '2023-01-20T09:00:00Z' },
+    { id: 36, orphanage_id: 58, name: 'Aliza Nadeem', age: 6, gender: 'Female', photo_url: null, admitted_date: '2024-10-15', medical_notes: 'Speech therapy ongoing', status: 'active', created_at: '2024-10-15T09:00:00Z' },
+    { id: 37, orphanage_id: 58, name: 'Farhan Gill', age: 14, gender: 'Male', photo_url: null, admitted_date: '2022-03-10', medical_notes: 'Healthy, captain of cricket team', status: 'active', created_at: '2022-03-10T09:00:00Z' },
+    { id: 38, orphanage_id: 58, name: 'Noor Jehan', age: 8, gender: 'Female', photo_url: null, admitted_date: '2024-04-01', medical_notes: 'Skin allergy, topical cream', status: 'active', created_at: '2024-04-01T09:00:00Z' },
+    // CPWB Multan (id:31)
+    { id: 39, orphanage_id: 31, name: 'Qasim Ali', age: 9, gender: 'Male', photo_url: null, admitted_date: '2024-06-22', medical_notes: 'Bed-wetting treatment, improving', status: 'active', created_at: '2024-06-22T09:00:00Z' },
+    { id: 40, orphanage_id: 31, name: 'Sundas Rafiq', age: 7, gender: 'Female', photo_url: null, admitted_date: '2024-08-14', medical_notes: 'No known conditions', status: 'active', created_at: '2024-08-14T09:00:00Z' },
+    // D.G. Khan Girls (id:19 - high risk, offline)
+    { id: 41, orphanage_id: 19, name: 'Rubina Khatoon', age: 10, gender: 'Female', photo_url: null, admitted_date: '2023-11-20', medical_notes: 'Malnourished at admission, recovery plan active', status: 'active', created_at: '2023-11-20T09:00:00Z' },
+    { id: 42, orphanage_id: 19, name: 'Samina Bano', age: 6, gender: 'Female', photo_url: null, admitted_date: '2024-09-05', medical_notes: 'Scabies treatment completed', status: 'active', created_at: '2024-09-05T09:00:00Z' },
+    // Rajanpur (id:38 - high risk, offline)
+    { id: 43, orphanage_id: 38, name: 'Adeel Sarwar', age: 12, gender: 'Male', photo_url: null, admitted_date: '2023-07-10', medical_notes: 'Hepatitis C positive, treatment ongoing', status: 'active', created_at: '2023-07-10T09:00:00Z' },
+    // Al-Khidmat Multan (id:70)
+    { id: 44, orphanage_id: 70, name: 'Haroon Rashid', age: 8, gender: 'Male', photo_url: null, admitted_date: '2024-01-05', medical_notes: 'Healthy', status: 'active', created_at: '2024-01-05T09:00:00Z' },
+    { id: 45, orphanage_id: 70, name: 'Sumayya Bibi', age: 11, gender: 'Female', photo_url: null, admitted_date: '2023-06-20', medical_notes: 'Thalassemia minor, regular monitoring', status: 'active', created_at: '2023-06-20T09:00:00Z' },
+    { id: 46, orphanage_id: 70, name: 'Naveed Iqbal', age: 5, gender: 'Male', photo_url: null, admitted_date: '2025-03-01', medical_notes: 'Recent admission, initial assessment pending', status: 'active', created_at: '2025-03-01T09:00:00Z' },
+    // Edhi Multan (id:45)
+    { id: 47, orphanage_id: 45, name: 'Tayyaba Shahzadi', age: 9, gender: 'Female', photo_url: null, admitted_date: '2024-02-10', medical_notes: 'No known conditions', status: 'active', created_at: '2024-02-10T09:00:00Z' },
+    { id: 48, orphanage_id: 45, name: 'Junaid Masih', age: 7, gender: 'Male', photo_url: null, admitted_date: '2024-11-20', medical_notes: 'Dental caries, treatment scheduled', status: 'active', created_at: '2024-11-20T09:00:00Z' },
+    // Aghosh Gujranwala (id:51)
+    { id: 49, orphanage_id: 51, name: 'Zohaib Raza', age: 10, gender: 'Male', photo_url: null, admitted_date: '2023-09-01', medical_notes: 'Healthy, plays football', status: 'active', created_at: '2023-09-01T09:00:00Z' },
+    { id: 50, orphanage_id: 51, name: 'Maham Tariq', age: 6, gender: 'Female', photo_url: null, admitted_date: '2024-12-15', medical_notes: 'Growth monitoring — below 3rd percentile', status: 'active', created_at: '2024-12-15T09:00:00Z' },
+    // Mera Ghar Rawalpindi (id:59)
+    { id: 51, orphanage_id: 59, name: 'Umair Zafar', age: 13, gender: 'Male', photo_url: null, admitted_date: '2022-10-10', medical_notes: 'Healthy, preparing for board exams', status: 'active', created_at: '2022-10-10T09:00:00Z' },
+    { id: 52, orphanage_id: 59, name: 'Bushra Kiran', age: 8, gender: 'Female', photo_url: null, admitted_date: '2024-03-25', medical_notes: 'Thyroid medication', status: 'active', created_at: '2024-03-25T09:00:00Z' },
+    // CPWB Faisalabad (id:29)
+    { id: 53, orphanage_id: 29, name: 'Asad Mehmood', age: 11, gender: 'Male', photo_url: null, admitted_date: '2023-04-12', medical_notes: 'ADHD, behavioral therapy', status: 'active', created_at: '2023-04-12T09:00:00Z' },
+    { id: 54, orphanage_id: 29, name: 'Sidra Kanwal', age: 7, gender: 'Female', photo_url: null, admitted_date: '2024-08-30', medical_notes: 'No known conditions', status: 'active', created_at: '2024-08-30T09:00:00Z' },
+    // Punjab Model Bahawalpur Boys (id:16)
+    { id: 55, orphanage_id: 16, name: 'Irfan Mustafa', age: 9, gender: 'Male', photo_url: null, admitted_date: '2024-05-01', medical_notes: 'Healthy', status: 'active', created_at: '2024-05-01T09:00:00Z' },
+    // SOS Sialkot (id:6)
+    { id: 56, orphanage_id: 6, name: 'Huma Asghar', age: 8, gender: 'Female', photo_url: null, admitted_date: '2024-06-15', medical_notes: 'Celiac disease, gluten-free diet', status: 'active', created_at: '2024-06-15T09:00:00Z' },
+    { id: 57, orphanage_id: 6, name: 'Shayan Ali', age: 12, gender: 'Male', photo_url: null, admitted_date: '2023-01-08', medical_notes: 'No known conditions', status: 'active', created_at: '2023-01-08T09:00:00Z' },
+    // Dar-ul-Falah Lahore (id:22)
+    { id: 58, orphanage_id: 22, name: 'Anum Riaz', age: 5, gender: 'Female', photo_url: null, admitted_date: '2025-01-20', medical_notes: 'Healthy, settling in well', status: 'active', created_at: '2025-01-20T09:00:00Z' },
+    { id: 59, orphanage_id: 22, name: 'Wajid Hussain', age: 10, gender: 'Male', photo_url: null, admitted_date: '2023-10-05', medical_notes: 'Flat feet, orthotic insoles', status: 'active', created_at: '2023-10-05T09:00:00Z' },
+    // CPWB Kasur (id:37)
+    { id: 60, orphanage_id: 37, name: 'Saima Jabeen', age: 9, gender: 'Female', photo_url: null, admitted_date: '2024-04-14', medical_notes: 'Counseling for trauma, improving', status: 'active', created_at: '2024-04-14T09:00:00Z' },
   ],
-  health_records: [],
-  visitors: [],
-  alerts: [],
-  incidents: [],
+  health_records: [
+    { id: 1, child_id: 1, record_date: '2026-09-15', type: 'checkup', doctor: 'Dr. Amina Rafiq', notes: 'Routine checkup, all vitals normal. Height 128cm, Weight 26kg.', vitals: { bp: '95/60', temp: 36.7, pulse: 82 }, created_at: '2026-09-15T10:00:00Z' },
+    { id: 2, child_id: 1, record_date: '2026-06-10', type: 'vaccination', doctor: 'Dr. Amina Rafiq', notes: 'Hepatitis B booster administered.', vitals: { bp: '92/58', temp: 36.5, pulse: 78 }, created_at: '2026-06-10T10:00:00Z' },
+    { id: 3, child_id: 2, record_date: '2026-09-20', type: 'checkup', doctor: 'Dr. Saeed Ahmad', notes: 'Asthma stable, peak flow 210. Continue current medication.', vitals: { bp: '88/55', temp: 36.8, pulse: 88 }, created_at: '2026-09-20T10:00:00Z' },
+    { id: 4, child_id: 13, record_date: '2026-08-05', type: 'follow-up', doctor: 'Dr. Nasir Javed', notes: 'Arm fracture fully healed, full range of motion restored. Cleared for sports.', vitals: { bp: '100/65', temp: 36.6, pulse: 76 }, created_at: '2026-08-05T10:00:00Z' },
+    { id: 5, child_id: 14, record_date: '2026-09-28', type: 'nutrition', doctor: 'Dr. Farhat Bano', notes: 'Weight gained 1.2kg since last visit. BMI improving. Continue nutritional supplements.', vitals: { bp: '85/52', temp: 36.5, pulse: 90 }, created_at: '2026-09-28T10:00:00Z' },
+    { id: 6, child_id: 31, record_date: '2026-10-01', type: 'specialist', doctor: 'Dr. Tahir Mehmood (Neurologist)', notes: 'Seizure-free for 8 months. EEG normal. Continue Levetiracetam 250mg BD.', vitals: { bp: '90/58', temp: 36.6, pulse: 80 }, created_at: '2026-10-01T10:00:00Z' },
+    { id: 7, child_id: 41, record_date: '2026-09-10', type: 'nutrition', doctor: 'Dr. Farhat Bano', notes: 'Weight 22kg (up from 18kg at admission). Height 130cm. BMI 13.0 — still underweight but improving.', vitals: { bp: '88/54', temp: 36.7, pulse: 86 }, created_at: '2026-09-10T10:00:00Z' },
+    { id: 8, child_id: 53, record_date: '2026-09-25', type: 'behavioral', doctor: 'Dr. Sobia Ashraf (Psychologist)', notes: 'ADHD behavioral therapy session #14. Focus improving, teacher reports better classroom behavior.', vitals: null, created_at: '2026-09-25T10:00:00Z' },
+  ],
+  visitors: [
+    { id: 1, name: 'Col. (R) Shahid Mehmood', cnic: '35201-1234567-1', phone: '0321-5551234', purpose: 'Government Inspection', photo_url: null, orphanage_id: 1, check_in: '2026-10-09T09:15:00Z', check_out: null, status: 'checked_in' },
+    { id: 2, name: 'Dr. Nazia Parveen', cnic: '35202-9876543-2', phone: '0300-4567890', purpose: 'Medical Camp', photo_url: null, orphanage_id: 1, check_in: '2026-10-09T08:30:00Z', check_out: null, status: 'checked_in' },
+    { id: 3, name: 'Malik Tariq Hussain', cnic: '35201-5555678-3', phone: '0333-1112233', purpose: 'Family Visit (Ahmed Khan)', photo_url: null, orphanage_id: 1, check_in: '2026-10-08T14:00:00Z', check_out: '2026-10-08T16:30:00Z', status: 'checked_out' },
+    { id: 4, name: 'Tahira Begum', cnic: '37405-2223344-4', phone: '0345-6667788', purpose: 'NGO Audit (UNICEF)', photo_url: null, orphanage_id: 28, check_in: '2026-10-09T10:00:00Z', check_out: null, status: 'checked_in' },
+    { id: 5, name: 'Advocate Sohail Rana', cnic: '35201-8889900-5', phone: '0301-3334455', purpose: 'Legal Review', photo_url: null, orphanage_id: 28, check_in: '2026-10-08T11:00:00Z', check_out: '2026-10-08T13:45:00Z', status: 'checked_out' },
+    { id: 6, name: 'Haji Abdul Rashid', cnic: '36302-4445566-6', phone: '0312-7778899', purpose: 'Donation Delivery', photo_url: null, orphanage_id: 42, check_in: '2026-10-09T07:45:00Z', check_out: '2026-10-09T08:30:00Z', status: 'checked_out' },
+    { id: 7, name: 'Sarah Johnson', cnic: 'PASSPORT-UK-12345', phone: '+44-7700-900123', purpose: 'International NGO Visit (Save the Children)', photo_url: null, orphanage_id: 1, check_in: '2026-10-07T10:00:00Z', check_out: '2026-10-07T15:00:00Z', status: 'checked_out' },
+    { id: 8, name: 'Prof. Dr. Khalid Mahmood', cnic: '35202-1112233-8', phone: '0321-9990011', purpose: 'Academic Research', photo_url: null, orphanage_id: 57, check_in: '2026-10-09T09:00:00Z', check_out: null, status: 'checked_in' },
+    { id: 9, name: 'Nasreen Akhtar', cnic: '36601-7778899-9', phone: '0300-1234567', purpose: 'Family Visit (Qasim Ali)', photo_url: null, orphanage_id: 31, check_in: '2026-10-08T10:30:00Z', check_out: '2026-10-08T12:00:00Z', status: 'checked_out' },
+    { id: 10, name: 'Ch. Nadeem Ashraf (MPA)', cnic: '35201-6667788-0', phone: '0333-5556677', purpose: 'Parliamentary Inspection Visit', photo_url: null, orphanage_id: 7, check_in: '2026-10-09T11:00:00Z', check_out: null, status: 'checked_in' },
+    { id: 11, name: 'Syed Amir Shah', cnic: '34101-3334455-1', phone: '0345-2223344', purpose: 'Zakat Distribution', photo_url: null, orphanage_id: 50, check_in: '2026-10-07T09:00:00Z', check_out: '2026-10-07T11:30:00Z', status: 'checked_out' },
+    { id: 12, name: 'Rukhsana Kausar', cnic: '36302-8889900-2', phone: '0321-4445566', purpose: 'Prospective Foster Parent', photo_url: null, orphanage_id: 58, check_in: '2026-10-09T13:00:00Z', check_out: null, status: 'checked_in' },
+    { id: 13, name: 'Inspector Zubair Qureshi', cnic: '35201-2223344-3', phone: '0300-8889900', purpose: 'Police Verification', photo_url: null, orphanage_id: 37, check_in: '2026-10-08T15:00:00Z', check_out: '2026-10-08T16:00:00Z', status: 'checked_out' },
+    { id: 14, name: 'Engr. Bilal Saeed', cnic: '35201-9990011-4', phone: '0333-7778899', purpose: 'Building Safety Inspection', photo_url: null, orphanage_id: 19, check_in: '2026-10-06T10:00:00Z', check_out: '2026-10-06T14:00:00Z', status: 'checked_out' },
+    { id: 15, name: 'Maulana Qari Abdul Basit', cnic: '36601-5556677-5', phone: '0312-1112233', purpose: 'Religious Education Assessment', photo_url: null, orphanage_id: 70, check_in: '2026-10-09T08:00:00Z', check_out: null, status: 'checked_in' },
+    { id: 16, name: 'Dr. Farzana Altaf', cnic: '35202-4445566-6', phone: '0345-9990011', purpose: 'Psychological Assessment', photo_url: null, orphanage_id: 29, check_in: '2026-10-08T09:30:00Z', check_out: '2026-10-08T12:30:00Z', status: 'checked_out' },
+    { id: 17, name: 'Kamran Akmal (Volunteer)', cnic: '35201-1112233-7', phone: '0300-3334455', purpose: 'Volunteer Teaching (English)', photo_url: null, orphanage_id: 51, check_in: '2026-10-09T14:00:00Z', check_out: null, status: 'checked_in' },
+    { id: 18, name: 'Mrs. Shahida Parveen', cnic: '35202-6667788-8', phone: '0321-5556677', purpose: 'Donation — Winter Clothes', photo_url: null, orphanage_id: 22, check_in: '2026-10-07T11:00:00Z', check_out: '2026-10-07T11:45:00Z', status: 'checked_out' },
+  ],
+  alerts: (function() {
+    const _alerts = [];
+    const _alertData = [
+      { type: 'headcount_mismatch', severity: 'high', message: 'Headcount mismatch detected at CPWB Child Protection Institution, D.G. Khan', detail: 'Expected: 8, Detected: 12. Scanning adjacent zones.', camera_id: 'CAM-A1 Main Hall', ai_model: 'ProximityAI v1.2', zone: 'Main Hall', orphanage_id: 41, days_ago: 1 },
+      { type: 'restricted_zone', severity: 'critical', message: 'Unauthorized person in restricted zone at Punjab Model Children Home (Girls), D.G. Khan', detail: 'Unregistered adult detected via facial recognition. ID match: NONE.', camera_id: 'CAM-C1 Kitchen', ai_model: 'ProximityAI v1.2', zone: 'Kitchen', orphanage_id: 19, days_ago: 0 },
+      { type: 'perimeter_breach', severity: 'critical', message: 'Perimeter movement detected after hours at CPWB Child Protection Unit, Rajanpur', detail: 'Motion sensor + thermal camera triggered. Recording flagged for review.', camera_id: 'CAM-E2 Back Gate', ai_model: 'PoseGuard v1.4', zone: 'Main Gate', orphanage_id: 38, days_ago: 2 },
+      { type: 'camera_offline', severity: 'medium', message: 'Camera feed interrupted at Edhi Foundation Child Home, Muzaffargarh', detail: 'Feed lost for 38s. Network check in progress. Last frame saved.', camera_id: 'CAM-B1 Dormitory', ai_model: 'System', zone: 'Dormitory A', orphanage_id: 77, days_ago: 0 },
+      { type: 'child_missing', severity: 'critical', message: "Child not detected in expected zone at SOS Children's Village, Lahore", detail: 'Last seen 8 minutes ago at Garden. Cross-camera tracking initiated.', camera_id: 'CAM-D1 Playground', ai_model: 'ProximityAI v1.2', zone: 'Garden', orphanage_id: 1, days_ago: 3 },
+      { type: 'loitering', severity: 'medium', message: 'Loitering detected near entrance at Edhi Foundation Child Home, Jhang', detail: 'Individual stationary for 12+ minutes at facility perimeter.', camera_id: 'CAM-E1 Main Gate', ai_model: 'PoseGuard v1.4', zone: 'Main Gate', orphanage_id: 69, days_ago: 1 },
+      { type: 'headcount_mismatch', severity: 'high', message: "Headcount mismatch detected at SOS Children's Village, Rawalpindi", detail: 'Expected: 10, Detected: 7. Scanning adjacent zones.', camera_id: 'CAM-B2 Washroom Entry', ai_model: 'ProximityAI v1.2', zone: 'Dormitory A', orphanage_id: 2, days_ago: 4 },
+      { type: 'restricted_zone', severity: 'critical', message: 'Unauthorized person in restricted zone at Al-Khidmat Foundation Orphanage, Multan', detail: 'Unregistered adult detected via facial recognition. ID match: NONE.', camera_id: 'CAM-C1 Kitchen', ai_model: 'ProximityAI v1.2', zone: 'Kitchen', orphanage_id: 70, days_ago: 5 },
+      { type: 'camera_offline', severity: 'medium', message: 'Camera feed interrupted at Punjab Model Children Home (Girls), Sargodha', detail: 'Feed lost for 22s. Network restored. Last frame saved.', camera_id: 'CAM-F1 Study Room', ai_model: 'System', zone: 'Study Room', orphanage_id: 15, days_ago: 2 },
+      { type: 'perimeter_breach', severity: 'critical', message: 'Perimeter movement detected after hours at CPWB Child Protection Institution, Rahim Yar Khan', detail: 'Motion sensor + thermal camera triggered. Recording flagged for review.', camera_id: 'CAM-E1 Main Gate', ai_model: 'PoseGuard v1.4', zone: 'Main Gate', orphanage_id: 35, days_ago: 6 },
+      { type: 'child_missing', severity: 'critical', message: 'Child not detected in expected zone at Aghosh Home (Al-Khidmat), Attock', detail: 'Last seen 5 minutes ago at Study Room. Cross-camera tracking initiated.', camera_id: 'CAM-F1 Study Room', ai_model: 'ProximityAI v1.2', zone: 'Study Room', orphanage_id: 50, days_ago: 1 },
+      { type: 'loitering', severity: 'medium', message: 'Loitering detected near entrance at Dar-ul-Falah, Sargodha', detail: 'Individual stationary for 9+ minutes at facility perimeter.', camera_id: 'CAM-E1 Main Gate', ai_model: 'PoseGuard v1.4', zone: 'Main Gate', orphanage_id: 24, days_ago: 3 },
+      { type: 'headcount_mismatch', severity: 'high', message: 'Headcount mismatch detected at CPWB Child Protection Institution, Sahiwal', detail: 'Expected: 6, Detected: 10. Scanning adjacent zones.', camera_id: 'CAM-D1 Playground', ai_model: 'ProximityAI v1.2', zone: 'Garden', orphanage_id: 36, days_ago: 0 },
+      { type: 'camera_offline', severity: 'medium', message: 'Camera feed interrupted at CPWB Child Protection Unit, Rajanpur', detail: 'Feed lost for 55s. Network check in progress. Last frame saved.', camera_id: 'CAM-A2 Corridor', ai_model: 'System', zone: 'Main Hall', orphanage_id: 38, days_ago: 0 },
+    ];
+    const now = Date.now();
+    _alertData.forEach((a, i) => {
+      const ts = new Date(now - a.days_ago * 86400000 - Math.floor(Math.random() * 43200000));
+      _alerts.push({ id: i + 1, type: a.type, severity: a.severity, message: a.message, detail: a.detail, camera_id: a.camera_id, ai_model: a.ai_model, zone: a.zone, orphanage_id: a.orphanage_id, acknowledged: a.days_ago > 2, created_at: ts.toISOString() });
+    });
+    return _alerts;
+  })(),
+  incidents: (function() {
+    const _incidents = [];
+    const _incidentData = [
+      { type: 'physical_violence', label: 'Physical Violence', severity: 'critical', orphanage_id: 19, days_ago: 0, confidence: 91.3, ai_model: 'ViolenceNet v2.1', camera_id: 'CAM-A1 Main Hall', zone: 'Main Hall', persons: 3, reviewed: false },
+      { type: 'verbal_abuse', label: 'Verbal Abuse', severity: 'high', orphanage_id: 38, days_ago: 1, confidence: 78.5, ai_model: 'AudioSense v2.0', camera_id: 'CAM-C2 Dining', zone: 'Kitchen', persons: 2, reviewed: false },
+      { type: 'bullying', label: 'Bullying', severity: 'high', orphanage_id: 19, days_ago: 1, confidence: 82.1, ai_model: 'ViolenceNet v2.1', camera_id: 'CAM-D1 Playground', zone: 'Garden', persons: 4, reviewed: false },
+      { type: 'neglect', label: 'Neglect Indicator', severity: 'medium', orphanage_id: 41, days_ago: 2, confidence: 74.6, ai_model: 'ProximityAI v1.2', camera_id: 'CAM-B1 Dormitory', zone: 'Dormitory A', persons: 1, reviewed: true },
+      { type: 'rough_handling', label: 'Rough Handling', severity: 'high', orphanage_id: 19, days_ago: 3, confidence: 85.9, ai_model: 'PoseGuard v1.4', camera_id: 'CAM-A2 Corridor', zone: 'Main Hall', persons: 2, reviewed: true },
+      { type: 'distress', label: 'Child Distress', severity: 'high', orphanage_id: 38, days_ago: 2, confidence: 79.2, ai_model: 'FaceEmotion v3.0', camera_id: 'CAM-B1 Dormitory', zone: 'Dormitory A', persons: 1, reviewed: false },
+      { type: 'harassment', label: 'Harassment', severity: 'critical', orphanage_id: 77, days_ago: 4, confidence: 88.7, ai_model: 'PoseGuard v1.4', camera_id: 'CAM-B2 Washroom Entry', zone: 'Dormitory B', persons: 2, reviewed: true },
+      { type: 'unauthorized_contact', label: 'Unauthorized Contact', severity: 'critical', orphanage_id: 38, days_ago: 5, confidence: 92.4, ai_model: 'ProximityAI v1.2', camera_id: 'CAM-E1 Main Gate', zone: 'Main Gate', persons: 3, reviewed: true },
+      { type: 'verbal_abuse', label: 'Verbal Abuse', severity: 'high', orphanage_id: 69, days_ago: 1, confidence: 73.8, ai_model: 'AudioSense v2.0', camera_id: 'CAM-C1 Kitchen', zone: 'Kitchen', persons: 2, reviewed: false },
+      { type: 'physical_violence', label: 'Physical Violence', severity: 'critical', orphanage_id: 35, days_ago: 3, confidence: 87.2, ai_model: 'ViolenceNet v2.1', camera_id: 'CAM-D1 Playground', zone: 'Garden', persons: 2, reviewed: true },
+      { type: 'neglect', label: 'Neglect Indicator', severity: 'medium', orphanage_id: 82, days_ago: 2, confidence: 71.3, ai_model: 'ProximityAI v1.2', camera_id: 'CAM-F1 Study Room', zone: 'Study Room', persons: 1, reviewed: false },
+      { type: 'bullying', label: 'Bullying', severity: 'high', orphanage_id: 24, days_ago: 0, confidence: 76.9, ai_model: 'ViolenceNet v2.1', camera_id: 'CAM-D1 Playground', zone: 'Garden', persons: 3, reviewed: false },
+      { type: 'distress', label: 'Child Distress', severity: 'high', orphanage_id: 15, days_ago: 4, confidence: 81.5, ai_model: 'FaceEmotion v3.0', camera_id: 'CAM-B1 Dormitory', zone: 'Dormitory B', persons: 1, reviewed: true },
+      { type: 'rough_handling', label: 'Rough Handling', severity: 'high', orphanage_id: 49, days_ago: 6, confidence: 80.1, ai_model: 'PoseGuard v1.4', camera_id: 'CAM-A1 Main Hall', zone: 'Main Hall', persons: 2, reviewed: true },
+      { type: 'verbal_abuse', label: 'Verbal Abuse', severity: 'high', orphanage_id: 19, days_ago: 5, confidence: 75.0, ai_model: 'AudioSense v2.0', camera_id: 'CAM-C2 Dining', zone: 'Kitchen', persons: 2, reviewed: true },
+      { type: 'physical_violence', label: 'Physical Violence', severity: 'critical', orphanage_id: 41, days_ago: 6, confidence: 89.6, ai_model: 'ViolenceNet v2.1', camera_id: 'CAM-A2 Corridor', zone: 'Main Hall', persons: 2, reviewed: true },
+      { type: 'neglect', label: 'Neglect Indicator', severity: 'medium', orphanage_id: 84, days_ago: 3, confidence: 69.8, ai_model: 'ProximityAI v1.2', camera_id: 'CAM-B1 Dormitory', zone: 'Dormitory A', persons: 1, reviewed: false },
+      { type: 'harassment', label: 'Harassment', severity: 'critical', orphanage_id: 19, days_ago: 7, confidence: 90.2, ai_model: 'PoseGuard v1.4', camera_id: 'CAM-A1 Main Hall', zone: 'Main Hall', persons: 2, reviewed: true },
+      { type: 'unauthorized_contact', label: 'Unauthorized Contact', severity: 'critical', orphanage_id: 69, days_ago: 3, confidence: 93.1, ai_model: 'ProximityAI v1.2', camera_id: 'CAM-E2 Back Gate', zone: 'Main Gate', persons: 2, reviewed: true },
+      { type: 'bullying', label: 'Bullying', severity: 'high', orphanage_id: 75, days_ago: 2, confidence: 77.4, ai_model: 'ViolenceNet v2.1', camera_id: 'CAM-D1 Playground', zone: 'Garden', persons: 3, reviewed: false },
+    ];
+    const now = Date.now();
+    _incidentData.forEach((inc, i) => {
+      const ts = new Date(now - inc.days_ago * 86400000 - Math.floor(Math.random() * 43200000));
+      _incidents.push({
+        id: i + 1, type: inc.type, label: inc.label, severity: inc.severity, orphanage_id: inc.orphanage_id,
+        description: `${inc.label} detected at orphanage #${inc.orphanage_id}. ${inc.persons} person(s) involved. Zone: ${inc.zone}.`,
+        zone: inc.zone, confidence: inc.confidence, ai_model: inc.ai_model, model_backbone: 'CNN',
+        detection_type: 'action_recognition', camera_id: inc.camera_id, frame_count: Math.floor(Math.random() * 45) + 10,
+        persons_detected: inc.persons, bounding_box: { x: 200, y: 100, w: 120, h: 160 },
+        inference_ms: Math.floor(Math.random() * 80) + 20, detected_at: ts.toISOString(),
+        status: inc.reviewed ? 'reviewed' : 'open', reviewed: inc.reviewed,
+      });
+    });
+    return _incidents;
+  })(),
   zones: [
     { id: 1, orphanage_id: 1, name: 'Main Hall', description: 'Central play and activity area', expected_count: 15, current_count: 0, status: 'active' },
     { id: 2, orphanage_id: 1, name: 'Dormitory A', description: 'Boys sleeping quarters', expected_count: 10, current_count: 0, status: 'active' },
@@ -137,7 +303,7 @@ const defaultData = {
   growth_records: [],
   notifications: [],
   emotion_detections: [],
-  counters: { children: 8, health_records: 0, visitors: 0, alerts: 0, incidents: 0, activity_log: 0, orphanages: 85, growth_records: 0, notifications: 0, emotion_detections: 0 }
+  counters: { children: 60, health_records: 8, visitors: 18, alerts: 14, incidents: 20, activity_log: 0, orphanages: 85, growth_records: 0, notifications: 0, emotion_detections: 0 }
 };
 
 class Store {
@@ -152,6 +318,15 @@ class Store {
     if (!this.data.counters.notifications) this.data.counters.notifications = 0;
     if (!this.data.emotion_detections) this.data.emotion_detections = [];
     if (!this.data.counters.emotion_detections) this.data.counters.emotion_detections = 0;
+    this.data.orphanages.forEach(o => {
+      if (o.compliance_score == null) {
+        const base = o.risk_level === 'high' ? 45 : o.risk_level === 'medium' ? 68 : 82;
+        const seed = ((o.id * 7 + 13) % 17);
+        o.compliance_score = Math.min(98, base + seed);
+        const d = new Date(); d.setDate(d.getDate() - ((o.id * 3 + 5) % 90));
+        o.last_inspection = d.toISOString().split('T')[0];
+      }
+    });
   }
 
   load() {
@@ -407,6 +582,7 @@ class Store {
       const responseRate = totalIncidents > 0 ? Math.round((reviewedIncidents / totalIncidents) * 100) : 100;
       const staffRatio = o.total_children > 0 ? (o.staff_count / o.total_children) : 0;
       const cameraCoverage = o.cameras > 0 ? Math.min(100, Math.round((o.cameras / Math.max(1, Math.ceil(o.total_children / 8))) * 100)) : 0;
+      const complianceScore = o.compliance_score || 75;
 
       let score = 100;
       score -= criticalIncidents * 8;
@@ -417,12 +593,13 @@ class Store {
       score += (staffRatio >= 0.3 ? 5 : staffRatio >= 0.2 ? 2 : 0);
       score += (cameraCoverage >= 80 ? 5 : cameraCoverage >= 50 ? 2 : 0);
       score -= (o.status === 'offline' ? 10 : 0);
+      score += (complianceScore >= 90 ? 5 : complianceScore >= 70 ? 2 : complianceScore < 50 ? -5 : 0);
       score = Math.max(0, Math.min(100, Math.round(score)));
 
       const grade = score >= 90 ? 'A' : score >= 80 ? 'B' : score >= 70 ? 'C' : score >= 50 ? 'D' : 'F';
       return {
         ...o, score, grade, responseRate, staffRatio: Math.round(staffRatio * 100),
-        cameraCoverage, openIncidents, criticalIncidents, unresolvedAlerts,
+        cameraCoverage, complianceScore, openIncidents, criticalIncidents, unresolvedAlerts,
         totalIncidents, reviewedIncidents
       };
     }).sort((a, b) => b.score - a.score).map((o, i) => ({ ...o, rank: i + 1 }));
