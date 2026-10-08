@@ -130,6 +130,37 @@ function startAIDetection() {
       if (vt.severity === 'critical') {
         store.updateOrphanage(org.id, { risk_level: 'high' });
         broadcast({ type: 'risk_update', orphanage_id: org.id, risk_level: 'high' });
+
+        const nearestStation = store.getNearestStation(org.lat, org.lng);
+        if (nearestStation) {
+          const dispatch = store.addDispatch({
+            incident_id: incident.id,
+            incident_type: vt.type,
+            incident_label: vt.label,
+            severity: vt.severity,
+            orphanage_id: org.id,
+            orphanage_name: org.name,
+            orphanage_address: org.address,
+            orphanage_lat: org.lat,
+            orphanage_lng: org.lng,
+            station_id: nearestStation.id,
+            station_name: nearestStation.name,
+            station_phone: nearestStation.phone,
+            station_address: nearestStation.address,
+            distance_km: nearestStation.distance_km,
+            zone: zone ? zone.name : null,
+            confidence: parseFloat(confidence),
+          });
+          broadcast({ type: 'police_dispatch', dispatch });
+          const dispatchNotif = store.addNotification({
+            type: 'police_dispatch',
+            title: 'Police Dispatched',
+            message: `${nearestStation.name} alerted for ${vt.label} at ${org.name} (${nearestStation.distance_km}km away)`,
+            severity: 'critical',
+            orphanage_id: org.id,
+          });
+          broadcast({ type: 'notification', notification: dispatchNotif });
+        }
       }
     }
 
@@ -371,6 +402,15 @@ app.get('/api/briefing', (req, res) => {
     incident_breakdown: breakdown,
     recent_critical: todayIncidents.filter(i => i.severity === 'critical').slice(0, 5),
   });
+});
+
+// Police Stations & Dispatches
+app.get('/api/police-stations', (req, res) => res.json(store.getPoliceStations()));
+app.get('/api/dispatches', (req, res) => res.json(store.getDispatches(req.query.orphanage_id)));
+app.put('/api/dispatches/:id', (req, res) => {
+  const d = store.updateDispatch(req.params.id, req.body);
+  if (d) { broadcast({ type: 'dispatch_update', dispatch: d }); res.json(d); }
+  else res.status(404).json({ error: 'Not found' });
 });
 
 wss.on('connection', (ws) => {

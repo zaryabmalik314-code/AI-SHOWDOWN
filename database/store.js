@@ -43,7 +43,20 @@ const defaultData = {
   growth_records: [],
   notifications: [],
   emotion_detections: [],
-  counters: { children: 8, health_records: 0, visitors: 0, alerts: 0, incidents: 0, activity_log: 0, orphanages: 10, growth_records: 0, notifications: 0, emotion_detections: 0 }
+  police_stations: [
+    { id: 1, name: 'Johar Town Police Station', city: 'Lahore', phone: '042-35310001', lat: 31.4710, lng: 74.2690, address: 'Johar Town, Lahore' },
+    { id: 2, name: 'Gulberg Police Station', city: 'Lahore', phone: '042-35761002', lat: 31.5180, lng: 74.3550, address: 'Gulberg III, Lahore' },
+    { id: 3, name: 'Satellite Town Police Station', city: 'Rawalpindi', phone: '051-9290003', lat: 33.5670, lng: 73.0200, address: 'Satellite Town, Rawalpindi' },
+    { id: 4, name: 'Peoples Colony Police Station', city: 'Faisalabad', phone: '041-8730004', lat: 31.4200, lng: 73.0810, address: 'Peoples Colony, Faisalabad' },
+    { id: 5, name: 'Bosan Road Police Station', city: 'Multan', phone: '061-9210005', lat: 30.1590, lng: 71.5270, address: 'Bosan Road, Multan' },
+    { id: 6, name: 'Margalla Police Station', city: 'Islamabad', phone: '051-9261006', lat: 33.7310, lng: 73.0900, address: 'G-9, Islamabad' },
+    { id: 7, name: 'Civil Lines Police Station', city: 'Gujranwala', phone: '055-9200007', lat: 32.1890, lng: 74.1960, address: 'Civil Lines, Gujranwala' },
+    { id: 8, name: 'Cantt Police Station', city: 'Sialkot', phone: '052-9250008', lat: 32.4960, lng: 74.5250, address: 'Cantt Area, Sialkot' },
+    { id: 9, name: 'Model Town Police Station', city: 'Bahawalpur', phone: '062-9250009', lat: 29.3560, lng: 71.6930, address: 'Model Town, Bahawalpur' },
+    { id: 10, name: 'University Road Police Station', city: 'Sargodha', phone: '048-9230010', lat: 32.0760, lng: 72.6880, address: 'University Road, Sargodha' },
+  ],
+  police_dispatches: [],
+  counters: { children: 8, health_records: 0, visitors: 0, alerts: 0, incidents: 0, activity_log: 0, orphanages: 10, growth_records: 0, notifications: 0, emotion_detections: 0, police_dispatches: 0 }
 };
 
 class Store {
@@ -58,6 +71,9 @@ class Store {
     if (!this.data.counters.notifications) this.data.counters.notifications = 0;
     if (!this.data.emotion_detections) this.data.emotion_detections = [];
     if (!this.data.counters.emotion_detections) this.data.counters.emotion_detections = 0;
+    if (!this.data.police_stations) this.data.police_stations = JSON.parse(JSON.stringify(defaultData.police_stations));
+    if (!this.data.police_dispatches) this.data.police_dispatches = [];
+    if (!this.data.counters.police_dispatches) this.data.counters.police_dispatches = 0;
   }
 
   load() {
@@ -298,6 +314,45 @@ class Store {
     if (this.data.emotion_detections.length > 500) this.data.emotion_detections = this.data.emotion_detections.slice(-250);
     this.save();
     return detection;
+  }
+
+  // Police Stations & Dispatches
+  getPoliceStations() { return this.data.police_stations; }
+
+  getNearestStation(lat, lng) {
+    const toRad = d => d * Math.PI / 180;
+    let nearest = null;
+    let minDist = Infinity;
+    this.data.police_stations.forEach(s => {
+      const dLat = toRad(s.lat - lat);
+      const dLng = toRad(s.lng - lng);
+      const a = Math.sin(dLat / 2) ** 2 + Math.cos(toRad(lat)) * Math.cos(toRad(s.lat)) * Math.sin(dLng / 2) ** 2;
+      const dist = 6371 * 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+      if (dist < minDist) { minDist = dist; nearest = s; }
+    });
+    return nearest ? { ...nearest, distance_km: Math.round(minDist * 10) / 10 } : null;
+  }
+
+  getDispatches(orphanageId, limit = 50) {
+    let list = this.data.police_dispatches;
+    if (orphanageId) list = list.filter(d => d.orphanage_id === parseInt(orphanageId));
+    return list.sort((a, b) => new Date(b.dispatched_at) - new Date(a.dispatched_at)).slice(0, limit);
+  }
+
+  addDispatch(dispatch) {
+    dispatch.id = this.nextId('police_dispatches');
+    dispatch.dispatched_at = new Date().toISOString();
+    dispatch.status = 'dispatched';
+    this.data.police_dispatches.push(dispatch);
+    if (this.data.police_dispatches.length > 500) this.data.police_dispatches = this.data.police_dispatches.slice(-250);
+    this.save();
+    return dispatch;
+  }
+
+  updateDispatch(id, updates) {
+    const d = this.data.police_dispatches.find(x => x.id === parseInt(id));
+    if (d) { Object.assign(d, updates); this.save(); }
+    return d;
   }
 
   // Rankings

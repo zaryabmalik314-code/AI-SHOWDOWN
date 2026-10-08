@@ -27,6 +27,8 @@ function connectWS() {
       case 'child_added': loadChildren(); loadStats(); break;
       case 'emotion_detection': handleEmotionDetection(data.detection); break;
       case 'notification': handleNewNotification(data.notification); break;
+      case 'police_dispatch': handleNewDispatch(data.dispatch); break;
+      case 'dispatch_update': handleDispatchUpdate(data.dispatch); break;
     }
   };
   ws.onclose = () => setTimeout(connectWS, 3000);
@@ -55,6 +57,7 @@ document.querySelectorAll('.nav-item').forEach(item => {
     if (page === 'emotions') loadEmotions();
     if (page === 'anomalies') loadAnomalies();
     if (page === 'briefing') loadBriefing();
+    if (page === 'dispatch') loadDispatches();
   });
 });
 
@@ -1573,6 +1576,7 @@ function navigateToPage(page) {
   if (page === 'emotions') loadEmotions();
   if (page === 'anomalies') loadAnomalies();
   if (page === 'briefing') loadBriefing();
+  if (page === 'dispatch') loadDispatches();
 }
 
 function highlightMatch(text, query) {
@@ -2121,6 +2125,118 @@ async function loadBriefing() {
       </div>
     `;
   } catch (e) { console.error(e); }
+}
+
+// === Emergency Dispatch ===
+let cachedDispatches = [];
+
+async function loadDispatches() {
+  try {
+    const url = currentFilter ? `/api/dispatches?orphanage_id=${currentFilter}` : '/api/dispatches';
+    cachedDispatches = await (await fetch(url)).json();
+    renderDispatchStats();
+    renderDispatches();
+  } catch (e) { console.error(e); }
+}
+
+function renderDispatchStats() {
+  const total = cachedDispatches.length;
+  const active = cachedDispatches.filter(d => d.status !== 'resolved').length;
+  const responding = cachedDispatches.filter(d => d.status === 'responding').length;
+  const onScene = cachedDispatches.filter(d => d.status === 'on_scene').length;
+  const resolved = cachedDispatches.filter(d => d.status === 'resolved').length;
+  document.getElementById('dispatch-stats').innerHTML = `
+    <div class="dispatch-stat-card"><div class="stat-num" style="color:#ef4444">${active}</div><div class="stat-label">Active Dispatches</div></div>
+    <div class="dispatch-stat-card"><div class="stat-num" style="color:#f59e0b">${responding}</div><div class="stat-label">Responding</div></div>
+    <div class="dispatch-stat-card"><div class="stat-num" style="color:#3b82f6">${onScene}</div><div class="stat-label">On Scene</div></div>
+    <div class="dispatch-stat-card"><div class="stat-num" style="color:#10b981">${resolved}</div><div class="stat-label">Resolved</div></div>
+  `;
+}
+
+function renderDispatches() {
+  const feed = document.getElementById('dispatch-feed');
+  if (cachedDispatches.length === 0) {
+    feed.innerHTML = '<div style="text-align:center;padding:60px 20px;color:var(--text-tertiary)"><svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" style="margin-bottom:12px;opacity:0.3"><path d="M22 16.92v3a2 2 0 01-2.18 2 19.79 19.79 0 01-8.63-3.07 19.5 19.5 0 01-6-6 19.79 19.79 0 01-3.07-8.67A2 2 0 014.11 2h3a2 2 0 012 1.72c.127.96.361 1.903.7 2.81a2 2 0 01-.45 2.11L8.09 9.91a16 16 0 006 6l1.27-1.27a2 2 0 012.11-.45c.907.339 1.85.573 2.81.7A2 2 0 0122 16.92z"/></svg><div style="font-weight:600;margin-bottom:4px">No Dispatches Yet</div><div style="font-size:12px">Police will be automatically alerted when critical incidents are detected</div></div>';
+    return;
+  }
+  feed.innerHTML = cachedDispatches.map(d => renderDispatchCard(d)).join('');
+}
+
+function renderDispatchCard(d) {
+  const time = new Date(d.dispatched_at).toLocaleString('en-PK');
+  const statusLabels = { dispatched: 'Dispatched', responding: 'Responding', on_scene: 'On Scene', resolved: 'Resolved' };
+  const nextStatus = { dispatched: 'responding', responding: 'on_scene', on_scene: 'resolved' };
+  const nextLabel = { dispatched: 'Mark Responding', responding: 'Mark On Scene', on_scene: 'Mark Resolved' };
+  const actions = d.status !== 'resolved' ? `
+    <div class="dispatch-actions">
+      <button class="btn btn-primary" onclick="updateDispatchStatus(${d.id}, '${nextStatus[d.status]}')">${nextLabel[d.status]}</button>
+      <a href="tel:${d.station_phone}" class="btn btn-outline">Call Station</a>
+    </div>` : '';
+
+  return `
+    <div class="dispatch-card status-${d.status}" id="dispatch-${d.id}">
+      <div class="dispatch-card-header">
+        <div class="dispatch-type-badge">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M10.29 3.86L1.82 18a2 2 0 001.71 3h16.94a2 2 0 001.71-3L13.71 3.86a2 2 0 00-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>
+          ${d.incident_label}
+        </div>
+        <span class="dispatch-status-badge ${d.status}">${statusLabels[d.status]}</span>
+      </div>
+      <div class="dispatch-details">
+        <div class="dispatch-detail-row">
+          <div>
+            <div class="detail-label">Orphanage</div>
+            <div class="detail-value">${d.orphanage_name}</div>
+            <div style="font-size:11px;color:var(--text-tertiary)">${d.orphanage_address}</div>
+          </div>
+        </div>
+        <div class="dispatch-detail-row">
+          <div>
+            <div class="detail-label">Police Station Alerted</div>
+            <div class="detail-value">${d.station_name}</div>
+            <div style="font-size:11px;color:var(--text-tertiary)">${d.station_phone} &middot; ${d.distance_km}km away</div>
+          </div>
+        </div>
+        <div class="dispatch-detail-row">
+          <div>
+            <div class="detail-label">Zone</div>
+            <div class="detail-value">${d.zone || 'General Area'}</div>
+          </div>
+        </div>
+        <div class="dispatch-detail-row">
+          <div>
+            <div class="detail-label">AI Confidence</div>
+            <div class="detail-value">${d.confidence}%</div>
+          </div>
+        </div>
+      </div>
+      ${actions}
+      <div class="dispatch-time">Dispatched: ${time}</div>
+    </div>`;
+}
+
+async function updateDispatchStatus(id, status) {
+  try {
+    await fetch('/api/dispatches/' + id, { method: 'PUT', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ status }) });
+    loadDispatches();
+  } catch (e) { console.error(e); }
+}
+
+function handleNewDispatch(dispatch) {
+  cachedDispatches.unshift(dispatch);
+  if (document.getElementById('page-dispatch').classList.contains('active')) {
+    renderDispatchStats();
+    renderDispatches();
+  }
+}
+
+function handleDispatchUpdate(dispatch) {
+  const idx = cachedDispatches.findIndex(d => d.id === dispatch.id);
+  if (idx !== -1) cachedDispatches[idx] = dispatch;
+  if (document.getElementById('page-dispatch').classList.contains('active')) {
+    renderDispatchStats();
+    renderDispatches();
+  }
 }
 
 // Init - load all data so global search works
