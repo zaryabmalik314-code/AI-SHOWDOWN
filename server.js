@@ -34,16 +34,33 @@ function broadcast(data) {
 }
 
 // AI Violence/Harassment Detection Simulation
-const violenceTypes = [
-  { type: 'physical_violence', severity: 'critical', label: 'Physical Violence', desc: 'Hitting/pushing detected between individuals' },
-  { type: 'verbal_abuse', severity: 'high', label: 'Verbal Abuse', desc: 'Aggressive shouting/screaming pattern detected' },
-  { type: 'harassment', severity: 'critical', label: 'Harassment', desc: 'Inappropriate physical contact detected' },
-  { type: 'bullying', severity: 'high', label: 'Bullying', desc: 'Repeated aggressive behavior toward same individual' },
-  { type: 'neglect', severity: 'medium', label: 'Neglect Indicator', desc: 'Child isolated/unattended for extended period' },
-  { type: 'distress', severity: 'high', label: 'Child Distress', desc: 'Crying/distress pattern detected in child' },
-  { type: 'rough_handling', severity: 'high', label: 'Rough Handling', desc: 'Staff using excessive force with child' },
-  { type: 'unauthorized_contact', severity: 'critical', label: 'Unauthorized Contact', desc: 'Unknown adult in close proximity to children unsupervised' },
+const aiModels = [
+  { name: 'ViolenceNet v2.1', type: 'action_recognition', backbone: 'SlowFast-R50' },
+  { name: 'PoseGuard v1.4', type: 'pose_analysis', backbone: 'YOLOv8-pose + GRU' },
+  { name: 'FaceEmotion v3.0', type: 'facial_expression', backbone: 'HSEmotion-ResNet34' },
+  { name: 'ProximityAI v1.2', type: 'spatial_analysis', backbone: 'DeepSORT + ReID' },
+  { name: 'AudioSense v2.0', type: 'audio_classification', backbone: 'YAMNet + LSTM' },
 ];
+
+const violenceTypes = [
+  { type: 'physical_violence', severity: 'critical', label: 'Physical Violence', desc: 'Hitting/pushing detected between individuals', model: 0, weight: 8, minConf: 82 },
+  { type: 'verbal_abuse', severity: 'high', label: 'Verbal Abuse', desc: 'Aggressive shouting/screaming pattern detected', model: 4, weight: 15, minConf: 71 },
+  { type: 'harassment', severity: 'critical', label: 'Harassment', desc: 'Inappropriate physical contact detected', model: 1, weight: 5, minConf: 85 },
+  { type: 'bullying', severity: 'high', label: 'Bullying', desc: 'Repeated aggressive behavior toward same individual', model: 0, weight: 12, minConf: 74 },
+  { type: 'neglect', severity: 'medium', label: 'Neglect Indicator', desc: 'Child isolated/unattended for extended period', model: 3, weight: 25, minConf: 68 },
+  { type: 'distress', severity: 'high', label: 'Child Distress', desc: 'Crying/distress pattern detected in child', model: 2, weight: 20, minConf: 72 },
+  { type: 'rough_handling', severity: 'high', label: 'Rough Handling', desc: 'Staff using excessive force with child', model: 1, weight: 10, minConf: 79 },
+  { type: 'unauthorized_contact', severity: 'critical', label: 'Unauthorized Contact', desc: 'Unknown adult in close proximity to children unsupervised', model: 3, weight: 5, minConf: 88 },
+];
+
+const cameraNames = ['CAM-A1 Main Hall', 'CAM-A2 Corridor', 'CAM-B1 Dormitory', 'CAM-B2 Washroom Entry', 'CAM-C1 Kitchen', 'CAM-C2 Dining', 'CAM-D1 Playground', 'CAM-D2 Garden', 'CAM-E1 Main Gate', 'CAM-E2 Back Gate', 'CAM-F1 Study Room', 'CAM-F2 Library', 'CAM-G1 Staff Room', 'CAM-G2 Office'];
+
+function weightedRandom(items) {
+  const total = items.reduce((s, i) => s + i.weight, 0);
+  let r = Math.random() * total;
+  for (const item of items) { r -= item.weight; if (r <= 0) return item; }
+  return items[0];
+}
 
 function startAIDetection() {
   const orphanages = store.getOrphanages();
@@ -63,27 +80,40 @@ function startAIDetection() {
     // Security alerts (10% chance per tick)
     if (Math.random() < 0.1) {
       const org = orphanages[Math.floor(Math.random() * orphanages.length)];
+      if (org.status !== 'online') return;
       const zones = store.getZones(org.id);
       const zone = zones.length > 0 ? zones[Math.floor(Math.random() * zones.length)] : null;
+      const camera = cameraNames[Math.floor(Math.random() * Math.min(org.cameras, cameraNames.length))];
       const alertTypes = [
-        { type: 'headcount_mismatch', severity: 'high', msg: 'Headcount mismatch detected' },
-        { type: 'restricted_zone', severity: 'critical', msg: 'Unauthorized person in restricted zone' },
-        { type: 'perimeter_breach', severity: 'critical', msg: 'Movement at perimeter after hours' },
-        { type: 'child_missing', severity: 'critical', msg: 'Child not detected in expected zone' },
+        { type: 'headcount_mismatch', severity: 'high', msg: 'Headcount mismatch detected', detail: 'Expected: {exp}, Detected: {det}. Scanning adjacent zones.', model: 'ProximityAI v1.2', weight: 30 },
+        { type: 'restricted_zone', severity: 'critical', msg: 'Unauthorized person in restricted zone', detail: 'Unregistered adult detected via facial recognition. ID match: NONE.', model: 'ProximityAI v1.2', weight: 15 },
+        { type: 'perimeter_breach', severity: 'critical', msg: 'Perimeter movement detected after hours', detail: 'Motion sensor + thermal camera triggered. Recording flagged for review.', model: 'PoseGuard v1.4', weight: 10 },
+        { type: 'child_missing', severity: 'critical', msg: 'Child not detected in expected zone', detail: 'Last seen {min} minutes ago at {lastZone}. Cross-camera tracking initiated.', model: 'ProximityAI v1.2', weight: 20 },
+        { type: 'camera_offline', severity: 'medium', msg: 'Camera feed interrupted', detail: 'Feed lost for {sec}s. Network check in progress. Last frame saved.', model: 'System', weight: 15 },
+        { type: 'loitering', severity: 'medium', msg: 'Loitering detected near entrance', detail: 'Individual stationary for {min}+ minutes at facility perimeter.', model: 'PoseGuard v1.4', weight: 10 },
       ];
-      const at = alertTypes[Math.floor(Math.random() * alertTypes.length)];
+      const at = weightedRandom(alertTypes);
+      const detail = at.detail
+        .replace('{exp}', zone ? zone.expected_count : 12)
+        .replace('{det}', zone ? Math.max(0, zone.expected_count + (Math.random() > 0.5 ? 1 : -1) * Math.floor(Math.random() * 4 + 1)) : 8)
+        .replace('{min}', Math.floor(Math.random() * 15) + 3)
+        .replace('{sec}', Math.floor(Math.random() * 45) + 10)
+        .replace('{lastZone}', zone ? zone.name : 'Main Hall');
       const alert = store.addAlert({
         type: at.type,
         severity: at.severity,
-        message: `${at.msg} - ${org.name}${zone ? ', ' + zone.name : ''}`,
+        message: `${at.msg} at ${org.name}, ${org.city}`,
+        detail: detail,
+        camera_id: camera,
+        ai_model: at.model,
         zone: zone ? zone.name : null,
         orphanage_id: org.id
       });
       broadcast({ type: 'alert', alert });
       const notif = store.addNotification({
         type: 'security_alert',
-        title: at.msg,
-        message: `${at.msg} - ${org.name}${zone ? ', ' + zone.name : ''}`,
+        title: `${at.msg} [${at.model}]`,
+        message: `[${camera}] ${at.msg} at ${org.name}, ${org.city}. ${detail}`,
         severity: at.severity === 'critical' ? 'critical' : 'high',
         orphanage_id: org.id,
       });
@@ -92,28 +122,39 @@ function startAIDetection() {
 
     // Violence/Harassment incidents (3% chance per tick)
     if (Math.random() < 0.03) {
-      const org = orphanages.filter(o => o.status === 'online')[Math.floor(Math.random() * orphanages.filter(o => o.status === 'online').length)];
+      const onlineOrgs = orphanages.filter(o => o.status === 'online');
+      const org = onlineOrgs[Math.floor(Math.random() * onlineOrgs.length)];
       const zones = store.getZones(org.id);
       const zone = zones.length > 0 ? zones[Math.floor(Math.random() * zones.length)] : null;
-      const vt = violenceTypes[Math.floor(Math.random() * violenceTypes.length)];
-      const confidence = (70 + Math.random() * 29).toFixed(1);
+      const vt = weightedRandom(violenceTypes);
+      const model = aiModels[vt.model];
+      const confidence = (vt.minConf + Math.random() * (99 - vt.minConf)).toFixed(1);
+      const camera = cameraNames[Math.floor(Math.random() * Math.min(org.cameras, cameraNames.length))];
+      const personsDetected = vt.type === 'neglect' ? 1 : Math.floor(Math.random() * 3) + 2;
+      const bbox = { x: Math.floor(Math.random() * 400) + 100, y: Math.floor(Math.random() * 200) + 50, w: Math.floor(Math.random() * 150) + 80, h: Math.floor(Math.random() * 200) + 100 };
       const incident = store.addIncident({
         type: vt.type,
         label: vt.label,
         severity: vt.severity,
-        description: `${vt.desc} - ${org.name}${zone ? ', ' + zone.name : ''}`,
+        description: `${vt.desc} at ${org.name}, ${org.city}. Detected: ${personsDetected} person(s). Zone: ${zone ? zone.name : 'Unknown'}. Expected: ${zone ? zone.expected_count : '?'}.`,
         zone: zone ? zone.name : null,
         orphanage_id: org.id,
         orphanage_name: org.name,
         confidence: parseFloat(confidence),
-        ai_model: 'ViolenceNet v2.1',
-        frame_count: Math.floor(Math.random() * 30) + 5,
+        ai_model: model.name,
+        model_backbone: model.backbone,
+        detection_type: model.type,
+        camera_id: camera,
+        frame_count: Math.floor(Math.random() * 45) + 10,
+        persons_detected: personsDetected,
+        bounding_box: bbox,
+        inference_ms: Math.floor(Math.random() * 80) + 20,
       });
       broadcast({ type: 'incident', incident });
       const notif = store.addNotification({
         type: 'ai_detection',
-        title: vt.label,
-        message: `${vt.desc} - ${org.name}${zone ? ', ' + zone.name : ''} (${confidence}% confidence)`,
+        title: `${vt.label} [${model.name}]`,
+        message: `${camera}: ${vt.desc} at ${org.name}, ${org.city} (${confidence}% confidence, ${personsDetected} person(s))`,
         severity: vt.severity,
         orphanage_id: org.id,
       });
@@ -121,12 +162,11 @@ function startAIDetection() {
 
       store.addActivity({
         event_type: 'ai_detection',
-        description: `AI ALERT: ${vt.label} detected at ${org.name}${zone ? ' - ' + zone.name : ''} (${confidence}% confidence)`,
+        description: `${model.name}: ${vt.label} at ${org.name} [${camera}] — ${confidence}% confidence, ${personsDetected} person(s)`,
         zone_id: zone ? zone.id : null,
         orphanage_id: org.id
       });
 
-      // Update orphanage risk
       if (vt.severity === 'critical') {
         store.updateOrphanage(org.id, { risk_level: 'high' });
         broadcast({ type: 'risk_update', orphanage_id: org.id, risk_level: 'high' });
@@ -135,42 +175,51 @@ function startAIDetection() {
 
     // Emotion detection (5% chance per tick)
     if (Math.random() < 0.05) {
-      const org = orphanages.filter(o => o.status === 'online')[Math.floor(Math.random() * orphanages.filter(o => o.status === 'online').length)];
+      const onlineOrgs = orphanages.filter(o => o.status === 'online');
+      const org = onlineOrgs[Math.floor(Math.random() * onlineOrgs.length)];
       if (org) {
         const zones = store.getZones(org.id);
         const zone = zones.length > 0 ? zones[Math.floor(Math.random() * zones.length)] : null;
         const children = store.getChildren(org.id);
         const child = children.length > 0 ? children[Math.floor(Math.random() * children.length)] : null;
+        const camera = cameraNames[Math.floor(Math.random() * Math.min(org.cameras, cameraNames.length))];
         const emotions = [
-          { emotion: 'distressed', severity: 'high', action: 'Staff notified for immediate check' },
-          { emotion: 'crying', severity: 'high', action: 'Caretaker dispatched to location' },
-          { emotion: 'anxious', severity: 'medium', action: 'Monitoring increased' },
-          { emotion: 'fearful', severity: 'high', action: 'Security alert raised' },
-          { emotion: 'happy', severity: 'low', action: 'No action needed' },
-          { emotion: 'neutral', severity: 'low', action: 'Normal behavior' },
-          { emotion: 'excited', severity: 'low', action: 'No action needed' },
-          { emotion: 'sad', severity: 'medium', action: 'Counselor notified' },
+          { emotion: 'distressed', severity: 'high', action: 'Staff notified for immediate check. Caretaker dispatched.', weight: 5, valence: -0.8 },
+          { emotion: 'crying', severity: 'high', action: 'Caretaker dispatched. Audio pattern confirms vocal distress.', weight: 8, valence: -0.7 },
+          { emotion: 'anxious', severity: 'medium', action: 'Monitoring frequency increased to 10s intervals.', weight: 10, valence: -0.4 },
+          { emotion: 'fearful', severity: 'high', action: 'Security alert raised. Sending team for headcount verification.', weight: 4, valence: -0.9 },
+          { emotion: 'happy', severity: 'low', action: 'No action needed. Positive environment confirmed.', weight: 30, valence: 0.8 },
+          { emotion: 'neutral', severity: 'low', action: 'Normal behavior. Baseline updated.', weight: 25, valence: 0.0 },
+          { emotion: 'excited', severity: 'low', action: 'No action needed. Group activity detected.', weight: 12, valence: 0.6 },
+          { emotion: 'sad', severity: 'medium', action: 'Counselor notification sent. Follow-up scheduled.', weight: 6, valence: -0.5 },
         ];
-        const emo = emotions[Math.floor(Math.random() * emotions.length)];
-        const confidence = (65 + Math.random() * 34).toFixed(1);
+        const emo = weightedRandom(emotions);
+        const confidence = (68 + Math.random() * 31).toFixed(1);
+        const emotionScores = {};
+        emotions.forEach(e => { emotionScores[e.emotion] = e.emotion === emo.emotion ? parseFloat(confidence) : parseFloat((Math.random() * 25).toFixed(1)); });
         const detection = store.addEmotionDetection({
-          child_name: child ? child.name : 'Unknown Child',
+          child_name: child ? child.name : `Child-${Math.floor(Math.random() * 200) + 1}`,
+          child_id: child ? child.id : null,
           emotion: emo.emotion,
           confidence: parseFloat(confidence),
+          emotional_valence: emo.valence,
+          emotion_scores: emotionScores,
           severity: emo.severity,
           zone: zone ? zone.name : 'Unknown',
+          camera_id: camera,
           orphanage_id: org.id,
           orphanage_name: org.name,
+          ai_model: 'FaceEmotion v3.0',
           action_taken: emo.action,
+          inference_ms: Math.floor(Math.random() * 40) + 15,
         });
         broadcast({ type: 'emotion_detection', detection });
 
-        // Create notification for distress emotions
         if (['distressed', 'crying', 'fearful'].includes(emo.emotion)) {
           const notif = store.addNotification({
             type: 'emotion_alert',
-            title: `${emo.emotion.charAt(0).toUpperCase() + emo.emotion.slice(1)} Child Detected`,
-            message: `${child ? child.name : 'A child'} detected as ${emo.emotion} at ${org.name}${zone ? ', ' + zone.name : ''} (${confidence}% confidence)`,
+            title: `EMOTION ALERT: ${child ? '"' + child.name + '"' : 'Child'} showing signs of ${emo.emotion}`,
+            message: `[${camera}] at ${org.name}, ${org.city}. Emotional confidence: ${confidence}%. ${emo.action}`,
             severity: emo.severity,
             orphanage_id: org.id,
           });
