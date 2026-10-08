@@ -601,11 +601,13 @@ function renderIncidentItem(i) {
         <span>&#129302; ${i.ai_model}</span>
         <span>Confidence: <span class="confidence-bar"><span class="fill" style="width:${i.confidence}%;background:${confColor}"></span></span> ${i.confidence}%</span>
         <span>&#127909; ${i.frame_count} frames</span>
+        ${i.clip ? `<span style="color:var(--danger);font-weight:700">&#128308; CLIP RECORDED (${i.clip.duration_sec}s)</span>` : ''}
       </div>
     </div>
     <div style="text-align:right">
       <span class="risk-badge ${i.severity}">${i.severity}</span>
       ${i.reviewed ? '<div style="color:var(--success);font-size:11px;margin-top:6px">Reviewed</div>' : '<div style="color:var(--warning);font-size:11px;margin-top:6px">Pending Review</div>'}
+      ${i.clip ? '<div style="color:var(--danger);font-size:11px;margin-top:4px">&#127909; Clip Saved</div>' : ''}
     </div>
   </div>`;
 }
@@ -673,6 +675,36 @@ async function viewIncident(id) {
         <div><strong>Orphanage:</strong> ${i.orphanage_name || 'N/A'}</div>
         <div><strong>Detected:</strong> ${new Date(i.detected_at).toLocaleString('en-PK')}</div>
       </div>
+      ${i.clip ? `
+      <div class="clip-player">
+        <div class="clip-player-header">
+          <span style="color:var(--danger);font-weight:700">&#128308; RECORDED CLIP</span>
+          <span style="font-size:11px;color:var(--text-tertiary)">${i.clip.camera_id} &middot; ${i.clip.camera_name}</span>
+        </div>
+        <div class="clip-player-screen">
+          <div class="clip-screen-overlay">
+            <div class="clip-cam-label">${i.clip.camera_id} &middot; ${i.clip.camera_name}</div>
+            <div class="clip-rec-badge">&#128308; REC</div>
+            <div class="clip-timestamp">${new Date(i.clip.start_time).toLocaleString('en-PK')}</div>
+            <div class="clip-play-btn" onclick="playDemoClip(this)">
+              <svg width="48" height="48" viewBox="0 0 24 24" fill="white"><polygon points="5 3 19 12 5 21 5 3"/></svg>
+            </div>
+            <div class="clip-scanlines"></div>
+          </div>
+        </div>
+        <div class="clip-player-info">
+          <div><strong>Duration:</strong> ${i.clip.duration_sec}s</div>
+          <div><strong>Resolution:</strong> ${i.clip.resolution}</div>
+          <div><strong>FPS:</strong> ${i.clip.fps}</div>
+          <div><strong>Size:</strong> ${i.clip.size_mb} MB</div>
+          <div><strong>Start:</strong> ${new Date(i.clip.start_time).toLocaleTimeString('en-PK')}</div>
+          <div><strong>End:</strong> ${new Date(i.clip.end_time).toLocaleTimeString('en-PK')}</div>
+        </div>
+        <div style="display:flex;gap:8px;margin-top:10px">
+          <button class="btn btn-outline btn-sm" onclick="alert('DEMO MODE — Clip download simulated.\\nFile: ${i.clip.camera_id}_${i.clip.duration_sec}s.mp4 (${i.clip.size_mb}MB)')">&#11015; Download Clip</button>
+          <button class="btn btn-outline btn-sm" onclick="alert('DEMO MODE — Clip flagged as evidence.')">&#128204; Flag as Evidence</button>
+        </div>
+      </div>` : ''}
     `;
     const btn = document.getElementById('btn-review-incident');
     btn.onclick = async () => {
@@ -2125,6 +2157,23 @@ async function loadBriefing() {
       </div>
     `;
   } catch (e) { console.error(e); }
+}
+
+// === Demo Clip Player ===
+function playDemoClip(el) {
+  const screen = el.closest('.clip-screen-overlay');
+  el.style.display = 'none';
+  const progress = document.createElement('div');
+  progress.className = 'clip-progress';
+  progress.innerHTML = '<div class="clip-progress-bar"></div>';
+  screen.appendChild(progress);
+  const bar = progress.querySelector('.clip-progress-bar');
+  let w = 0;
+  const iv = setInterval(() => {
+    w += 2;
+    bar.style.width = w + '%';
+    if (w >= 100) { clearInterval(iv); el.style.display = ''; progress.remove(); }
+  }, 100);
 }
 
 // === Emergency Dispatch ===

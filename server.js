@@ -97,6 +97,9 @@ function startAIDetection() {
       const zone = zones.length > 0 ? zones[Math.floor(Math.random() * zones.length)] : null;
       const vt = violenceTypes[Math.floor(Math.random() * violenceTypes.length)];
       const confidence = (70 + Math.random() * 29).toFixed(1);
+      const cameraId = zone ? `CAM-${org.id}${zone ? '-' + zones.indexOf(zone) + 1 : ''}` : `CAM-${org.id}-1`;
+      const clipDuration = Math.floor(Math.random() * 25) + 8;
+      const clipStart = new Date(Date.now() - clipDuration * 1000);
       const incident = store.addIncident({
         type: vt.type,
         label: vt.label,
@@ -108,6 +111,17 @@ function startAIDetection() {
         confidence: parseFloat(confidence),
         ai_model: 'ViolenceNet v2.1',
         frame_count: Math.floor(Math.random() * 30) + 5,
+        clip: {
+          camera_id: cameraId,
+          camera_name: `${zone ? zone.name : 'Main'} Camera`,
+          duration_sec: clipDuration,
+          start_time: clipStart.toISOString(),
+          end_time: new Date().toISOString(),
+          resolution: '1080p',
+          fps: 30,
+          size_mb: parseFloat((clipDuration * 2.4).toFixed(1)),
+          status: 'recorded',
+        },
       });
       broadcast({ type: 'incident', incident });
       const notif = store.addNotification({
