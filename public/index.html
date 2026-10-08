@@ -222,8 +222,14 @@
     <section class="page-section" id="page-cameras">
       <div class="page-header">
         <h2>Live Camera Feeds</h2>
-        <div class="header-time"><div class="live-dot"></div><span>AI Detection Active</span></div>
+        <div style="display:flex;gap:10px;align-items:center">
+          <select id="camera-org-filter" style="padding:8px 14px;border-radius:var(--radius-sm);border:1px solid var(--border);background:var(--bg-card);color:var(--text-primary);font-size:12px;font-family:inherit;cursor:pointer;outline:none">
+            <option value="">All Orphanages</option>
+          </select>
+          <div class="header-time"><div class="live-dot"></div><span>AI Detection Active</span></div>
+        </div>
       </div>
+      <div class="camera-stats" id="camera-stats"></div>
       <div class="camera-grid" id="camera-grid"></div>
     </section>
 

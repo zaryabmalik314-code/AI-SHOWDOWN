@@ -860,38 +860,148 @@ async function checkoutVisitor(id) {
 }
 
 // Cameras
-function initCameras() {
+let cameraFeeds = [];
+let cameraOrgFilter = '';
+let cameraStream = null;
+let cameraDetectionInterval = null;
+
+async function initCameras() {
+  const filter = document.getElementById('camera-org-filter');
+  filter.innerHTML = '<option value="">All Orphanages</option>' + orphanages.map(o => `<option value="${o.id}" ${cameraOrgFilter == o.id ? 'selected' : ''}>${o.name} — ${o.city}</option>`).join('');
+  filter.onchange = (e) => { cameraOrgFilter = e.target.value; initCameras(); };
+
+  const allZones = [];
+  const orgList = cameraOrgFilter ? orphanages.filter(o => o.id === parseInt(cameraOrgFilter)) : orphanages;
+  for (const o of orgList) {
+    try {
+      const res = await fetch('/api/zones?orphanage_id=' + o.id);
+      const zones = await res.json();
+      zones.forEach(z => allZones.push({ ...z, orgName: o.name, orgStatus: o.status, orgId: o.id }));
+      if (zones.length === 0) {
+        for (let i = 0; i < Math.min(o.cameras, 4); i++) {
+          allZones.push({ name: `Camera ${i + 1}`, description: 'General surveillance', orgName: o.name, orgStatus: o.status, orgId: o.id });
+        }
+      }
+    } catch (e) { /* skip */ }
+  }
+  cameraFeeds = allZones;
+
+  const totalCams = orgList.reduce((s, o) => s + o.cameras, 0);
+  const onlineCams = orgList.filter(o => o.status === 'online').reduce((s, o) => s + o.cameras, 0);
+  const offlineOrgs = orgList.filter(o => o.status !== 'online').length;
+  document.getElementById('camera-stats').innerHTML = `
+    <div class="cam-stat-row">
+      <div class="cam-stat"><span class="cam-stat-val" style="color:var(--accent)">${totalCams}</span><span class="cam-stat-label">Total Cameras</span></div>
+      <div class="cam-stat"><span class="cam-stat-val" style="color:var(--success)">${onlineCams}</span><span class="cam-stat-label">Online</span></div>
+      <div class="cam-stat"><span class="cam-stat-val" style="color:var(--danger)">${totalCams - onlineCams}</span><span class="cam-stat-label">Offline</span></div>
+      <div class="cam-stat"><span class="cam-stat-val" style="color:var(--purple)">${orgList.length}</span><span class="cam-stat-label">Orphanages</span></div>
+      <div class="cam-stat"><span class="cam-stat-val" style="color:var(--cyan)">${allZones.length}</span><span class="cam-stat-label">Feed Zones</span></div>
+    </div>
+  `;
+
   const grid = document.getElementById('camera-grid');
-  const zones = ['Main Hall', 'Main Gate', 'Garden', 'Kitchen'];
-  grid.innerHTML = zones.map((zone, i) => `
-    <div class="camera-feed">
-      <div class="feed-header"><span>${zone}</span><div class="live-dot"></div></div>
+  grid.innerHTML = allZones.map((z, i) => `
+    <div class="camera-feed ${z.orgStatus !== 'online' ? 'cam-offline' : ''}">
+      <div class="feed-header">
+        <div>
+          <span class="feed-zone-name">${z.name}</span>
+          <span class="feed-org-name">${z.orgName}</span>
+        </div>
+        <div style="display:flex;align-items:center;gap:8px">
+          <span class="feed-status-badge ${z.orgStatus === 'online' ? 'online' : 'offline'}">${z.orgStatus === 'online' ? 'LIVE' : 'OFFLINE'}</span>
+          ${z.orgStatus === 'online' ? '<div class="live-dot"></div>' : ''}
+        </div>
+      </div>
       <div class="feed-body" id="feed-${i}">
-        ${i === 0 ? '<video id="cam-live" autoplay muted playsinline></video>' : '<div class="no-feed"><span style="font-size:32px">&#128247;</span>Simulated Feed</div>'}
-        <div class="feed-overlay"><span>AI Detection: Active</span><span id="feed-count-${i}">Persons: 0</span></div>
+        ${i === 0 && z.orgStatus === 'online' ? '<video id="cam-live" autoplay muted playsinline></video>' :
+          z.orgStatus === 'online' ?
+            `<div class="sim-feed" id="sim-feed-${i}"><canvas class="sim-canvas" id="sim-canvas-${i}"></canvas></div>` :
+            '<div class="no-feed"><span style="font-size:28px">&#128683;</span><span>Feed Unavailable</span><span style="font-size:10px;color:var(--danger)">Orphanage Offline</span></div>'
+        }
+        ${z.orgStatus === 'online' ? `<div class="feed-overlay"><span>AI: Active</span><span id="feed-count-${i}">Persons: 0</span></div>` : ''}
       </div>
     </div>
   `).join('');
-  navigator.mediaDevices.getUserMedia({ video: { width: 640, height: 480 } })
-    .then(stream => { const v = document.getElementById('cam-live'); if (v) v.srcObject = stream; startDetectionSim(); })
-    .catch(() => {
+
+  if (cameraDetectionInterval) clearInterval(cameraDetectionInterval);
+  if (cameraStream) { cameraStream.getTracks().forEach(t => t.stop()); cameraStream = null; }
+
+  const firstOnline = allZones.findIndex(z => z.orgStatus === 'online');
+  if (firstOnline === 0) {
+    try {
+      cameraStream = await navigator.mediaDevices.getUserMedia({ video: { width: 640, height: 480 } });
+      const v = document.getElementById('cam-live');
+      if (v) v.srcObject = cameraStream;
+    } catch (e) {
       const f = document.getElementById('feed-0');
-      if (f) f.innerHTML = '<div class="no-feed"><span style="font-size:32px">&#128247;</span>Camera unavailable</div><div class="feed-overlay"><span>AI: Simulated</span><span id="feed-count-0">Persons: 0</span></div>';
-      startDetectionSim();
-    });
+      if (f) f.innerHTML = '<div class="sim-feed" id="sim-feed-0"><canvas class="sim-canvas" id="sim-canvas-0"></canvas></div><div class="feed-overlay"><span>AI: Simulated</span><span id="feed-count-0">Persons: 0</span></div>';
+    }
+  }
+
+  allZones.forEach((z, i) => {
+    if (z.orgStatus !== 'online') return;
+    if (i === 0 && document.getElementById('cam-live')) return;
+    const canvas = document.getElementById('sim-canvas-' + i);
+    if (canvas) drawSimFeed(canvas, z.name);
+  });
+
+  startDetectionSim();
+}
+
+function drawSimFeed(canvas, label) {
+  const ctx = canvas.getContext('2d');
+  canvas.width = 320; canvas.height = 180;
+
+  function render() {
+    const t = Date.now() * 0.001;
+    ctx.fillStyle = `hsl(${140 + Math.sin(t) * 10}, 8%, ${8 + Math.sin(t * 0.5) * 2}%)`;
+    ctx.fillRect(0, 0, 320, 180);
+
+    for (let i = 0; i < 5; i++) {
+      const x = (Math.sin(t * 0.3 + i * 2) + 1) * 100 + 40;
+      const y = 90 + Math.sin(t * 0.4 + i) * 30;
+      ctx.fillStyle = `rgba(16, 185, 129, ${0.03 + Math.sin(t + i) * 0.02})`;
+      ctx.beginPath(); ctx.arc(x, y, 8 + i * 2, 0, Math.PI * 2); ctx.fill();
+    }
+
+    for (let i = 0; i < 3; i++) {
+      ctx.fillStyle = 'rgba(255,255,255,0.015)';
+      const y = ((t * 30 + i * 60) % 180);
+      ctx.fillRect(0, y, 320, 1);
+    }
+
+    ctx.fillStyle = 'rgba(16,185,129,0.06)';
+    ctx.fillRect(0, 0, 320, 1);
+    ctx.fillRect(0, 179, 320, 1);
+    ctx.fillRect(0, 0, 1, 180);
+    ctx.fillRect(319, 0, 1, 180);
+
+    ctx.fillStyle = 'rgba(16,185,129,0.3)';
+    ctx.font = '9px Inter, sans-serif';
+    const ts = new Date().toLocaleTimeString('en-PK');
+    ctx.fillText(ts, 6, 14);
+    ctx.fillText('REC', 280, 14);
+
+    const recDot = Math.sin(t * 3) > 0;
+    if (recDot) { ctx.beginPath(); ctx.arc(274, 11, 3, 0, Math.PI * 2); ctx.fill(); }
+
+    requestAnimationFrame(render);
+  }
+  render();
 }
 
 function startDetectionSim() {
-  const canvas = document.createElement('canvas');
-  const ctx = canvas.getContext('2d', { willReadFrequently: true });
+  if (cameraDetectionInterval) clearInterval(cameraDetectionInterval);
+  const analysisCanvas = document.createElement('canvas');
+  const analysisCtx = analysisCanvas.getContext('2d', { willReadFrequently: true });
 
   function detectPersonRegions(video) {
     if (!video || !video.videoWidth) return [];
     const w = 160, h = 120;
-    canvas.width = w; canvas.height = h;
-    ctx.drawImage(video, 0, 0, w, h);
+    analysisCanvas.width = w; analysisCanvas.height = h;
+    analysisCtx.drawImage(video, 0, 0, w, h);
     let imgData;
-    try { imgData = ctx.getImageData(0, 0, w, h); } catch (e) { return []; }
+    try { imgData = analysisCtx.getImageData(0, 0, w, h); } catch (e) { return []; }
     const d = imgData.data;
     const grid = [];
     const cellW = 10, cellH = 10;
@@ -947,36 +1057,42 @@ function startDetectionSim() {
     return regions.slice(0, 4);
   }
 
-  setInterval(() => {
-    const video = document.getElementById('cam-live');
-    const feed = document.getElementById('feed-0');
-    if (!feed) return;
-    feed.querySelectorAll('.detection-box').forEach(b => b.remove());
+  cameraDetectionInterval = setInterval(() => {
+    cameraFeeds.forEach((z, i) => {
+      if (z.orgStatus !== 'online') return;
+      const feed = document.getElementById('feed-' + i);
+      if (!feed) return;
+      feed.querySelectorAll('.detection-box').forEach(b => b.remove());
+      const countEl = document.getElementById('feed-count-' + i);
 
-    const regions = detectPersonRegions(video);
-    const personCount = Math.max(regions.length, 1);
-    const el0 = document.getElementById('feed-count-0');
-    if (el0) el0.textContent = 'Persons: ' + regions.length;
-
-    regions.forEach((reg, i) => {
-      const conf = (82 + Math.random() * 17).toFixed(0);
-      const box = document.createElement('div');
-      box.className = 'detection-box';
-      box.style.cssText = `left:${reg.x}%;top:${reg.y}%;width:${reg.w}%;height:${reg.h}%`;
-      box.innerHTML = `<div class="det-label">Person ${conf}%</div>`;
-      feed.appendChild(box);
+      if (i === 0 && document.getElementById('cam-live')) {
+        const video = document.getElementById('cam-live');
+        const regions = detectPersonRegions(video);
+        if (countEl) countEl.textContent = 'Persons: ' + regions.length;
+        regions.forEach(reg => {
+          const conf = (82 + Math.random() * 17).toFixed(0);
+          const box = document.createElement('div');
+          box.className = 'detection-box';
+          box.style.cssText = `left:${reg.x}%;top:${reg.y}%;width:${reg.w}%;height:${reg.h}%`;
+          box.innerHTML = `<div class="det-label">Person ${conf}%</div>`;
+          feed.appendChild(box);
+        });
+      } else {
+        const simCount = Math.floor(Math.random() * 5) + 1;
+        if (countEl) countEl.textContent = 'Persons: ' + simCount;
+        for (let j = 0; j < Math.min(simCount, 2); j++) {
+          const conf = (78 + Math.random() * 21).toFixed(0);
+          const box = document.createElement('div');
+          box.className = 'detection-box';
+          const bx = 15 + j * 30 + Math.random() * 15;
+          const by = 10 + Math.random() * 25;
+          box.style.cssText = `left:${bx}%;top:${by}%;width:${18 + Math.random() * 10}%;height:${30 + Math.random() * 20}%`;
+          box.innerHTML = `<div class="det-label">Person ${conf}%</div>`;
+          feed.appendChild(box);
+        }
+      }
     });
-
-    if (regions.length === 0 && video && video.videoWidth) {
-      const el0 = document.getElementById('feed-count-0');
-      if (el0) el0.textContent = 'Persons: 0';
-    }
-
-    for (let i = 1; i < 4; i++) {
-      const el = document.getElementById('feed-count-' + i);
-      if (el) el.textContent = 'Persons: ' + (Math.floor(Math.random() * 4) + 1);
-    }
-  }, 2000);
+  }, 2500);
 }
 
 // Activity
