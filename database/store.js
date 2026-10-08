@@ -40,7 +40,10 @@ const defaultData = {
     { id: 7, orphanage_id: 1, name: 'Study Room', description: 'Homework area', expected_count: 8, current_count: 0, status: 'active' },
   ],
   activity_log: [],
-  counters: { children: 8, health_records: 0, visitors: 0, alerts: 0, incidents: 0, activity_log: 0, orphanages: 10 }
+  growth_records: [],
+  notifications: [],
+  emotion_detections: [],
+  counters: { children: 8, health_records: 0, visitors: 0, alerts: 0, incidents: 0, activity_log: 0, orphanages: 10, growth_records: 0, notifications: 0, emotion_detections: 0 }
 };
 
 class Store {
@@ -49,6 +52,12 @@ class Store {
     if (!this.data.orphanages) this.data = JSON.parse(JSON.stringify(defaultData));
     if (!this.data.incidents) this.data.incidents = [];
     if (!this.data.counters.incidents) this.data.counters.incidents = 0;
+    if (!this.data.growth_records) this.data.growth_records = [];
+    if (!this.data.counters.growth_records) this.data.counters.growth_records = 0;
+    if (!this.data.notifications) this.data.notifications = [];
+    if (!this.data.counters.notifications) this.data.counters.notifications = 0;
+    if (!this.data.emotion_detections) this.data.emotion_detections = [];
+    if (!this.data.counters.emotion_detections) this.data.counters.emotion_detections = 0;
   }
 
   load() {
@@ -224,6 +233,71 @@ class Store {
     if (this.data.activity_log.length > 500) this.data.activity_log = this.data.activity_log.slice(-250);
     this.save();
     return event;
+  }
+
+  // Growth Records
+  getGrowthRecords(childId) {
+    return this.data.growth_records
+      .filter(r => r.child_id === parseInt(childId))
+      .sort((a, b) => new Date(b.recorded_date) - new Date(a.recorded_date));
+  }
+
+  addGrowthRecord(childId, record) {
+    record.id = this.nextId('growth_records');
+    record.child_id = parseInt(childId);
+    record.recorded_date = record.recorded_date || new Date().toISOString().split('T')[0];
+    record.created_at = new Date().toISOString();
+    this.data.growth_records.push(record);
+    this.save();
+    return record;
+  }
+
+  // Notifications
+  getNotifications(limit = 50) {
+    return this.data.notifications
+      .sort((a, b) => new Date(b.created_at) - new Date(a.created_at))
+      .slice(0, limit);
+  }
+
+  addNotification(notification) {
+    notification.id = this.nextId('notifications');
+    notification.read = false;
+    notification.created_at = new Date().toISOString();
+    this.data.notifications.push(notification);
+    if (this.data.notifications.length > 500) this.data.notifications = this.data.notifications.slice(-250);
+    this.save();
+    return notification;
+  }
+
+  markNotificationRead(id) {
+    const notif = this.data.notifications.find(n => n.id === parseInt(id));
+    if (notif) { notif.read = true; this.save(); }
+    return notif;
+  }
+
+  markAllNotificationsRead() {
+    this.data.notifications.forEach(n => { n.read = true; });
+    this.save();
+  }
+
+  getUnreadCount() {
+    return this.data.notifications.filter(n => !n.read).length;
+  }
+
+  // Emotion Detections
+  getEmotionDetections(orphanageId, limit = 50) {
+    let list = this.data.emotion_detections;
+    if (orphanageId) list = list.filter(e => e.orphanage_id === parseInt(orphanageId));
+    return list.sort((a, b) => new Date(b.detected_at) - new Date(a.detected_at)).slice(0, limit);
+  }
+
+  addEmotionDetection(detection) {
+    detection.id = this.nextId('emotion_detections');
+    detection.detected_at = new Date().toISOString();
+    this.data.emotion_detections.push(detection);
+    if (this.data.emotion_detections.length > 500) this.data.emotion_detections = this.data.emotion_detections.slice(-250);
+    this.save();
+    return detection;
   }
 
   // Rankings

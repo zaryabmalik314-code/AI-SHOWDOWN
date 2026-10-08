@@ -25,6 +25,8 @@ function connectWS() {
       case 'risk_update': updateOrphanageRisk(data.orphanage_id, data.risk_level); break;
       case 'visitor_checkin': case 'visitor_checkout': loadVisitors(); loadStats(); break;
       case 'child_added': loadChildren(); loadStats(); break;
+      case 'emotion_detection': handleEmotionDetection(data.detection); break;
+      case 'notification': handleNewNotification(data.notification); break;
     }
   };
   ws.onclose = () => setTimeout(connectWS, 3000);
@@ -49,6 +51,10 @@ document.querySelectorAll('.nav-item').forEach(item => {
     if (page === 'rankings') loadRankings();
     if (page === 'portal') loadPortal();
     if (page === 'activity') loadActivity();
+    if (page === 'analytics') loadAnalytics();
+    if (page === 'emotions') loadEmotions();
+    if (page === 'anomalies') loadAnomalies();
+    if (page === 'briefing') loadBriefing();
   });
 });
 
@@ -798,7 +804,7 @@ function renderChildRow(c) {
     <td>${getOrg(c.orphanage_id)}</td>
     <td>${new Date(c.admitted_date).toLocaleDateString('en-PK')}</td>
     <td>${c.medical_notes || '-'}</td>
-    <td><button class="btn btn-outline btn-sm" onclick="viewHealth(${c.id},'${c.name}')">Health</button></td>
+    <td style="display:flex;gap:6px"><button class="btn btn-outline btn-sm" onclick="viewHealth(${c.id},'${c.name}')">Health</button><button class="btn btn-outline btn-sm" style="border-color:var(--accent);color:var(--accent)" onclick="viewGrowth(${c.id},'${c.name}')">Growth</button></td>
   </tr>`;
 }
 
@@ -1563,6 +1569,10 @@ function navigateToPage(page) {
   if (page === 'rankings') loadRankings();
   if (page === 'portal') loadPortal();
   if (page === 'activity') loadActivity();
+  if (page === 'analytics') loadAnalytics();
+  if (page === 'emotions') loadEmotions();
+  if (page === 'anomalies') loadAnomalies();
+  if (page === 'briefing') loadBriefing();
 }
 
 function highlightMatch(text, query) {
@@ -1706,6 +1716,413 @@ function runGlobalSearch(query) {
   results.innerHTML = html;
 }
 
+// ====== NOTIFICATION CENTER ======
+let notifUnreadCount = 0;
+
+function toggleNotifCenter() {
+  document.getElementById('notif-panel').classList.toggle('open');
+  if (document.getElementById('notif-panel').classList.contains('open')) loadNotifications();
+}
+
+async function loadNotifications() {
+  try {
+    const res = await fetch('/api/notifications');
+    const notifs = await res.json();
+    const list = document.getElementById('notif-panel-list');
+    if (!notifs.length) {
+      list.innerHTML = '<div style="padding:40px;text-align:center;color:var(--text-tertiary)">No notifications yet</div>';
+      return;
+    }
+    list.innerHTML = notifs.map(n => {
+      const time = timeAgo(new Date(n.created_at));
+      const icons = { security_alert: '&#128680;', ai_detection: '&#129302;', emotion_alert: '&#128546;' };
+      const icon = icons[n.type] || '&#128276;';
+      const bgColors = { security_alert: 'rgba(239,68,68,0.15)', ai_detection: 'rgba(139,92,246,0.15)', emotion_alert: 'rgba(251,191,36,0.15)' };
+      return `<div class="notif-item ${n.read ? '' : 'unread'} ${n.severity || ''}" onclick="markNotifRead(${n.id})">
+        <div class="notif-icon" style="background:${bgColors[n.type] || 'rgba(16,185,129,0.15)'}">${icon}</div>
+        <div class="notif-info">
+          <div class="notif-title">${n.title}</div>
+          <div class="notif-msg">${n.message}</div>
+          <div class="notif-time">${time}</div>
+        </div>
+      </div>`;
+    }).join('');
+  } catch (e) { console.error(e); }
+}
+
+function timeAgo(date) {
+  const s = Math.floor((Date.now() - date) / 1000);
+  if (s < 60) return 'Just now';
+  if (s < 3600) return Math.floor(s / 60) + 'm ago';
+  if (s < 86400) return Math.floor(s / 3600) + 'h ago';
+  return Math.floor(s / 86400) + 'd ago';
+}
+
+async function markNotifRead(id) {
+  await fetch(`/api/notifications/${id}/read`, { method: 'PUT' });
+  loadNotifications();
+  updateNotifCount();
+}
+
+async function markAllNotifsRead() {
+  await fetch('/api/notifications/read-all', { method: 'PUT' });
+  loadNotifications();
+  updateNotifCount();
+}
+
+async function updateNotifCount() {
+  try {
+    const res = await fetch('/api/notifications/unread-count');
+    const { count } = await res.json();
+    notifUnreadCount = count;
+    const badge = document.getElementById('notif-count');
+    if (count > 0) {
+      badge.textContent = count > 99 ? '99+' : count;
+      badge.style.display = 'flex';
+    } else {
+      badge.style.display = 'none';
+    }
+  } catch (e) { /* ignore */ }
+}
+
+function handleNewNotification(notif) {
+  notifUnreadCount++;
+  const badge = document.getElementById('notif-count');
+  badge.textContent = notifUnreadCount > 99 ? '99+' : notifUnreadCount;
+  badge.style.display = 'flex';
+  if (document.getElementById('notif-panel').classList.contains('open')) loadNotifications();
+}
+
+setInterval(updateNotifCount, 15000);
+
+// ====== ANALYTICS / CHARTS ======
+let incidentChart, alertTypeChart, severityChart;
+
+async function loadAnalytics() {
+  try {
+    const [timelineRes, typesRes, incidentsRes] = await Promise.all([
+      fetch('/api/analytics/incidents-timeline' + qs(currentFilter)),
+      fetch('/api/analytics/alerts-by-type' + qs(currentFilter)),
+      fetch('/api/incidents' + qs(currentFilter)),
+    ]);
+    const timeline = await timelineRes.json();
+    const alertTypes = await typesRes.json();
+    const incidents = await incidentsRes.json();
+
+    // Incidents timeline line chart
+    const ctx1 = document.getElementById('chart-incidents-timeline');
+    if (incidentChart) incidentChart.destroy();
+    incidentChart = new Chart(ctx1, {
+      type: 'line',
+      data: {
+        labels: timeline.map(d => d.date.slice(5)),
+        datasets: [{
+          label: 'Total Incidents',
+          data: timeline.map(d => d.total),
+          borderColor: '#10b981',
+          backgroundColor: 'rgba(16,185,129,0.1)',
+          fill: true,
+          tension: 0.4,
+          pointRadius: 4,
+          pointBackgroundColor: '#10b981',
+        }]
+      },
+      options: {
+        responsive: true,
+        plugins: { legend: { labels: { color: '#8a8a9a' } } },
+        scales: {
+          x: { ticks: { color: '#55555f' }, grid: { color: 'rgba(255,255,255,0.04)' } },
+          y: { ticks: { color: '#55555f' }, grid: { color: 'rgba(255,255,255,0.04)' }, beginAtZero: true }
+        }
+      }
+    });
+
+    // Alerts by type doughnut
+    const ctx2 = document.getElementById('chart-alerts-type');
+    if (alertTypeChart) alertTypeChart.destroy();
+    const colors = ['#10b981', '#f59e0b', '#ef4444', '#8b5cf6', '#06b6d4', '#ec4899'];
+    alertTypeChart = new Chart(ctx2, {
+      type: 'doughnut',
+      data: {
+        labels: alertTypes.map(a => a.type),
+        datasets: [{
+          data: alertTypes.map(a => a.count),
+          backgroundColor: colors.slice(0, alertTypes.length),
+          borderColor: '#111114',
+          borderWidth: 2,
+        }]
+      },
+      options: {
+        responsive: true,
+        plugins: {
+          legend: { position: 'bottom', labels: { color: '#8a8a9a', padding: 16, usePointStyle: true } }
+        }
+      }
+    });
+
+    // Severity breakdown bar chart
+    const severities = { critical: 0, high: 0, medium: 0, low: 0 };
+    incidents.forEach(i => { severities[i.severity] = (severities[i.severity] || 0) + 1; });
+    const ctx3 = document.getElementById('chart-severity');
+    if (severityChart) severityChart.destroy();
+    severityChart = new Chart(ctx3, {
+      type: 'bar',
+      data: {
+        labels: ['Critical', 'High', 'Medium', 'Low'],
+        datasets: [{
+          label: 'Count',
+          data: [severities.critical, severities.high, severities.medium, severities.low || 0],
+          backgroundColor: ['#ef4444', '#f59e0b', '#06b6d4', '#10b981'],
+          borderRadius: 6,
+          barThickness: 40,
+        }]
+      },
+      options: {
+        responsive: true,
+        plugins: { legend: { display: false } },
+        scales: {
+          x: { ticks: { color: '#8a8a9a' }, grid: { display: false } },
+          y: { ticks: { color: '#55555f' }, grid: { color: 'rgba(255,255,255,0.04)' }, beginAtZero: true }
+        }
+      }
+    });
+  } catch (e) { console.error(e); }
+}
+
+// ====== CHILD GROWTH TRACKER ======
+let growthChart;
+
+async function viewGrowth(childId, name) {
+  document.getElementById('growth-child-id').value = childId;
+  document.getElementById('growth-modal-title').textContent = `Growth Tracker - ${name}`;
+  document.getElementById('growth-form').reset();
+
+  try {
+    const res = await fetch(`/api/children/${childId}/growth`);
+    const records = await res.json();
+
+    // Render chart
+    const ctx = document.getElementById('chart-growth');
+    if (growthChart) growthChart.destroy();
+    if (records.length > 1) {
+      const sorted = [...records].reverse();
+      growthChart = new Chart(ctx, {
+        type: 'line',
+        data: {
+          labels: sorted.map(r => r.recorded_date),
+          datasets: [
+            { label: 'Height (cm)', data: sorted.map(r => r.height_cm), borderColor: '#10b981', backgroundColor: 'rgba(16,185,129,0.1)', fill: false, tension: 0.3, yAxisID: 'y' },
+            { label: 'Weight (kg)', data: sorted.map(r => r.weight_kg), borderColor: '#8b5cf6', backgroundColor: 'rgba(139,92,246,0.1)', fill: false, tension: 0.3, yAxisID: 'y1' },
+          ]
+        },
+        options: {
+          responsive: true,
+          plugins: { legend: { labels: { color: '#8a8a9a' } } },
+          scales: {
+            x: { ticks: { color: '#55555f' }, grid: { color: 'rgba(255,255,255,0.04)' } },
+            y: { type: 'linear', position: 'left', ticks: { color: '#10b981' }, grid: { color: 'rgba(255,255,255,0.04)' }, title: { display: true, text: 'Height (cm)', color: '#10b981' } },
+            y1: { type: 'linear', position: 'right', ticks: { color: '#8b5cf6' }, grid: { display: false }, title: { display: true, text: 'Weight (kg)', color: '#8b5cf6' } }
+          }
+        }
+      });
+      document.getElementById('growth-chart-container').style.display = 'block';
+    } else {
+      document.getElementById('growth-chart-container').style.display = records.length ? 'none' : 'none';
+    }
+
+    // Render history
+    document.getElementById('growth-history').innerHTML = records.length
+      ? '<h4 style="margin:16px 0 8px;font-size:13px;color:var(--text-secondary)">History</h4>' + records.map(r => `
+        <div class="growth-record">
+          <span class="growth-date">${r.recorded_date}</span>
+          <span class="growth-val">${r.height_cm} cm</span>
+          <span class="growth-val">${r.weight_kg} kg</span>
+          <span class="growth-val" style="color:var(--accent)">BMI ${r.bmi}</span>
+          <span style="color:var(--text-secondary);font-size:12px">${r.notes || ''}</span>
+        </div>`).join('')
+      : '<p style="color:var(--text-tertiary);font-size:12px;margin-top:12px">No growth records yet. Add the first one above.</p>';
+
+    openModal('growth-modal');
+  } catch (e) { console.error(e); }
+}
+
+async function addGrowthRecord(e) {
+  e.preventDefault();
+  const form = e.target;
+  const data = Object.fromEntries(new FormData(form));
+  const childId = data.child_id; delete data.child_id;
+  await fetch(`/api/children/${childId}/growth`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(data)
+  });
+  const name = document.getElementById('growth-modal-title').textContent.replace('Growth Tracker - ', '');
+  viewGrowth(childId, name);
+}
+
+// ====== EMOTION DETECTION ======
+const emotionEmojis = {
+  distressed: '&#128553;', crying: '&#128557;', anxious: '&#128552;', fearful: '&#128560;',
+  happy: '&#128522;', neutral: '&#128528;', excited: '&#129321;', sad: '&#128546;'
+};
+
+async function loadEmotions() {
+  try {
+    const res = await fetch('/api/emotions' + qs(currentFilter));
+    const detections = await res.json();
+
+    const counts = {};
+    detections.forEach(d => { counts[d.emotion] = (counts[d.emotion] || 0) + 1; });
+    const distressed = (counts.distressed || 0) + (counts.crying || 0) + (counts.fearful || 0);
+    const positive = (counts.happy || 0) + (counts.excited || 0);
+    const neutral = counts.neutral || 0;
+    const concerned = (counts.anxious || 0) + (counts.sad || 0);
+
+    document.getElementById('emotion-stats').innerHTML = `
+      <div class="emo-stat"><div class="emo-icon">&#128553;</div><div class="emo-val" style="color:var(--danger)">${distressed}</div><div class="emo-label">Distressed</div></div>
+      <div class="emo-stat"><div class="emo-icon">&#128546;</div><div class="emo-val" style="color:var(--warning)">${concerned}</div><div class="emo-label">Concerned</div></div>
+      <div class="emo-stat"><div class="emo-icon">&#128528;</div><div class="emo-val" style="color:var(--cyan)">${neutral}</div><div class="emo-label">Neutral</div></div>
+      <div class="emo-stat"><div class="emo-icon">&#128522;</div><div class="emo-val" style="color:var(--success)">${positive}</div><div class="emo-label">Positive</div></div>
+    `;
+
+    document.getElementById('emotion-feed').innerHTML = detections.map(d => {
+      const emoji = emotionEmojis[d.emotion] || '&#128528;';
+      const time = timeAgo(new Date(d.detected_at));
+      const sevClass = d.severity === 'high' ? 'high' : d.severity === 'medium' ? 'medium' : '';
+      return `<div class="emotion-item">
+        <div class="emotion-emoji">${emoji}</div>
+        <div class="emotion-info">
+          <div class="emotion-label">${d.child_name} - <span style="text-transform:capitalize">${d.emotion}</span></div>
+          <div class="emotion-meta">${d.orphanage_name} &middot; ${d.zone} &middot; ${d.confidence}% confidence &middot; ${time}</div>
+        </div>
+        <div class="emotion-action ${sevClass}">${d.action_taken}</div>
+      </div>`;
+    }).join('') || '<p style="color:var(--text-secondary);padding:20px">No emotion detections yet.</p>';
+  } catch (e) { console.error(e); }
+}
+
+function handleEmotionDetection(detection) {
+  const feed = document.getElementById('emotion-feed');
+  if (feed && document.getElementById('page-emotions').classList.contains('active')) {
+    loadEmotions();
+  }
+}
+
+// ====== ANOMALY DETECTION ======
+async function loadAnomalies() {
+  try {
+    const res = await fetch('/api/analytics/anomalies');
+    const anomalies = await res.json();
+
+    document.getElementById('anomaly-list').innerHTML = anomalies.map(a => {
+      const changeClass = a.change_percent > 0 ? 'up' : a.change_percent < 0 ? 'down' : 'flat';
+      const changeText = a.change_percent > 0 ? `+${a.change_percent}%` : a.change_percent < 0 ? `${a.change_percent}%` : '0%';
+      const arrow = a.change_percent > 0 ? '&#9650;' : a.change_percent < 0 ? '&#9660;' : '&#8212;';
+      return `<div class="anomaly-card ${a.anomaly_level}">
+        <div>
+          <div class="anomaly-name">${a.name}</div>
+          <div class="anomaly-city">${a.city}</div>
+        </div>
+        <div class="anomaly-stats">
+          <div class="anomaly-stat-item">
+            <div class="anomaly-stat-val">${a.incidents_this_week}</div>
+            <div class="anomaly-stat-label">This Week</div>
+          </div>
+          <div class="anomaly-stat-item">
+            <div class="anomaly-stat-val" style="color:var(--text-secondary)">${a.incidents_last_week}</div>
+            <div class="anomaly-stat-label">Last Week</div>
+          </div>
+          <div class="anomaly-stat-item">
+            <div class="anomaly-stat-val" style="color:var(--danger)">${a.critical_this_week}</div>
+            <div class="anomaly-stat-label">Critical</div>
+          </div>
+          <div class="anomaly-stat-item">
+            <div class="anomaly-stat-val" style="color:var(--warning)">${a.unresolved_alerts}</div>
+            <div class="anomaly-stat-label">Unresolved</div>
+          </div>
+        </div>
+        <div class="anomaly-change ${changeClass}">${arrow} ${changeText}</div>
+      </div>`;
+    }).join('') || '<p style="color:var(--text-secondary);padding:20px">No data yet.</p>';
+  } catch (e) { console.error(e); }
+}
+
+// ====== DAILY BRIEFING ======
+async function loadBriefing() {
+  try {
+    const res = await fetch('/api/briefing');
+    const b = await res.json();
+
+    const breakdownHtml = Object.entries(b.incident_breakdown).map(([type, count]) =>
+      `<div style="display:flex;justify-content:space-between;padding:6px 0;border-bottom:1px solid var(--border)">
+        <span style="text-transform:capitalize;color:var(--text-secondary)">${type.replace(/_/g, ' ')}</span>
+        <span style="font-weight:700;color:var(--text-primary)">${count}</span>
+      </div>`
+    ).join('') || '<p style="color:var(--text-tertiary);font-size:12px">No incidents today</p>';
+
+    const criticalHtml = b.recent_critical.map(i =>
+      `<div style="padding:10px;background:var(--bg-elevated);border-radius:var(--radius-sm);margin-bottom:8px;border-left:3px solid var(--danger)">
+        <div style="font-weight:600;font-size:13px">${i.label}</div>
+        <div style="font-size:11px;color:var(--text-secondary);margin-top:2px">${i.description}</div>
+        <div style="font-size:10px;color:var(--text-tertiary);margin-top:4px">${new Date(i.detected_at).toLocaleString('en-PK')}</div>
+      </div>`
+    ).join('') || '<p style="color:var(--text-tertiary);font-size:12px">No critical incidents today</p>';
+
+    document.getElementById('briefing-content').innerHTML = `
+      <div class="briefing-card">
+        <h3>&#128203; System Overview - ${new Date(b.date).toLocaleDateString('en-PK', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' })}</h3>
+        <div class="briefing-grid">
+          <div class="briefing-stat"><div class="bv" style="color:var(--accent)">${b.summary.total_orphanages}</div><div class="bl">Total Orphanages</div></div>
+          <div class="briefing-stat"><div class="bv" style="color:var(--success)">${b.summary.online}</div><div class="bl">Online</div></div>
+          <div class="briefing-stat"><div class="bv" style="color:var(--cyan)">${b.summary.total_children}</div><div class="bl">Children</div></div>
+          <div class="briefing-stat"><div class="bv" style="color:var(--purple)">${b.summary.active_visitors}</div><div class="bl">Active Visitors</div></div>
+        </div>
+      </div>
+
+      <div class="briefing-card">
+        <h3>&#9888; Today's Activity</h3>
+        <div class="briefing-grid">
+          <div class="briefing-stat"><div class="bv" style="color:var(--danger)">${b.today.incidents}</div><div class="bl">Incidents</div></div>
+          <div class="briefing-stat"><div class="bv" style="color:var(--danger)">${b.today.critical_incidents}</div><div class="bl">Critical</div></div>
+          <div class="briefing-stat"><div class="bv" style="color:var(--warning)">${b.today.alerts}</div><div class="bl">Alerts</div></div>
+          <div class="briefing-stat"><div class="bv" style="color:var(--success)">${b.today.resolved_alerts}</div><div class="bl">Resolved</div></div>
+        </div>
+      </div>
+
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px">
+        <div class="briefing-card">
+          <h3>&#128200; Incident Breakdown</h3>
+          ${breakdownHtml}
+        </div>
+        <div class="briefing-card">
+          <h3>&#128680; Critical Incidents</h3>
+          ${criticalHtml}
+        </div>
+      </div>
+
+      <div class="briefing-card">
+        <h3>&#127942; Performance</h3>
+        <div class="briefing-highlight">
+          ${b.top_performer ? `<div class="briefing-highlight-card good">
+            <div class="bh-label">Top Performer</div>
+            <div class="bh-name" style="color:var(--success)">${b.top_performer.name}</div>
+            <div class="bh-score">Score: ${b.top_performer.score}/100 &middot; Grade ${b.top_performer.grade}</div>
+          </div>` : ''}
+          ${b.needs_attention ? `<div class="briefing-highlight-card bad">
+            <div class="bh-label">Needs Attention</div>
+            <div class="bh-name" style="color:var(--danger)">${b.needs_attention.name}</div>
+            <div class="bh-score">Score: ${b.needs_attention.score}/100 &middot; Grade ${b.needs_attention.grade} &middot; ${b.needs_attention.open_incidents} open incidents</div>
+          </div>` : ''}
+        </div>
+      </div>
+
+      <div style="text-align:center;padding:16px;color:var(--text-tertiary);font-size:11px">
+        Generated at ${new Date(b.generated_at).toLocaleString('en-PK')} &middot; OrphanGuard AI Punjab Command Center
+      </div>
+    `;
+  } catch (e) { console.error(e); }
+}
+
 // Init - load all data so global search works
 loadOrphanages();
 loadStats();
@@ -1714,3 +2131,4 @@ loadAlerts();
 loadChildren();
 loadVisitors();
 loadActivity();
+updateNotifCount();
