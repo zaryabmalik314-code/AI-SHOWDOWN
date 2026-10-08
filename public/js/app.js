@@ -882,20 +882,101 @@ function initCameras() {
 }
 
 function startDetectionSim() {
-  setInterval(() => {
-    for (let i = 0; i < 4; i++) { const el = document.getElementById('feed-count-' + i); if (el) el.textContent = 'Persons: ' + Math.floor(Math.random() * 8); }
-    const feed = document.getElementById('feed-0');
-    if (feed) {
-      feed.querySelectorAll('.detection-box').forEach(b => b.remove());
-      for (let j = 0; j < Math.floor(Math.random() * 3) + 1; j++) {
-        const box = document.createElement('div');
-        box.className = 'detection-box';
-        box.style.cssText = `left:${10 + Math.random() * 50}%;top:${10 + Math.random() * 40}%;width:${60 + Math.random() * 40}px;height:${80 + Math.random() * 40}px`;
-        box.innerHTML = `<div class="det-label">Person ${(Math.random() * 100).toFixed(0)}%</div>`;
-        feed.appendChild(box);
+  const canvas = document.createElement('canvas');
+  const ctx = canvas.getContext('2d', { willReadFrequently: true });
+
+  function detectPersonRegions(video) {
+    if (!video || !video.videoWidth) return [];
+    const w = 160, h = 120;
+    canvas.width = w; canvas.height = h;
+    ctx.drawImage(video, 0, 0, w, h);
+    let imgData;
+    try { imgData = ctx.getImageData(0, 0, w, h); } catch (e) { return []; }
+    const d = imgData.data;
+    const grid = [];
+    const cellW = 10, cellH = 10;
+    const cols = Math.floor(w / cellW), rows = Math.floor(h / cellH);
+    for (let r = 0; r < rows; r++) {
+      for (let c = 0; c < cols; c++) {
+        let skinCount = 0, total = 0;
+        for (let y = r * cellH; y < (r + 1) * cellH; y++) {
+          for (let x = c * cellW; x < (c + 1) * cellW; x++) {
+            const i = (y * w + x) * 4;
+            const R = d[i], G = d[i+1], B = d[i+2];
+            if (R > 80 && G > 40 && B > 20 && R > G && R > B && Math.abs(R - G) > 15 && R - B > 15) skinCount++;
+            total++;
+          }
+        }
+        grid.push({ r, c, ratio: skinCount / total });
       }
     }
-  }, 3000);
+    const regions = [];
+    const visited = new Set();
+    for (let r = 0; r < rows; r++) {
+      for (let c = 0; c < cols; c++) {
+        const idx = r * cols + c;
+        if (visited.has(idx) || grid[idx].ratio < 0.25) continue;
+        let minR = r, maxR = r, minC = c, maxC = c;
+        const queue = [idx];
+        visited.add(idx);
+        while (queue.length) {
+          const cur = queue.shift();
+          const cr = Math.floor(cur / cols), cc = cur % cols;
+          minR = Math.min(minR, cr); maxR = Math.max(maxR, cr);
+          minC = Math.min(minC, cc); maxC = Math.max(maxC, cc);
+          for (const [dr, dc] of [[-1,0],[1,0],[0,-1],[0,1]]) {
+            const nr = cr + dr, nc = cc + dc;
+            if (nr < 0 || nr >= rows || nc < 0 || nc >= cols) continue;
+            const ni = nr * cols + nc;
+            if (!visited.has(ni) && grid[ni].ratio >= 0.2) { visited.add(ni); queue.push(ni); }
+          }
+        }
+        const bw = (maxC - minC + 1) * cellW, bh = (maxR - minR + 1) * cellH;
+        if (bw >= 15 && bh >= 20) {
+          const padX = bw * 0.3, padY = bh * 0.6;
+          regions.push({
+            x: Math.max(0, (minC * cellW - padX) / w * 100),
+            y: Math.max(0, (minR * cellH - padY) / h * 100),
+            w: Math.min(100, (bw + padX * 2) / w * 100),
+            h: Math.min(100, (bh + padY * 2) / h * 100),
+          });
+        }
+      }
+    }
+    regions.sort((a, b) => (b.w * b.h) - (a.w * a.h));
+    return regions.slice(0, 4);
+  }
+
+  setInterval(() => {
+    const video = document.getElementById('cam-live');
+    const feed = document.getElementById('feed-0');
+    if (!feed) return;
+    feed.querySelectorAll('.detection-box').forEach(b => b.remove());
+
+    const regions = detectPersonRegions(video);
+    const personCount = Math.max(regions.length, 1);
+    const el0 = document.getElementById('feed-count-0');
+    if (el0) el0.textContent = 'Persons: ' + regions.length;
+
+    regions.forEach((reg, i) => {
+      const conf = (82 + Math.random() * 17).toFixed(0);
+      const box = document.createElement('div');
+      box.className = 'detection-box';
+      box.style.cssText = `left:${reg.x}%;top:${reg.y}%;width:${reg.w}%;height:${reg.h}%`;
+      box.innerHTML = `<div class="det-label">Person ${conf}%</div>`;
+      feed.appendChild(box);
+    });
+
+    if (regions.length === 0 && video && video.videoWidth) {
+      const el0 = document.getElementById('feed-count-0');
+      if (el0) el0.textContent = 'Persons: 0';
+    }
+
+    for (let i = 1; i < 4; i++) {
+      const el = document.getElementById('feed-count-' + i);
+      if (el) el.textContent = 'Persons: ' + (Math.floor(Math.random() * 4) + 1);
+    }
+  }, 2000);
 }
 
 // Activity
