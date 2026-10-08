@@ -5,16 +5,110 @@ const DB_FILE = path.join(__dirname, 'data.json');
 
 const defaultData = {
   orphanages: [
-    { id: 1, name: 'SOS Children Village', city: 'Lahore', district: 'Lahore', address: 'Johar Town, Lahore', lat: 31.4697, lng: 74.2728, total_children: 45, staff_count: 12, cameras: 8, status: 'online', risk_level: 'low' },
-    { id: 2, name: 'Edhi Foundation Home', city: 'Rawalpindi', district: 'Rawalpindi', address: 'Satellite Town, Rawalpindi', lat: 33.5651, lng: 73.0169, total_children: 62, staff_count: 18, cameras: 12, status: 'online', risk_level: 'low' },
-    { id: 3, name: 'Dar-ul-Sukoon', city: 'Faisalabad', district: 'Faisalabad', address: 'Peoples Colony, Faisalabad', lat: 31.4187, lng: 73.0791, total_children: 38, staff_count: 10, cameras: 6, status: 'online', risk_level: 'medium' },
-    { id: 4, name: 'Al-Khidmat Orphanage', city: 'Multan', district: 'Multan', address: 'Bosan Road, Multan', lat: 30.1575, lng: 71.5249, total_children: 55, staff_count: 14, cameras: 10, status: 'online', risk_level: 'low' },
-    { id: 5, name: 'Pakistan Sweet Home', city: 'Islamabad', district: 'Islamabad', address: 'G-9 Markaz, Islamabad', lat: 33.7294, lng: 73.0931, total_children: 80, staff_count: 22, cameras: 16, status: 'online', risk_level: 'low' },
-    { id: 6, name: 'Fountain House', city: 'Lahore', district: 'Lahore', address: 'Gulberg III, Lahore', lat: 31.5204, lng: 74.3587, total_children: 30, staff_count: 8, cameras: 5, status: 'online', risk_level: 'low' },
-    { id: 7, name: 'Child Protection Bureau', city: 'Gujranwala', district: 'Gujranwala', address: 'Civil Lines, Gujranwala', lat: 32.1877, lng: 74.1945, total_children: 42, staff_count: 11, cameras: 7, status: 'offline', risk_level: 'high' },
-    { id: 8, name: 'Saylani Welfare Home', city: 'Sialkot', district: 'Sialkot', address: 'Cantt Area, Sialkot', lat: 32.4945, lng: 74.5229, total_children: 35, staff_count: 9, cameras: 6, status: 'online', risk_level: 'low' },
-    { id: 9, name: 'Kashana Orphanage', city: 'Bahawalpur', district: 'Bahawalpur', address: 'Model Town, Bahawalpur', lat: 29.3544, lng: 71.6911, total_children: 28, staff_count: 7, cameras: 4, status: 'online', risk_level: 'medium' },
-    { id: 10, name: 'Ehsaas Foundation Home', city: 'Sargodha', district: 'Sargodha', address: 'University Road, Sargodha', lat: 32.0740, lng: 72.6861, total_children: 33, staff_count: 9, cameras: 5, status: 'online', risk_level: 'low' },
+    // SOS Children's Villages (6)
+    { id: 1, name: "SOS Children's Village", city: 'Lahore', district: 'Lahore', address: 'Johar Town, Lahore', lat: 31.4697, lng: 74.2728, total_children: 120, staff_count: 35, cameras: 24, status: 'online', risk_level: 'low' },
+    { id: 2, name: "SOS Children's Village", city: 'Rawalpindi', district: 'Rawalpindi', address: 'G.T. Road, opposite High Court, Rawalpindi', lat: 33.5651, lng: 73.0169, total_children: 95, staff_count: 28, cameras: 20, status: 'online', risk_level: 'low' },
+    { id: 3, name: "SOS Children's Village", city: 'Faisalabad', district: 'Faisalabad', address: 'Faisalabad', lat: 31.4500, lng: 73.1100, total_children: 85, staff_count: 24, cameras: 18, status: 'online', risk_level: 'low' },
+    { id: 4, name: "SOS Children's Village", city: 'Multan', district: 'Multan', address: 'Multan', lat: 30.2100, lng: 71.4700, total_children: 78, staff_count: 22, cameras: 17, status: 'online', risk_level: 'low' },
+    { id: 5, name: "SOS Children's Village", city: 'Sargodha', district: 'Sargodha', address: 'Sargodha', lat: 32.0850, lng: 72.6700, total_children: 70, staff_count: 20, cameras: 14, status: 'online', risk_level: 'low' },
+    { id: 6, name: "SOS Children's Village", city: 'Sialkot', district: 'Sialkot', address: 'Sialkot', lat: 32.5000, lng: 74.5300, total_children: 65, staff_count: 18, cameras: 14, status: 'online', risk_level: 'low' },
+
+    // Punjab SWD Model Children Homes (15)
+    { id: 7, name: 'Punjab Model Children Home (Boys)', city: 'Lahore', district: 'Lahore', address: 'Lahore', lat: 31.5400, lng: 74.3500, total_children: 55, staff_count: 14, cameras: 10, status: 'online', risk_level: 'low' },
+    { id: 8, name: 'Punjab Model Children Home (Girls)', city: 'Lahore', district: 'Lahore', address: 'Lahore', lat: 31.5300, lng: 74.3400, total_children: 48, staff_count: 12, cameras: 8, status: 'online', risk_level: 'low' },
+    { id: 9, name: 'Punjab Model Children Home (Boys)', city: 'Faisalabad', district: 'Faisalabad', address: 'Faisalabad', lat: 31.4187, lng: 73.0791, total_children: 52, staff_count: 13, cameras: 8, status: 'online', risk_level: 'low' },
+    { id: 10, name: 'Punjab Model Children Home (Girls)', city: 'Sialkot', district: 'Sialkot', address: 'Sialkot', lat: 32.4945, lng: 74.5229, total_children: 40, staff_count: 10, cameras: 6, status: 'online', risk_level: 'medium' },
+    { id: 11, name: 'Punjab Model Children Home (Girls)', city: 'Gujranwala', district: 'Gujranwala', address: 'Gujranwala', lat: 32.1877, lng: 74.1945, total_children: 38, staff_count: 10, cameras: 6, status: 'online', risk_level: 'low' },
+    { id: 12, name: 'Punjab Model Children Home (Boys)', city: 'Rawalpindi', district: 'Rawalpindi', address: 'Rawalpindi', lat: 33.5900, lng: 73.0400, total_children: 50, staff_count: 13, cameras: 8, status: 'online', risk_level: 'low' },
+    { id: 13, name: 'Punjab Model Children Home (Girls)', city: 'Rawalpindi', district: 'Rawalpindi', address: 'Rawalpindi', lat: 33.5800, lng: 73.0300, total_children: 44, staff_count: 11, cameras: 7, status: 'online', risk_level: 'low' },
+    { id: 14, name: 'Punjab Model Children Home (Boys)', city: 'Sargodha', district: 'Sargodha', address: 'Sargodha', lat: 32.0740, lng: 72.6861, total_children: 42, staff_count: 11, cameras: 6, status: 'online', risk_level: 'low' },
+    { id: 15, name: 'Punjab Model Children Home (Girls)', city: 'Sargodha', district: 'Sargodha', address: 'Sargodha', lat: 32.0650, lng: 72.6950, total_children: 36, staff_count: 9, cameras: 5, status: 'online', risk_level: 'medium' },
+    { id: 16, name: 'Punjab Model Children Home (Boys)', city: 'Bahawalpur', district: 'Bahawalpur', address: 'Bahawalpur', lat: 29.3944, lng: 71.6811, total_children: 45, staff_count: 12, cameras: 7, status: 'online', risk_level: 'low' },
+    { id: 17, name: 'Punjab Model Children Home (Girls)', city: 'Bahawalpur', district: 'Bahawalpur', address: 'Bahawalpur', lat: 29.3844, lng: 71.6911, total_children: 38, staff_count: 10, cameras: 6, status: 'online', risk_level: 'low' },
+    { id: 18, name: 'Punjab Model Children Home (Boys)', city: 'D.G. Khan', district: 'Dera Ghazi Khan', address: 'D.G. Khan', lat: 30.0489, lng: 70.6455, total_children: 40, staff_count: 10, cameras: 5, status: 'online', risk_level: 'medium' },
+    { id: 19, name: 'Punjab Model Children Home (Girls)', city: 'D.G. Khan', district: 'Dera Ghazi Khan', address: 'D.G. Khan', lat: 30.0550, lng: 70.6350, total_children: 35, staff_count: 9, cameras: 4, status: 'offline', risk_level: 'high' },
+    { id: 20, name: 'Punjab Model Children Home (Boys)', city: 'Narowal', district: 'Narowal', address: 'Narowal', lat: 32.1020, lng: 74.8730, total_children: 32, staff_count: 8, cameras: 4, status: 'online', risk_level: 'low' },
+    { id: 21, name: 'Punjab Model Children Home (Girls)', city: 'Narowal', district: 'Narowal', address: 'Narowal', lat: 32.1100, lng: 74.8650, total_children: 28, staff_count: 7, cameras: 4, status: 'online', risk_level: 'low' },
+
+    // Dar-ul-Falah Mother & Children Homes (6)
+    { id: 22, name: 'Dar-ul-Falah', city: 'Lahore', district: 'Lahore', address: 'Lahore', lat: 31.5100, lng: 74.3200, total_children: 30, staff_count: 8, cameras: 5, status: 'online', risk_level: 'low' },
+    { id: 23, name: 'Dar-ul-Falah', city: 'Rawalpindi', district: 'Rawalpindi', address: 'Rawalpindi', lat: 33.6000, lng: 73.0200, total_children: 25, staff_count: 7, cameras: 4, status: 'online', risk_level: 'low' },
+    { id: 24, name: 'Dar-ul-Falah', city: 'Sargodha', district: 'Sargodha', address: 'Sargodha', lat: 32.0800, lng: 72.7050, total_children: 22, staff_count: 6, cameras: 3, status: 'online', risk_level: 'medium' },
+    { id: 25, name: 'Dar-ul-Falah', city: 'Sialkot', district: 'Sialkot', address: 'Sialkot', lat: 32.5100, lng: 74.5100, total_children: 20, staff_count: 6, cameras: 3, status: 'online', risk_level: 'low' },
+    { id: 26, name: 'Dar-ul-Falah', city: 'Multan', district: 'Multan', address: 'Multan', lat: 30.1700, lng: 71.5100, total_children: 28, staff_count: 7, cameras: 4, status: 'online', risk_level: 'low' },
+    { id: 27, name: 'Dar-ul-Falah', city: 'Bahawalpur', district: 'Bahawalpur', address: 'Bahawalpur', lat: 29.3700, lng: 71.7000, total_children: 24, staff_count: 6, cameras: 3, status: 'online', risk_level: 'low' },
+
+    // CPWB Child Protection Institutions (14)
+    { id: 28, name: 'CPWB Child Protection Institution', city: 'Lahore', district: 'Lahore', address: 'Angoori Bagh, Shalimar Link Road, Lahore', lat: 31.5800, lng: 74.3100, total_children: 65, staff_count: 20, cameras: 16, status: 'online', risk_level: 'low' },
+    { id: 29, name: 'CPWB Child Protection Institution', city: 'Faisalabad', district: 'Faisalabad', address: 'Faisalabad', lat: 31.4300, lng: 73.0600, total_children: 48, staff_count: 14, cameras: 10, status: 'online', risk_level: 'low' },
+    { id: 30, name: 'CPWB Child Protection Institution', city: 'Rawalpindi', district: 'Rawalpindi', address: 'Rawalpindi', lat: 33.5700, lng: 73.0500, total_children: 52, staff_count: 15, cameras: 12, status: 'online', risk_level: 'low' },
+    { id: 31, name: 'CPWB Child Protection Institution', city: 'Multan', district: 'Multan', address: 'Multan', lat: 30.1500, lng: 71.5400, total_children: 44, staff_count: 12, cameras: 8, status: 'online', risk_level: 'low' },
+    { id: 32, name: 'CPWB Child Protection Institution', city: 'Gujranwala', district: 'Gujranwala', address: 'Gujranwala', lat: 32.2000, lng: 74.1800, total_children: 38, staff_count: 10, cameras: 7, status: 'online', risk_level: 'low' },
+    { id: 33, name: 'CPWB Child Protection Institution', city: 'Sialkot', district: 'Sialkot', address: 'Sialkot', lat: 32.4800, lng: 74.5400, total_children: 35, staff_count: 9, cameras: 6, status: 'online', risk_level: 'medium' },
+    { id: 34, name: 'CPWB Child Protection Institution', city: 'Bahawalpur', district: 'Bahawalpur', address: 'Bahawalpur', lat: 29.4000, lng: 71.6700, total_children: 40, staff_count: 10, cameras: 6, status: 'online', risk_level: 'low' },
+    { id: 35, name: 'CPWB Child Protection Institution', city: 'Rahim Yar Khan', district: 'Rahim Yar Khan', address: 'Rahim Yar Khan', lat: 28.4212, lng: 70.2989, total_children: 36, staff_count: 9, cameras: 5, status: 'online', risk_level: 'medium' },
+    { id: 36, name: 'CPWB Child Protection Institution', city: 'Sahiwal', district: 'Sahiwal', address: 'Sahiwal', lat: 30.6682, lng: 73.1114, total_children: 32, staff_count: 8, cameras: 5, status: 'online', risk_level: 'low' },
+    { id: 37, name: 'CPWB Child Protection Unit', city: 'Kasur', district: 'Kasur', address: 'Kasur', lat: 31.1167, lng: 74.4500, total_children: 28, staff_count: 8, cameras: 6, status: 'online', risk_level: 'low' },
+    { id: 38, name: 'CPWB Child Protection Unit', city: 'Rajanpur', district: 'Rajanpur', address: 'Rajanpur', lat: 29.1044, lng: 70.3301, total_children: 22, staff_count: 6, cameras: 3, status: 'offline', risk_level: 'high' },
+    { id: 39, name: 'CPWB Child Protection Institution', city: 'Sargodha', district: 'Sargodha', address: 'Sargodha', lat: 32.0900, lng: 72.6750, total_children: 34, staff_count: 9, cameras: 5, status: 'online', risk_level: 'low' },
+    { id: 40, name: 'CPWB Child Protection Institution', city: 'Hafizabad', district: 'Hafizabad', address: 'Hafizabad', lat: 32.0709, lng: 73.6880, total_children: 26, staff_count: 7, cameras: 4, status: 'online', risk_level: 'low' },
+    { id: 41, name: 'CPWB Child Protection Institution', city: 'D.G. Khan', district: 'Dera Ghazi Khan', address: 'D.G. Khan', lat: 30.0600, lng: 70.6550, total_children: 30, staff_count: 8, cameras: 4, status: 'online', risk_level: 'medium' },
+
+    // Edhi Foundation Child Homes (8)
+    { id: 42, name: 'Edhi Foundation Child Home', city: 'Lahore', district: 'Lahore', address: 'Edhi Centre, Lahore', lat: 31.5560, lng: 74.3100, total_children: 45, staff_count: 12, cameras: 8, status: 'online', risk_level: 'low' },
+    { id: 43, name: 'Edhi Foundation Child Home (Gulberg)', city: 'Lahore', district: 'Lahore', address: 'Gulberg, Lahore', lat: 31.5150, lng: 74.3500, total_children: 38, staff_count: 10, cameras: 6, status: 'online', risk_level: 'low' },
+    { id: 44, name: 'Edhi Foundation Child Home (Township)', city: 'Lahore', district: 'Lahore', address: 'Township, Lahore', lat: 31.4750, lng: 74.3150, total_children: 35, staff_count: 9, cameras: 5, status: 'online', risk_level: 'low' },
+    { id: 45, name: 'Edhi Foundation Child Home', city: 'Multan', district: 'Multan', address: 'Multan', lat: 30.1900, lng: 71.4900, total_children: 42, staff_count: 11, cameras: 7, status: 'online', risk_level: 'low' },
+    { id: 46, name: 'Edhi Foundation Child Home', city: 'Rawalpindi', district: 'Rawalpindi', address: 'Rawalpindi', lat: 33.5550, lng: 73.0600, total_children: 40, staff_count: 10, cameras: 6, status: 'online', risk_level: 'low' },
+    { id: 47, name: 'Edhi Foundation Child Home', city: 'Faisalabad', district: 'Faisalabad', address: 'Faisalabad', lat: 31.4050, lng: 73.0950, total_children: 36, staff_count: 9, cameras: 5, status: 'online', risk_level: 'low' },
+    { id: 48, name: 'Edhi Foundation Child Home', city: 'Gujranwala', district: 'Gujranwala', address: 'Gujranwala', lat: 32.1750, lng: 74.2050, total_children: 30, staff_count: 8, cameras: 4, status: 'online', risk_level: 'low' },
+    { id: 49, name: 'Edhi Foundation Child Home', city: 'Bahawalpur', district: 'Bahawalpur', address: 'Bahawalpur', lat: 29.3600, lng: 71.7100, total_children: 28, staff_count: 7, cameras: 4, status: 'online', risk_level: 'medium' },
+
+    // Al-Khidmat Aghosh Homes (7)
+    { id: 50, name: 'Aghosh Home (Al-Khidmat)', city: 'Attock', district: 'Attock', address: 'Attock', lat: 33.7660, lng: 72.3609, total_children: 55, staff_count: 14, cameras: 10, status: 'online', risk_level: 'low' },
+    { id: 51, name: 'Aghosh Home (Al-Khidmat)', city: 'Gujranwala', district: 'Gujranwala', address: 'Gujranwala', lat: 32.2050, lng: 74.2100, total_children: 50, staff_count: 13, cameras: 8, status: 'online', risk_level: 'low' },
+    { id: 52, name: 'Aghosh Home (Al-Khidmat)', city: 'Rawalpindi', district: 'Rawalpindi', address: 'Rawalpindi', lat: 33.5850, lng: 73.0350, total_children: 48, staff_count: 12, cameras: 8, status: 'online', risk_level: 'low' },
+    { id: 53, name: 'Aghosh Home (Al-Khidmat)', city: 'Faisalabad', district: 'Faisalabad', address: 'Faisalabad', lat: 31.4350, lng: 73.0500, total_children: 45, staff_count: 12, cameras: 7, status: 'online', risk_level: 'low' },
+    { id: 54, name: 'Aghosh Home (Al-Khidmat) Boys', city: 'Sheikhupura', district: 'Sheikhupura', address: 'Sheikhupura', lat: 31.7131, lng: 73.9850, total_children: 42, staff_count: 11, cameras: 6, status: 'online', risk_level: 'low' },
+    { id: 55, name: 'Aghosh Home (Al-Khidmat) Girls', city: 'Sheikhupura', district: 'Sheikhupura', address: 'Sheikhupura', lat: 31.7200, lng: 73.9750, total_children: 38, staff_count: 10, cameras: 6, status: 'online', risk_level: 'low' },
+    { id: 56, name: 'Aghosh Home (Al-Khidmat)', city: 'Murree', district: 'Rawalpindi', address: 'Murree', lat: 33.9100, lng: 73.3900, total_children: 35, staff_count: 9, cameras: 5, status: 'online', risk_level: 'low' },
+
+    // Kashana Home (Government)
+    { id: 57, name: 'Kashana Home', city: 'Lahore', district: 'Lahore', address: 'Near Mall Road, Lahore', lat: 31.5620, lng: 74.3280, total_children: 60, staff_count: 16, cameras: 10, status: 'online', risk_level: 'low' },
+
+    // Pakistan Sweet Home
+    { id: 58, name: 'Pakistan Sweet Home', city: 'Rawalpindi', district: 'Rawalpindi', address: 'Rawalpindi', lat: 33.5550, lng: 73.0100, total_children: 80, staff_count: 22, cameras: 16, status: 'online', risk_level: 'low' },
+
+    // Other Known NGOs
+    { id: 59, name: 'Mera Ghar Orphanage', city: 'Rawalpindi', district: 'Rawalpindi', address: 'Rawalpindi', lat: 33.5650, lng: 73.0250, total_children: 32, staff_count: 8, cameras: 5, status: 'online', risk_level: 'low' },
+    { id: 60, name: 'Saba Homes', city: 'Rawalpindi', district: 'Rawalpindi', address: 'Rawalpindi', lat: 33.5750, lng: 73.0100, total_children: 28, staff_count: 7, cameras: 4, status: 'online', risk_level: 'low' },
+    { id: 61, name: 'Roshni Homes', city: 'Gujranwala', district: 'Gujranwala', address: 'Gujranwala', lat: 32.1950, lng: 74.1850, total_children: 35, staff_count: 9, cameras: 5, status: 'online', risk_level: 'low' },
+    { id: 62, name: 'Almarah Foundation', city: 'Lahore', district: 'Lahore', address: 'Lahore', lat: 31.5000, lng: 74.3600, total_children: 25, staff_count: 7, cameras: 4, status: 'online', risk_level: 'low' },
+    { id: 63, name: 'Quba Foundation', city: 'Lahore', district: 'Lahore', address: 'Lahore', lat: 31.4900, lng: 74.3300, total_children: 22, staff_count: 6, cameras: 3, status: 'online', risk_level: 'medium' },
+    { id: 64, name: 'Aasra Welfare Society', city: 'Lahore', district: 'Lahore', address: 'Lahore', lat: 31.5500, lng: 74.3700, total_children: 20, staff_count: 6, cameras: 3, status: 'online', risk_level: 'low' },
+    { id: 65, name: 'Blessed Orphan Centre', city: 'Lahore', district: 'Lahore', address: 'Lahore', lat: 31.5250, lng: 74.3800, total_children: 30, staff_count: 8, cameras: 4, status: 'online', risk_level: 'low' },
+
+    // Additional NGO/Edhi/Al-Khidmat branches across remaining districts
+    { id: 66, name: 'Edhi Foundation Child Home', city: 'Sahiwal', district: 'Sahiwal', address: 'Sahiwal', lat: 30.6600, lng: 73.1000, total_children: 25, staff_count: 7, cameras: 3, status: 'online', risk_level: 'low' },
+    { id: 67, name: 'Edhi Foundation Child Home', city: 'Rahim Yar Khan', district: 'Rahim Yar Khan', address: 'Rahim Yar Khan', lat: 28.4300, lng: 70.3100, total_children: 28, staff_count: 7, cameras: 4, status: 'online', risk_level: 'low' },
+    { id: 68, name: 'Edhi Foundation Child Home', city: 'Sargodha', district: 'Sargodha', address: 'Sargodha', lat: 32.0600, lng: 72.7100, total_children: 26, staff_count: 7, cameras: 3, status: 'online', risk_level: 'low' },
+    { id: 69, name: 'Edhi Foundation Child Home', city: 'Jhang', district: 'Jhang', address: 'Jhang', lat: 31.2681, lng: 72.3181, total_children: 22, staff_count: 6, cameras: 3, status: 'online', risk_level: 'medium' },
+    { id: 70, name: 'Al-Khidmat Foundation Orphanage', city: 'Multan', district: 'Multan', address: 'Bosan Road, Multan', lat: 30.1575, lng: 71.5249, total_children: 55, staff_count: 14, cameras: 10, status: 'online', risk_level: 'low' },
+    { id: 71, name: 'Edhi Foundation Child Home', city: 'Gujarat', district: 'Gujarat', address: 'Gujarat', lat: 32.5731, lng: 74.0789, total_children: 24, staff_count: 6, cameras: 3, status: 'online', risk_level: 'low' },
+    { id: 72, name: 'Al-Khidmat Foundation Orphanage', city: 'Gujarat', district: 'Gujarat', address: 'Gujarat', lat: 32.5800, lng: 74.0900, total_children: 30, staff_count: 8, cameras: 4, status: 'online', risk_level: 'low' },
+    { id: 73, name: 'Edhi Foundation Child Home', city: 'Jhelum', district: 'Jhelum', address: 'Jhelum', lat: 32.9341, lng: 73.7257, total_children: 22, staff_count: 6, cameras: 3, status: 'online', risk_level: 'low' },
+    { id: 74, name: 'Edhi Foundation Child Home', city: 'Okara', district: 'Okara', address: 'Okara', lat: 30.8138, lng: 73.4534, total_children: 20, staff_count: 5, cameras: 3, status: 'online', risk_level: 'low' },
+    { id: 75, name: 'Edhi Foundation Child Home', city: 'Vehari', district: 'Vehari', address: 'Vehari', lat: 30.0452, lng: 72.3489, total_children: 18, staff_count: 5, cameras: 2, status: 'online', risk_level: 'medium' },
+    { id: 76, name: 'Al-Khidmat Foundation Orphanage', city: 'Khanewal', district: 'Khanewal', address: 'Khanewal', lat: 30.3018, lng: 71.9321, total_children: 25, staff_count: 7, cameras: 3, status: 'online', risk_level: 'low' },
+    { id: 77, name: 'Edhi Foundation Child Home', city: 'Muzaffargarh', district: 'Muzaffargarh', address: 'Muzaffargarh', lat: 30.0729, lng: 71.1943, total_children: 20, staff_count: 5, cameras: 2, status: 'offline', risk_level: 'high' },
+    { id: 78, name: 'Al-Khidmat Foundation Orphanage', city: 'Bahawalnagar', district: 'Bahawalnagar', address: 'Bahawalnagar', lat: 29.9944, lng: 73.2533, total_children: 22, staff_count: 6, cameras: 3, status: 'online', risk_level: 'low' },
+    { id: 79, name: 'Edhi Foundation Child Home', city: 'Mandi Bahauddin', district: 'Mandi Bahauddin', address: 'Mandi Bahauddin', lat: 32.5861, lng: 73.4917, total_children: 18, staff_count: 5, cameras: 2, status: 'online', risk_level: 'low' },
+    { id: 80, name: 'Al-Khidmat Foundation Orphanage', city: 'Chiniot', district: 'Chiniot', address: 'Chiniot', lat: 31.7200, lng: 72.9789, total_children: 20, staff_count: 5, cameras: 3, status: 'online', risk_level: 'low' },
+    { id: 81, name: 'Edhi Foundation Child Home', city: 'Toba Tek Singh', district: 'Toba Tek Singh', address: 'Toba Tek Singh', lat: 30.9709, lng: 72.4826, total_children: 18, staff_count: 5, cameras: 2, status: 'online', risk_level: 'low' },
+    { id: 82, name: 'Al-Khidmat Foundation Orphanage', city: 'Mianwali', district: 'Mianwali', address: 'Mianwali', lat: 32.5853, lng: 71.5436, total_children: 22, staff_count: 6, cameras: 3, status: 'online', risk_level: 'medium' },
+    { id: 83, name: 'Edhi Foundation Child Home', city: 'Khushab', district: 'Khushab', address: 'Khushab', lat: 32.2967, lng: 72.3533, total_children: 16, staff_count: 4, cameras: 2, status: 'online', risk_level: 'low' },
+    { id: 84, name: 'Edhi Foundation Child Home', city: 'Layyah', district: 'Layyah', address: 'Layyah', lat: 30.9693, lng: 70.9428, total_children: 15, staff_count: 4, cameras: 2, status: 'online', risk_level: 'medium' },
+    { id: 85, name: 'Edhi Foundation Child Home', city: 'Pakpattan', district: 'Pakpattan', address: 'Pakpattan', lat: 30.3500, lng: 73.3900, total_children: 16, staff_count: 4, cameras: 2, status: 'online', risk_level: 'low' },
   ],
   children: [
     { id: 1, orphanage_id: 1, name: 'Ahmed Khan', age: 8, gender: 'Male', photo_url: null, admitted_date: '2024-01-15', medical_notes: 'Healthy, regular checkups', status: 'active', created_at: new Date().toISOString() },
@@ -43,7 +137,7 @@ const defaultData = {
   growth_records: [],
   notifications: [],
   emotion_detections: [],
-  counters: { children: 8, health_records: 0, visitors: 0, alerts: 0, incidents: 0, activity_log: 0, orphanages: 10, growth_records: 0, notifications: 0, emotion_detections: 0 }
+  counters: { children: 8, health_records: 0, visitors: 0, alerts: 0, incidents: 0, activity_log: 0, orphanages: 85, growth_records: 0, notifications: 0, emotion_detections: 0 }
 };
 
 class Store {
