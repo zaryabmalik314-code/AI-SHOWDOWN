@@ -106,7 +106,8 @@ body {
   position: relative;
 }
 
-.nav-item .nav-icon { font-size: 16px; width: 22px; text-align: center; }
+.nav-item .nav-icon { width: 22px; display: flex; align-items: center; justify-content: center; flex-shrink: 0; }
+.nav-item .nav-icon svg { width: 18px; height: 18px; }
 
 .nav-item:hover {
   background: var(--accent-glow);
@@ -215,10 +216,11 @@ body {
   background: var(--bg-card);
   border: 1px solid var(--border);
   border-radius: var(--radius);
-  padding: 22px;
+  padding: 20px;
   position: relative;
   overflow: hidden;
   transition: var(--transition);
+  min-width: 0;
 }
 
 .stat-card:hover {
@@ -283,7 +285,7 @@ body {
   font-weight: 500;
 }
 
-.stats-grid-5 { grid-template-columns: repeat(5, 1fr); }
+.stats-grid-5 { grid-template-columns: repeat(5, minmax(0, 1fr)); }
 
 /* Section header */
 .section-header {
