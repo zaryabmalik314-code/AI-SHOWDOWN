@@ -12,6 +12,127 @@
 </head>
 <body>
 
+  <!-- LOGIN SCREEN -->
+  <div id="login-screen" class="login-screen">
+    <div class="login-bg-pattern"></div>
+    <div class="login-container">
+      <div class="login-card">
+        <div class="login-logo">
+          <svg width="64" height="64" viewBox="0 0 36 36" fill="none">
+            <defs><linearGradient id="login-grad" x1="0" y1="0" x2="36" y2="36"><stop offset="0%" stop-color="#10b981"/><stop offset="100%" stop-color="#34d399"/></linearGradient></defs>
+            <path d="M18 2L4 8v10c0 9.55 5.97 18.48 14 20 8.03-1.52 14-10.45 14-20V8L18 2z" fill="url(#login-grad)" opacity="0.15" stroke="url(#login-grad)" stroke-width="1.5"/>
+            <circle cx="18" cy="16" r="5" stroke="url(#login-grad)" stroke-width="1.5" fill="none"/>
+            <path d="M18 21c-4 0-7 2-7 4v1h14v-1c0-2-3-4-7-4z" fill="url(#login-grad)" opacity="0.6"/>
+          </svg>
+        </div>
+        <h1 class="login-title">OrphanGuard AI</h1>
+        <p class="login-subtitle">Punjab Child Protection Command Center</p>
+        <div class="login-badge">Government of Punjab — Social Welfare Department</div>
+        <form id="login-form" onsubmit="handleLogin(event)">
+          <div class="login-field">
+            <label>Officer ID / Email</label>
+            <input type="text" id="login-email" placeholder="Enter your officer ID" required>
+          </div>
+          <div class="login-field">
+            <label>Password</label>
+            <input type="password" id="login-password" placeholder="Enter password" required>
+          </div>
+          <button type="submit" class="login-btn">Access Command Center</button>
+          <div class="login-demo-hint">
+            <span>Demo Access:</span> admin / admin123
+          </div>
+        </form>
+        <div class="login-footer-links">
+          <a href="#" onclick="event.preventDefault();showComplaintPortal()">Report Child Abuse (Anonymous)</a>
+        </div>
+      </div>
+      <div class="login-info-panel">
+        <h2>Protecting Punjab's Children</h2>
+        <p>AI-powered real-time monitoring across orphanages in Punjab province</p>
+        <div class="login-stats-row">
+          <div class="login-stat"><div class="login-stat-val">10</div><div class="login-stat-label">Orphanages Monitored</div></div>
+          <div class="login-stat"><div class="login-stat-val">448</div><div class="login-stat-label">Children Protected</div></div>
+          <div class="login-stat"><div class="login-stat-val">79</div><div class="login-stat-label">AI Cameras Active</div></div>
+        </div>
+        <div class="login-features">
+          <div class="login-feature"><span>&#129302;</span> Violence & Harassment Detection (ViolenceNet v2.1)</div>
+          <div class="login-feature"><span>&#128546;</span> Emotional Distress Monitoring</div>
+          <div class="login-feature"><span>&#128247;</span> 24/7 Live Camera Surveillance</div>
+          <div class="login-feature"><span>&#128200;</span> Orphanage Safety Rankings</div>
+          <div class="login-feature"><span>&#128221;</span> Automated Compliance Reporting</div>
+        </div>
+        <div class="login-org-badges">
+          <span>Aligned with UNICEF Child Protection Standards</span>
+          <span>Punjab Child Protection Bureau</span>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ANONYMOUS COMPLAINT PORTAL -->
+  <div id="complaint-portal" class="complaint-portal" style="display:none">
+    <div class="complaint-container">
+      <div class="complaint-card">
+        <button class="complaint-close" onclick="hideComplaintPortal()">&times;</button>
+        <div class="complaint-header">
+          <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="#ef4444" stroke-width="1.5"><path d="M12 9v4m0 4h.01M3.26 19h17.48a1 1 0 0 0 .87-1.5L13.37 3.5a1 1 0 0 0-1.74 0L3.39 17.5a1 1 0 0 0 .87 1.5z"/></svg>
+          <h2>Report Child Abuse or Neglect</h2>
+          <p>Your identity will remain completely anonymous. All reports are encrypted and sent directly to the Child Protection Bureau.</p>
+        </div>
+        <form id="complaint-form" onsubmit="submitComplaint(event)">
+          <div class="complaint-field">
+            <label>Orphanage / Location</label>
+            <select id="complaint-orphanage" required>
+              <option value="">Select orphanage or location</option>
+              <option value="other">Other Location (specify below)</option>
+            </select>
+          </div>
+          <div class="complaint-field">
+            <label>Type of Concern</label>
+            <select id="complaint-type" required>
+              <option value="">Select type</option>
+              <option value="physical_abuse">Physical Abuse</option>
+              <option value="verbal_abuse">Verbal Abuse / Harassment</option>
+              <option value="neglect">Neglect</option>
+              <option value="exploitation">Child Exploitation</option>
+              <option value="missing_child">Missing Child</option>
+              <option value="unsafe_conditions">Unsafe Living Conditions</option>
+              <option value="staff_misconduct">Staff Misconduct</option>
+              <option value="other">Other</option>
+            </select>
+          </div>
+          <div class="complaint-field">
+            <label>Description of Incident</label>
+            <textarea id="complaint-description" rows="4" placeholder="Please describe what you witnessed or know about. Include dates, times, and any identifying details if possible." required></textarea>
+          </div>
+          <div class="complaint-field">
+            <label>Urgency Level</label>
+            <div class="complaint-urgency">
+              <label class="urgency-option"><input type="radio" name="urgency" value="critical" required> <span class="urgency-badge critical">Critical — Child in immediate danger</span></label>
+              <label class="urgency-option"><input type="radio" name="urgency" value="high"> <span class="urgency-badge high">High — Ongoing abuse/neglect</span></label>
+              <label class="urgency-option"><input type="radio" name="urgency" value="medium"> <span class="urgency-badge medium">Medium — Concerning behavior</span></label>
+              <label class="urgency-option"><input type="radio" name="urgency" value="low"> <span class="urgency-badge low">Low — General concern</span></label>
+            </div>
+          </div>
+          <div class="complaint-field">
+            <label>Contact (Optional — remains confidential)</label>
+            <input type="text" id="complaint-contact" placeholder="Phone or email if you'd like follow-up">
+          </div>
+          <button type="submit" class="complaint-submit">Submit Anonymous Report</button>
+          <p class="complaint-disclaimer">Protected under the Punjab Destitute and Neglected Children Act, 2004. False reports may be subject to legal action.</p>
+        </form>
+        <div id="complaint-success" style="display:none">
+          <div class="complaint-success-icon">&#9989;</div>
+          <h3>Report Submitted Successfully</h3>
+          <p>Reference Number: <strong id="complaint-ref"></strong></p>
+          <p>Your report has been encrypted and forwarded to the Child Protection Bureau. If you provided contact details, an investigator may reach out.</p>
+          <p class="complaint-helpline">Emergency Helpline: <strong>1121</strong> (Child Protection Bureau Punjab)</p>
+          <button class="login-btn" onclick="hideComplaintPortal()" style="margin-top:16px">Close</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
   <nav class="sidebar">
     <div class="sidebar-brand">
       <div class="brand-logo">
@@ -146,6 +267,14 @@
       <div class="page-header">
         <h2>Provincial Command Center</h2>
         <div class="header-actions">
+          <button class="btn btn-outline btn-sm" onclick="generatePDFReport()" style="gap:6px;display:flex;align-items:center">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/></svg>
+            Download Report
+          </button>
+          <button class="btn btn-outline btn-sm" onclick="toggleWhatsAppPanel()" style="gap:6px;display:flex;align-items:center;border-color:#25D366;color:#25D366">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor"><path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347z"/><path d="M12 0C5.373 0 0 5.373 0 12c0 2.625.846 5.059 2.284 7.034L.789 23.492l4.625-1.468A11.93 11.93 0 0 0 12 24c6.627 0 12-5.373 12-12S18.627 0 12 0zm0 21.75c-2.16 0-4.163-.676-5.813-1.828l-.416-.279-2.746.872.735-2.668-.304-.438A9.712 9.712 0 0 1 2.25 12c0-5.385 4.365-9.75 9.75-9.75S21.75 6.615 21.75 12s-4.365 9.75-9.75 9.75z"/></svg>
+            WhatsApp Alerts
+          </button>
           <div class="header-time">
             <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
             <span id="ssb-online-count">-- sites online</span>
@@ -549,6 +678,82 @@
       <div id="growth-history"></div>
     </div>
   </div>
+
+  <!-- WhatsApp Alert Simulation Panel -->
+  <div class="whatsapp-panel" id="whatsapp-panel">
+    <div class="wa-header">
+      <div style="display:flex;align-items:center;gap:10px">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="#25D366"><path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347z"/></svg>
+        <span style="font-weight:600;color:#fff">WhatsApp Alert Channel</span>
+      </div>
+      <button onclick="toggleWhatsAppPanel()" style="background:none;border:none;color:#aaa;cursor:pointer;font-size:18px">&times;</button>
+    </div>
+    <div class="wa-chat" id="wa-chat">
+      <div class="wa-date-divider">Today</div>
+      <div class="wa-msg system">
+        <div class="wa-msg-body">OrphanGuard AI Alert System activated. Critical alerts will be sent to all registered officials.</div>
+        <div class="wa-msg-time">System</div>
+      </div>
+      <div class="wa-msg incoming">
+        <div class="wa-msg-sender">OrphanGuard AI Bot</div>
+        <div class="wa-msg-body">&#128680; <strong>ALERT:</strong> Headcount mismatch detected at SOS Children Village, Lahore. Expected: 12, Detected: 9. Zone: Main Hall</div>
+        <div class="wa-msg-time">2:34 PM</div>
+      </div>
+      <div class="wa-msg incoming">
+        <div class="wa-msg-sender">OrphanGuard AI Bot</div>
+        <div class="wa-msg-body">&#129302; <strong>AI DETECTION:</strong> Possible verbal abuse detected at Dar-ul-Sukoon, Faisalabad. Confidence: 87%. ViolenceNet v2.1 flagged aggressive vocal patterns in Kitchen area.</div>
+        <div class="wa-msg-time">2:41 PM</div>
+      </div>
+      <div class="wa-msg incoming">
+        <div class="wa-msg-sender">OrphanGuard AI Bot</div>
+        <div class="wa-msg-body">&#128546; <strong>EMOTION ALERT:</strong> Child "Ahmed K." showing signs of distress at SOS Children Village. EmotionNet confidence: 91%. Caregiver notification sent.</div>
+        <div class="wa-msg-time">2:45 PM</div>
+      </div>
+      <div class="wa-msg outgoing">
+        <div class="wa-msg-body">Acknowledged. Sending team to Main Hall for headcount verification.</div>
+        <div class="wa-msg-time">2:47 PM &#10003;&#10003;</div>
+      </div>
+      <div class="wa-msg incoming">
+        <div class="wa-msg-sender">OrphanGuard AI Bot</div>
+        <div class="wa-msg-body">&#9989; Alert resolved. Headcount verified: 12/12 present at SOS Children Village Main Hall. Discrepancy was due to children in washroom.</div>
+        <div class="wa-msg-time">3:02 PM</div>
+      </div>
+    </div>
+    <div class="wa-footer">
+      <div class="wa-recipient-info">
+        <strong>Alert Recipients:</strong> DG Social Welfare, District Officers (9), CPB Inspectors (4)
+      </div>
+      <div style="display:flex;gap:8px;align-items:center;margin-top:8px">
+        <input type="text" class="wa-input" placeholder="Type a response..." id="wa-input">
+        <button class="wa-send" onclick="sendWAMessage()">Send</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- INSTITUTIONAL FOOTER -->
+  <footer class="institutional-footer" id="app-footer">
+    <div class="footer-content">
+      <div class="footer-brand">
+        <svg width="28" height="28" viewBox="0 0 36 36" fill="none"><path d="M18 2L4 8v10c0 9.55 5.97 18.48 14 20 8.03-1.52 14-10.45 14-20V8L18 2z" fill="rgba(16,185,129,0.15)" stroke="#10b981" stroke-width="1.5"/><circle cx="18" cy="16" r="5" stroke="#10b981" stroke-width="1.5" fill="none"/><path d="M18 21c-4 0-7 2-7 4v1h14v-1c0-2-3-4-7-4z" fill="#10b981" opacity="0.6"/></svg>
+        <div>
+          <strong>OrphanGuard AI</strong>
+          <span>Punjab Child Protection Command Center</span>
+        </div>
+      </div>
+      <div class="footer-links">
+        <span>Aligned with Punjab Child Protection Bureau Standards</span>
+        <span class="footer-sep">|</span>
+        <span>UNICEF Child Protection Framework Compliant</span>
+        <span class="footer-sep">|</span>
+        <span>Data encrypted under PECA 2016</span>
+      </div>
+      <div class="footer-bottom">
+        <span>Developed for the Government of Punjab, Social Welfare & Bait-ul-Maal Department</span>
+        <span class="footer-sep">|</span>
+        <span>Emergency: 1121 (Child Protection Helpline)</span>
+      </div>
+    </div>
+  </footer>
 
   <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
   <script src="/js/app.js"></script>

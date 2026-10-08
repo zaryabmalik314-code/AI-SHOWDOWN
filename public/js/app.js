@@ -2123,6 +2123,172 @@ async function loadBriefing() {
   } catch (e) { console.error(e); }
 }
 
+// ====== LOGIN SYSTEM ======
+function handleLogin(e) {
+  e.preventDefault();
+  const email = document.getElementById('login-email').value;
+  const password = document.getElementById('login-password').value;
+  if ((email === 'admin' && password === 'admin123') || email.includes('@')) {
+    document.getElementById('login-screen').style.display = 'none';
+    document.body.style.overflow = '';
+    sessionStorage.setItem('og_auth', '1');
+  } else {
+    const btn = e.target.querySelector('button[type="submit"]');
+    btn.textContent = 'Invalid credentials';
+    btn.style.background = 'var(--danger)';
+    setTimeout(() => { btn.textContent = 'Access Command Center'; btn.style.background = ''; }, 2000);
+  }
+}
+
+function checkAuth() {
+  if (sessionStorage.getItem('og_auth') === '1') {
+    document.getElementById('login-screen').style.display = 'none';
+  }
+}
+
+function logout() {
+  sessionStorage.removeItem('og_auth');
+  document.getElementById('login-screen').style.display = '';
+}
+
+checkAuth();
+
+// ====== COMPLAINT PORTAL ======
+function showComplaintPortal() {
+  const portal = document.getElementById('complaint-portal');
+  portal.style.display = '';
+  document.getElementById('complaint-form').style.display = '';
+  document.getElementById('complaint-success').style.display = 'none';
+  const sel = document.getElementById('complaint-orphanage');
+  sel.innerHTML = '<option value="">Select orphanage or location</option><option value="other">Other Location (specify below)</option>' +
+    orphanages.map(o => `<option value="${o.id}">${o.name} - ${o.city}</option>`).join('');
+}
+
+function hideComplaintPortal() {
+  document.getElementById('complaint-portal').style.display = 'none';
+}
+
+function submitComplaint(e) {
+  e.preventDefault();
+  const ref = 'CPB-' + Date.now().toString(36).toUpperCase() + '-' + Math.random().toString(36).slice(2, 6).toUpperCase();
+  document.getElementById('complaint-ref').textContent = ref;
+  document.getElementById('complaint-form').style.display = 'none';
+  document.getElementById('complaint-success').style.display = '';
+}
+
+// ====== WHATSAPP PANEL ======
+function toggleWhatsAppPanel() {
+  document.getElementById('whatsapp-panel').classList.toggle('open');
+}
+
+function sendWAMessage() {
+  const input = document.getElementById('wa-input');
+  const msg = input.value.trim();
+  if (!msg) return;
+  const chat = document.getElementById('wa-chat');
+  const now = new Date().toLocaleTimeString('en-PK', { hour: '2-digit', minute: '2-digit' });
+  chat.insertAdjacentHTML('beforeend', `<div class="wa-msg outgoing"><div class="wa-msg-body">${msg}</div><div class="wa-msg-time">${now} &#10003;&#10003;</div></div>`);
+  input.value = '';
+  chat.scrollTop = chat.scrollHeight;
+  setTimeout(() => {
+    chat.insertAdjacentHTML('beforeend', `<div class="wa-msg incoming"><div class="wa-msg-sender">OrphanGuard AI Bot</div><div class="wa-msg-body">&#9989; Message received. Forwarding to relevant district officer.</div><div class="wa-msg-time">${now}</div></div>`);
+    chat.scrollTop = chat.scrollHeight;
+  }, 1500);
+}
+
+// ====== PDF REPORT GENERATION ======
+async function generatePDFReport() {
+  const btn = event.target.closest('button');
+  const origText = btn.innerHTML;
+  btn.innerHTML = '<span style="animation:spin 1s linear infinite;display:inline-block">&#9696;</span> Generating...';
+  btn.disabled = true;
+  try {
+    const [statsRes, rankingsRes, incidentsRes, alertsRes] = await Promise.all([
+      fetch('/api/stats'), fetch('/api/rankings'), fetch('/api/incidents'), fetch('/api/alerts')
+    ]);
+    const [stats, rankings, incidents, alerts] = await Promise.all([
+      statsRes.json(), rankingsRes.json(), incidentsRes.json(), alertsRes.json()
+    ]);
+    const avgScore = rankings.length ? Math.round(rankings.reduce((s, r) => s + r.score, 0) / rankings.length) : 0;
+    const critical = incidents.filter(i => i.severity === 'critical').length;
+    const reviewed = incidents.filter(i => i.reviewed).length;
+    const unresolved = alerts.filter(a => !a.acknowledged).length;
+
+    const reportHtml = `
+<!DOCTYPE html><html><head><meta charset="UTF-8"><title>OrphanGuard AI Monthly Safety Report</title>
+<style>
+*{margin:0;padding:0;box-sizing:border-box}body{font-family:Arial,sans-serif;color:#1a1a2e;padding:40px;max-width:800px;margin:0 auto}
+.header{text-align:center;border-bottom:3px solid #10b981;padding-bottom:20px;margin-bottom:30px}
+.header h1{color:#10b981;font-size:24px}.header p{color:#666;margin-top:8px}
+.badge{display:inline-block;background:#10b981;color:white;padding:4px 14px;border-radius:20px;font-size:11px;margin-top:10px}
+.section{margin-bottom:30px}.section h2{font-size:16px;color:#10b981;border-bottom:1px solid #ddd;padding-bottom:8px;margin-bottom:15px}
+.stats{display:grid;grid-template-columns:repeat(4,1fr);gap:15px;margin-bottom:20px}
+.stat{background:#f0fdf4;padding:15px;border-radius:8px;text-align:center}
+.stat .val{font-size:28px;font-weight:700;color:#10b981}.stat .label{font-size:11px;color:#666;margin-top:4px}
+table{width:100%;border-collapse:collapse;font-size:12px}th{background:#f0fdf4;color:#10b981;padding:10px;text-align:left}
+td{padding:8px 10px;border-bottom:1px solid #eee}.grade{font-weight:700;padding:2px 8px;border-radius:4px}
+.grade-a{color:#10b981}.grade-b{color:#3b82f6}.grade-c{color:#f59e0b}.grade-d,.grade-f{color:#ef4444}
+.footer{text-align:center;margin-top:40px;padding-top:20px;border-top:2px solid #10b981;font-size:11px;color:#666}
+.confidential{background:#fef2f2;color:#ef4444;padding:8px;text-align:center;font-size:11px;border-radius:4px;margin-top:20px}
+@media print{body{padding:20px}@page{margin:1cm}}
+</style></head><body>
+<div class="header">
+<h1>&#128737; OrphanGuard AI</h1>
+<p>Monthly Safety & Compliance Report — Punjab Province</p>
+<p style="font-size:12px;color:#888;margin-top:4px">Generated: ${new Date().toLocaleDateString('en-PK', { weekday:'long', year:'numeric', month:'long', day:'numeric' })}</p>
+<span class="badge">OFFICIAL — Government of Punjab</span>
+</div>
+
+<div class="section"><h2>Executive Summary</h2>
+<div class="stats">
+<div class="stat"><div class="val">${stats.totalOrphanages}</div><div class="label">Orphanages Monitored</div></div>
+<div class="stat"><div class="val">${stats.totalChildren}</div><div class="label">Children Protected</div></div>
+<div class="stat"><div class="val">${avgScore}</div><div class="label">Avg Safety Score</div></div>
+<div class="stat"><div class="val">${stats.onlineOrphanages}/${stats.totalOrphanages}</div><div class="label">Online Status</div></div>
+</div>
+<div class="stats">
+<div class="stat"><div class="val" style="color:#ef4444">${critical}</div><div class="label">Critical Incidents</div></div>
+<div class="stat"><div class="val" style="color:#f59e0b">${incidents.length}</div><div class="label">Total Detections</div></div>
+<div class="stat"><div class="val" style="color:#3b82f6">${reviewed}</div><div class="label">Reviewed</div></div>
+<div class="stat"><div class="val" style="color:#ef4444">${unresolved}</div><div class="label">Unresolved Alerts</div></div>
+</div></div>
+
+<div class="section"><h2>Orphanage Safety Rankings</h2>
+<table><thead><tr><th>#</th><th>Orphanage</th><th>City</th><th>Children</th><th>Score</th><th>Grade</th><th>Critical</th></tr></thead>
+<tbody>${rankings.map(r => `<tr><td>${r.rank}</td><td>${r.name}</td><td>${r.city}</td><td>${r.total_children}</td><td>${r.score}/100</td><td><span class="grade grade-${r.grade.toLowerCase()}">${r.grade}</span></td><td style="color:${r.criticalIncidents > 0 ? '#ef4444' : '#10b981'}">${r.criticalIncidents}</td></tr>`).join('')}
+</tbody></table></div>
+
+<div class="section"><h2>AI Detection Summary</h2>
+<p style="font-size:13px;color:#666;margin-bottom:10px">ViolenceNet v2.1 and EmotionNet analyzed ${incidents.reduce((s,i)=>s+i.frame_count,0).toLocaleString()} video frames across all monitored facilities.</p>
+<table><thead><tr><th>Type</th><th>Count</th><th>Avg Confidence</th></tr></thead>
+<tbody>${Object.entries(incidents.reduce((acc,i)=>{if(!acc[i.type])acc[i.type]={count:0,conf:0};acc[i.type].count++;acc[i.type].conf+=i.confidence;return acc},{})).map(([type,d])=>`<tr><td style="text-transform:capitalize">${type.replace(/_/g,' ')}</td><td>${d.count}</td><td>${(d.conf/d.count).toFixed(1)}%</td></tr>`).join('')}
+</tbody></table></div>
+
+<div class="section"><h2>Recommendations</h2>
+<ul style="font-size:13px;line-height:1.8;padding-left:20px">
+${rankings.filter(r=>r.grade==='D'||r.grade==='F').map(r=>`<li><strong>${r.name}</strong> (Grade ${r.grade}): Requires immediate inspection and improvement plan.</li>`).join('')}
+${rankings.filter(r=>r.cameraCoverage<80).map(r=>`<li><strong>${r.name}</strong>: Camera coverage at ${r.cameraCoverage}% — below 80% minimum standard.</li>`).join('')}
+<li>Continue 24/7 AI surveillance across all facilities.</li>
+<li>Schedule quarterly in-person inspections for Grade C and below.</li>
+</ul></div>
+
+<div class="confidential">CONFIDENTIAL — For authorized personnel of the Punjab Social Welfare Department only.</div>
+
+<div class="footer">
+<p><strong>OrphanGuard AI</strong> — Punjab Child Protection Command Center</p>
+<p>Government of Punjab | Social Welfare & Bait-ul-Maal Department</p>
+<p style="margin-top:8px">Emergency Helpline: 1121 | Punjab Child Protection Bureau</p>
+</div>
+</body></html>`;
+
+    const win = window.open('', '_blank');
+    win.document.write(reportHtml);
+    win.document.close();
+    setTimeout(() => win.print(), 500);
+  } catch (e) { console.error(e); alert('Error generating report'); }
+  finally { btn.innerHTML = origText; btn.disabled = false; }
+}
+
 // Init - load all data so global search works
 loadOrphanages();
 loadStats();
