@@ -808,25 +808,68 @@ async function addOrphanage(e) {
 // Map
 function initMap() {
   if (map) { map.invalidateSize(); return; }
-  map = L.map('punjab-map').setView([31.5, 73.0], 7);
-  L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-    attribution: '&copy; OpenStreetMap'
+  map = L.map('punjab-map').setView([31.8, 73.8], 7);
+  L.tileLayer('https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png', {
+    attribution: '&copy; OpenStreetMap &copy; CARTO'
   }).addTo(map);
 
+  const bounds = [];
+
   orphanages.forEach(o => {
-    const color = o.risk_level === 'high' ? '#ef4444' : o.risk_level === 'medium' ? '#fbbf24' : '#34d399';
+    bounds.push([o.lat, o.lng]);
+    const color = o.risk_level === 'high' ? '#ef4444' : o.risk_level === 'medium' ? '#fbbf24' : '#10b981';
     const icon = L.divIcon({
-      html: `<div style="background:${color};width:14px;height:14px;border-radius:50%;border:2px solid white;box-shadow:0 0 8px ${color}"></div>`,
-      className: '', iconSize: [14, 14], iconAnchor: [7, 7]
+      html: `<div style="position:relative"><div style="background:${color};width:20px;height:20px;border-radius:50%;border:3px solid white;box-shadow:0 0 12px ${color},0 0 24px ${color}40"></div><div style="position:absolute;top:24px;left:50%;transform:translateX(-50%);white-space:nowrap;font-size:10px;font-weight:700;color:white;text-shadow:0 0 4px #000,0 0 8px #000;pointer-events:none">${o.name.split(' ').slice(0,3).join(' ')}</div></div>`,
+      className: '', iconSize: [20, 20], iconAnchor: [10, 10]
     });
     L.marker([o.lat, o.lng], { icon }).addTo(map).bindPopup(`
-      <strong>${o.name}</strong><br>
-      ${o.city}, ${o.district}<br>
-      <span style="color:${o.status === 'online' ? '#34d399' : '#ef4444'}">${o.status.toUpperCase()}</span><br>
-      Children: ${o.total_children} | Staff: ${o.staff_count} | Cameras: ${o.cameras}<br>
-      Risk: <span style="color:${color};font-weight:700">${o.risk_level.toUpperCase()}</span>
+      <div style="min-width:220px">
+        <strong style="font-size:14px">${o.name}</strong><br>
+        <span style="color:#888">${o.address}</span><br><br>
+        <span style="color:${o.status === 'online' ? '#10b981' : '#ef4444'}">● ${o.status.toUpperCase()}</span>
+        ${o.registered ? ' <span style="background:#10b981;color:#fff;padding:1px 6px;border-radius:4px;font-size:10px;font-weight:700">REGISTERED</span>' : ''}<br>
+        ${o.org ? `<span style="color:#888;font-size:11px">Org: ${o.org}</span><br>` : ''}
+        <br>
+        <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:4px;text-align:center">
+          <div><strong>${o.total_children}</strong><br><span style="font-size:10px;color:#888">Children</span></div>
+          <div><strong>${o.staff_count}</strong><br><span style="font-size:10px;color:#888">Staff</span></div>
+          <div><strong>${o.cameras}</strong><br><span style="font-size:10px;color:#888">Cameras</span></div>
+        </div>
+      </div>
     `);
+    L.circle([o.lat, o.lng], { radius: 1500, color: color, fillColor: color, fillOpacity: 0.08, weight: 1, opacity: 0.3 }).addTo(map);
   });
+
+  fetch('/api/police-stations').then(r => r.json()).then(stations => {
+    stations.forEach(s => {
+      const icon = L.divIcon({
+        html: `<div style="position:relative"><div style="background:#3b82f6;width:14px;height:14px;border-radius:3px;border:2px solid white;box-shadow:0 0 8px #3b82f6"></div></div>`,
+        className: '', iconSize: [14, 14], iconAnchor: [7, 7]
+      });
+      L.marker([s.lat, s.lng], { icon }).addTo(map).bindPopup(`
+        <div style="min-width:180px">
+          <strong>🚔 ${s.name}</strong><br>
+          <span style="color:#888">${s.address}</span><br>
+          <span style="color:#3b82f6">Phone: ${s.phone}</span>
+        </div>
+      `);
+    });
+  });
+
+  if (bounds.length > 1) map.fitBounds(bounds, { padding: [40, 40] });
+
+  const legend = L.control({ position: 'bottomright' });
+  legend.onAdd = function() {
+    const div = L.DomUtil.create('div');
+    div.style.cssText = 'background:rgba(0,0,0,0.85);padding:10px 14px;border-radius:8px;color:white;font-size:11px;line-height:20px';
+    div.innerHTML = '<strong style="font-size:12px">Legend</strong><br>' +
+      '<span style="display:inline-block;width:10px;height:10px;border-radius:50%;background:#10b981;margin-right:6px"></span>Orphanage (Low Risk)<br>' +
+      '<span style="display:inline-block;width:10px;height:10px;border-radius:50%;background:#fbbf24;margin-right:6px"></span>Orphanage (Medium Risk)<br>' +
+      '<span style="display:inline-block;width:10px;height:10px;border-radius:50%;background:#ef4444;margin-right:6px"></span>Orphanage (High Risk)<br>' +
+      '<span style="display:inline-block;width:10px;height:10px;border-radius:3px;background:#3b82f6;margin-right:6px"></span>Police Station';
+    return div;
+  };
+  legend.addTo(map);
 
   setTimeout(() => map.invalidateSize(), 200);
 }
