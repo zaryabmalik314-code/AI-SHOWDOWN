@@ -1073,7 +1073,8 @@ function startDetectionSim() {
           const conf = (82 + Math.random() * 17).toFixed(0);
           const box = document.createElement('div');
           box.className = 'detection-box';
-          box.style.cssText = `left:${reg.x}%;top:${reg.y}%;width:${reg.w}%;height:${reg.h}%`;
+          const mirroredX = 100 - reg.x - reg.w;
+          box.style.cssText = `left:${mirroredX}%;top:${reg.y}%;width:${reg.w}%;height:${reg.h}%`;
           box.innerHTML = `<div class="det-label">Person ${conf}%</div>`;
           feed.appendChild(box);
         });
