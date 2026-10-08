@@ -201,7 +201,17 @@ const defaultData = {
 class Store {
   constructor() {
     this.data = this.load();
-    if (!this.data.orphanages) this.data = JSON.parse(JSON.stringify(defaultData));
+    if (!this.data.orphanages || this.data.orphanages.length < defaultData.orphanages.length) {
+      this.data.orphanages = JSON.parse(JSON.stringify(defaultData.orphanages));
+      this.data.counters.orphanages = defaultData.counters.orphanages;
+    }
+    if (!this.data.police_stations || this.data.police_stations.length < defaultData.police_stations.length) {
+      this.data.police_stations = JSON.parse(JSON.stringify(defaultData.police_stations));
+    }
+    if (!this.data.police_dispatches || this.data.police_dispatches.length < defaultData.police_dispatches.length) {
+      this.data.police_dispatches = JSON.parse(JSON.stringify(defaultData.police_dispatches));
+      this.data.counters.police_dispatches = defaultData.counters.police_dispatches;
+    }
     if (!this.data.incidents) this.data.incidents = [];
     if (!this.data.counters.incidents) this.data.counters.incidents = 0;
     if (!this.data.growth_records) this.data.growth_records = [];
@@ -210,9 +220,7 @@ class Store {
     if (!this.data.counters.notifications) this.data.counters.notifications = 0;
     if (!this.data.emotion_detections) this.data.emotion_detections = [];
     if (!this.data.counters.emotion_detections) this.data.counters.emotion_detections = 0;
-    if (!this.data.police_stations) this.data.police_stations = JSON.parse(JSON.stringify(defaultData.police_stations));
-    if (!this.data.police_dispatches) this.data.police_dispatches = [];
-    if (!this.data.counters.police_dispatches) this.data.counters.police_dispatches = 0;
+    this.save();
   }
 
   load() {
