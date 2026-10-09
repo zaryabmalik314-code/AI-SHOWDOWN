@@ -471,21 +471,61 @@
     <section class="page-section" id="page-analytics">
       <div class="page-header">
         <h2>Analytics Dashboard</h2>
-        <button class="btn btn-outline" onclick="loadAnalytics()">Refresh</button>
+        <div style="display:flex;gap:8px;align-items:center">
+          <span class="badge-status detection-active">Live Data</span>
+          <button class="btn btn-outline" onclick="loadAnalytics()">Refresh</button>
+        </div>
       </div>
+
+      <!-- KPI Row -->
+      <div class="analytics-kpi-row" id="analytics-kpis"></div>
+
+      <!-- Row 1: Timeline + Severity -->
       <div class="analytics-grid">
         <div class="chart-card">
           <h4>Incidents Over Last 7 Days</h4>
           <canvas id="chart-incidents-timeline"></canvas>
         </div>
         <div class="chart-card">
-          <h4>Alerts by Type</h4>
-          <canvas id="chart-alerts-type"></canvas>
-        </div>
-        <div class="chart-card wide">
           <h4>Incidents by Severity</h4>
           <canvas id="chart-severity"></canvas>
         </div>
+      </div>
+
+      <!-- Row 2: Incident Types + Alerts by Type -->
+      <div class="analytics-grid">
+        <div class="chart-card">
+          <h4>Incidents by Type</h4>
+          <canvas id="chart-incidents-type"></canvas>
+        </div>
+        <div class="chart-card">
+          <h4>Alerts by Type</h4>
+          <canvas id="chart-alerts-type"></canvas>
+        </div>
+      </div>
+
+      <!-- Row 3: Risk Distribution + AI Model Performance -->
+      <div class="analytics-grid">
+        <div class="chart-card">
+          <h4>Risk Distribution Across Orphanages</h4>
+          <canvas id="chart-risk-dist"></canvas>
+        </div>
+        <div class="chart-card">
+          <h4>AI Model Performance</h4>
+          <div id="ai-model-table" class="analytics-table-wrap"></div>
+        </div>
+      </div>
+
+      <!-- Row 4: Hotspot Table (full width) -->
+      <div class="chart-card wide" style="margin-top:20px">
+        <h4>Top 10 Hotspots — Last 7 Days</h4>
+        <div id="hotspot-table" class="analytics-table-wrap"></div>
+      </div>
+
+      <!-- Row 5: District Breakdown (full width) -->
+      <div class="chart-card wide" style="margin-top:20px">
+        <h4>District Breakdown</h4>
+        <div id="district-table" class="analytics-table-wrap"></div>
       </div>
     </section>
 

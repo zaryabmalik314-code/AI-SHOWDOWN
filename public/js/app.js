@@ -1716,94 +1716,172 @@ setInterval(updateNotifCount, 15000);
 // ====== ANALYTICS / CHARTS ======
 let incidentChart, alertTypeChart, severityChart;
 
+let riskChart, incidentTypeChart;
+
 async function loadAnalytics() {
   try {
-    const [timelineRes, typesRes, incidentsRes] = await Promise.all([
+    const [timelineRes, alertTypesRes, incidentsRes, incTypesRes, riskRes, hotspotsRes, aiRes, districtRes, metricsRes] = await Promise.all([
       fetch('/api/analytics/incidents-timeline' + qs(currentFilter)),
       fetch('/api/analytics/alerts-by-type' + qs(currentFilter)),
       fetch('/api/incidents' + qs(currentFilter)),
+      fetch('/api/analytics/incidents-by-type' + qs(currentFilter)),
+      fetch('/api/analytics/risk-distribution'),
+      fetch('/api/analytics/top-hotspots'),
+      fetch('/api/analytics/ai-model-stats' + qs(currentFilter)),
+      fetch('/api/analytics/district-breakdown'),
+      fetch('/api/analytics/response-metrics'),
     ]);
     const timeline = await timelineRes.json();
-    const alertTypes = await typesRes.json();
+    const alertTypes = await alertTypesRes.json();
     const incidents = await incidentsRes.json();
+    const incTypes = await incTypesRes.json();
+    const riskDist = await riskRes.json();
+    const hotspots = await hotspotsRes.json();
+    const aiModels = await aiRes.json();
+    const districts = await districtRes.json();
+    const metrics = await metricsRes.json();
 
-    // Incidents timeline line chart
-    const ctx1 = document.getElementById('chart-incidents-timeline');
+    // KPI cards
+    const totalWeek = timeline.reduce((s, d) => s + d.total, 0);
+    document.getElementById('analytics-kpis').innerHTML = `
+      <div class="analytics-kpi red">
+        <div class="kpi-val">${metrics.total_incidents}</div>
+        <div class="kpi-label">Total Incidents</div>
+        <div class="kpi-sub"><span>${metrics.total_critical}</span> critical</div>
+      </div>
+      <div class="analytics-kpi green">
+        <div class="kpi-val">${metrics.review_rate}%</div>
+        <div class="kpi-label">Review Rate</div>
+        <div class="kpi-sub"><span>${metrics.reviewed_incidents}/${metrics.total_incidents}</span> reviewed</div>
+      </div>
+      <div class="analytics-kpi amber">
+        <div class="kpi-val">${metrics.critical_response_rate}%</div>
+        <div class="kpi-label">Critical Response</div>
+        <div class="kpi-sub"><span>${metrics.critical_reviewed}/${metrics.total_critical}</span> addressed</div>
+      </div>
+      <div class="analytics-kpi blue">
+        <div class="kpi-val">${metrics.alert_ack_rate}%</div>
+        <div class="kpi-label">Alert Ack Rate</div>
+        <div class="kpi-sub"><span>${metrics.acknowledged_alerts}/${metrics.total_alerts}</span> acknowledged</div>
+      </div>
+      <div class="analytics-kpi purple">
+        <div class="kpi-val">${totalWeek}</div>
+        <div class="kpi-label">This Week</div>
+        <div class="kpi-sub">incidents in 7 days</div>
+      </div>
+    `;
+
+    const chartOpts = {
+      responsive: true,
+      plugins: { legend: { labels: { color: '#8a8a9a' } } },
+      scales: {
+        x: { ticks: { color: '#55555f' }, grid: { color: 'rgba(255,255,255,0.04)' } },
+        y: { ticks: { color: '#55555f' }, grid: { color: 'rgba(255,255,255,0.04)' }, beginAtZero: true }
+      }
+    };
+    const colors = ['#10b981', '#f59e0b', '#ef4444', '#8b5cf6', '#06b6d4', '#ec4899', '#f97316', '#14b8a6'];
+
+    // Incidents timeline — stacked area
     if (incidentChart) incidentChart.destroy();
-    incidentChart = new Chart(ctx1, {
+    const incTypes7 = ['physical_violence', 'verbal_abuse', 'harassment', 'bullying', 'distress', 'neglect'];
+    const typeColors = { physical_violence: '#ef4444', verbal_abuse: '#f59e0b', harassment: '#ec4899', bullying: '#8b5cf6', distress: '#06b6d4', neglect: '#f97316' };
+    incidentChart = new Chart(document.getElementById('chart-incidents-timeline'), {
       type: 'line',
       data: {
         labels: timeline.map(d => d.date.slice(5)),
-        datasets: [{
-          label: 'Total Incidents',
-          data: timeline.map(d => d.total),
-          borderColor: '#10b981',
-          backgroundColor: 'rgba(16,185,129,0.1)',
-          fill: true,
-          tension: 0.4,
-          pointRadius: 4,
-          pointBackgroundColor: '#10b981',
-        }]
+        datasets: incTypes7.filter(t => timeline.some(d => d[t] > 0)).map(t => ({
+          label: t.replace(/_/g, ' '),
+          data: timeline.map(d => d[t] || 0),
+          borderColor: typeColors[t] || '#888',
+          backgroundColor: (typeColors[t] || '#888') + '18',
+          fill: true, tension: 0.4, pointRadius: 3,
+        }))
       },
-      options: {
-        responsive: true,
-        plugins: { legend: { labels: { color: '#8a8a9a' } } },
-        scales: {
-          x: { ticks: { color: '#55555f' }, grid: { color: 'rgba(255,255,255,0.04)' } },
-          y: { ticks: { color: '#55555f' }, grid: { color: 'rgba(255,255,255,0.04)' }, beginAtZero: true }
-        }
-      }
+      options: { ...chartOpts, plugins: { legend: { position: 'bottom', labels: { color: '#8a8a9a', usePointStyle: true, padding: 12, font: { size: 11 } } } }, scales: { ...chartOpts.scales, y: { ...chartOpts.scales.y, stacked: true } } }
     });
 
-    // Alerts by type doughnut
-    const ctx2 = document.getElementById('chart-alerts-type');
-    if (alertTypeChart) alertTypeChart.destroy();
-    const colors = ['#10b981', '#f59e0b', '#ef4444', '#8b5cf6', '#06b6d4', '#ec4899'];
-    alertTypeChart = new Chart(ctx2, {
-      type: 'doughnut',
-      data: {
-        labels: alertTypes.map(a => a.type),
-        datasets: [{
-          data: alertTypes.map(a => a.count),
-          backgroundColor: colors.slice(0, alertTypes.length),
-          borderColor: '#111114',
-          borderWidth: 2,
-        }]
-      },
-      options: {
-        responsive: true,
-        plugins: {
-          legend: { position: 'bottom', labels: { color: '#8a8a9a', padding: 16, usePointStyle: true } }
-        }
-      }
-    });
-
-    // Severity breakdown bar chart
+    // Severity bar
     const severities = { critical: 0, high: 0, medium: 0, low: 0 };
     incidents.forEach(i => { severities[i.severity] = (severities[i.severity] || 0) + 1; });
-    const ctx3 = document.getElementById('chart-severity');
     if (severityChart) severityChart.destroy();
-    severityChart = new Chart(ctx3, {
+    severityChart = new Chart(document.getElementById('chart-severity'), {
       type: 'bar',
       data: {
         labels: ['Critical', 'High', 'Medium', 'Low'],
-        datasets: [{
-          label: 'Count',
-          data: [severities.critical, severities.high, severities.medium, severities.low || 0],
-          backgroundColor: ['#ef4444', '#f59e0b', '#06b6d4', '#10b981'],
-          borderRadius: 6,
-          barThickness: 40,
-        }]
+        datasets: [{ data: [severities.critical, severities.high, severities.medium, severities.low || 0], backgroundColor: ['#ef4444', '#f59e0b', '#06b6d4', '#10b981'], borderRadius: 6, barThickness: 36 }]
       },
-      options: {
-        responsive: true,
-        plugins: { legend: { display: false } },
-        scales: {
-          x: { ticks: { color: '#8a8a9a' }, grid: { display: false } },
-          y: { ticks: { color: '#55555f' }, grid: { color: 'rgba(255,255,255,0.04)' }, beginAtZero: true }
-        }
-      }
+      options: { ...chartOpts, plugins: { legend: { display: false } }, scales: { x: { ticks: { color: '#8a8a9a' }, grid: { display: false } }, y: chartOpts.scales.y } }
     });
+
+    // Incidents by type horizontal bar
+    if (incidentTypeChart) incidentTypeChart.destroy();
+    incidentTypeChart = new Chart(document.getElementById('chart-incidents-type'), {
+      type: 'bar',
+      data: {
+        labels: incTypes.map(t => t.type),
+        datasets: [{ data: incTypes.map(t => t.count), backgroundColor: colors.slice(0, incTypes.length), borderRadius: 4, barThickness: 22 }]
+      },
+      options: { indexAxis: 'y', responsive: true, plugins: { legend: { display: false } }, scales: { x: { ticks: { color: '#55555f' }, grid: { color: 'rgba(255,255,255,0.04)' }, beginAtZero: true }, y: { ticks: { color: '#8a8a9a', font: { size: 11 } }, grid: { display: false } } } }
+    });
+
+    // Alerts by type doughnut
+    if (alertTypeChart) alertTypeChart.destroy();
+    alertTypeChart = new Chart(document.getElementById('chart-alerts-type'), {
+      type: 'doughnut',
+      data: {
+        labels: alertTypes.map(a => a.type),
+        datasets: [{ data: alertTypes.map(a => a.count), backgroundColor: colors.slice(0, alertTypes.length), borderColor: '#111114', borderWidth: 2 }]
+      },
+      options: { responsive: true, plugins: { legend: { position: 'bottom', labels: { color: '#8a8a9a', padding: 14, usePointStyle: true, font: { size: 11 } } } } }
+    });
+
+    // Risk distribution doughnut
+    if (riskChart) riskChart.destroy();
+    riskChart = new Chart(document.getElementById('chart-risk-dist'), {
+      type: 'doughnut',
+      data: {
+        labels: ['Low Risk', 'Medium Risk', 'High Risk'],
+        datasets: [{ data: [riskDist.low, riskDist.medium, riskDist.high], backgroundColor: ['#10b981', '#f59e0b', '#ef4444'], borderColor: '#111114', borderWidth: 2 }]
+      },
+      options: { responsive: true, plugins: { legend: { position: 'bottom', labels: { color: '#8a8a9a', padding: 14, usePointStyle: true } } } }
+    });
+
+    // AI model table
+    document.getElementById('ai-model-table').innerHTML = `<table>
+      <thead><tr><th>Model</th><th>Detections</th><th>Avg Confidence</th><th>Top Type</th></tr></thead>
+      <tbody>${aiModels.map(m => `<tr>
+        <td style="font-weight:600">${m.model}</td>
+        <td>${m.detections}</td>
+        <td><div style="display:flex;align-items:center;gap:8px"><div class="conf-bar"><div class="conf-bar-fill" style="width:${m.avg_confidence}%;background:${m.avg_confidence >= 80 ? '#10b981' : m.avg_confidence >= 60 ? '#f59e0b' : '#ef4444'}"></div></div><span style="font-size:12px;color:var(--text-secondary)">${m.avg_confidence}%</span></div></td>
+        <td style="text-transform:capitalize">${m.top_type}</td>
+      </tr>`).join('')}</tbody></table>`;
+
+    // Hotspot table
+    document.getElementById('hotspot-table').innerHTML = `<table>
+      <thead><tr><th>#</th><th>Orphanage</th><th>City</th><th>Risk</th><th>Incidents (7d)</th><th>Critical</th><th>Unresolved</th><th>Status</th></tr></thead>
+      <tbody>${hotspots.map((h, i) => `<tr>
+        <td>${i + 1}</td>
+        <td style="font-weight:600;cursor:pointer" onclick="viewOrphanage(${h.id})">${h.name}</td>
+        <td>${h.city}</td>
+        <td><span class="risk-badge ${h.risk_level}">${h.risk_level}</span></td>
+        <td>${h.incidents_7d}</td>
+        <td style="color:${h.critical_7d > 0 ? '#ef4444' : '#10b981'};font-weight:600">${h.critical_7d}</td>
+        <td style="color:${h.unresolved_alerts > 0 ? '#f59e0b' : '#10b981'}">${h.unresolved_alerts}</td>
+        <td><span class="badge-status ${h.status === 'online' ? 'detection-active' : 'detection-error'}">${h.status}</span></td>
+      </tr>`).join('')}</tbody></table>`;
+
+    // District table
+    document.getElementById('district-table').innerHTML = `<table>
+      <thead><tr><th>District</th><th>Orphanages</th><th>Children</th><th>Online</th><th>Incidents</th><th>Coverage</th></tr></thead>
+      <tbody>${districts.slice(0, 20).map(d => `<tr>
+        <td style="font-weight:600">${d.district}</td>
+        <td>${d.orphanages}</td>
+        <td>${d.children}</td>
+        <td>${d.online}/${d.orphanages}</td>
+        <td style="color:${d.incidents > 5 ? '#ef4444' : d.incidents > 2 ? '#f59e0b' : '#10b981'}">${d.incidents}</td>
+        <td><div class="conf-bar" style="min-width:80px"><div class="conf-bar-fill" style="width:${Math.round(d.online / d.orphanages * 100)}%;background:${d.online === d.orphanages ? '#10b981' : '#f59e0b'}"></div></div></td>
+      </tr>`).join('')}</tbody></table>`;
+
   } catch (e) { console.error(e); }
 }
 

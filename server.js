@@ -295,6 +295,91 @@ app.get('/api/analytics/alerts-by-type', (req, res) => {
   res.json(Object.entries(types).map(([type, count]) => ({ type: type.replace(/_/g, ' '), count })));
 });
 
+app.get('/api/analytics/incidents-by-type', (req, res) => {
+  const incidents = store.getIncidents(req.query.orphanage_id, 500);
+  const types = {};
+  incidents.forEach(i => { types[i.type] = (types[i.type] || 0) + 1; });
+  res.json(Object.entries(types).map(([type, count]) => ({ type: type.replace(/_/g, ' '), count })).sort((a, b) => b.count - a.count));
+});
+
+app.get('/api/analytics/risk-distribution', (req, res) => {
+  const orphanages = store.getOrphanages();
+  const dist = { low: 0, medium: 0, high: 0 };
+  orphanages.forEach(o => { dist[o.risk_level] = (dist[o.risk_level] || 0) + 1; });
+  res.json(dist);
+});
+
+app.get('/api/analytics/top-hotspots', (req, res) => {
+  const orphanages = store.getOrphanages();
+  const results = orphanages.map(o => {
+    const incidents = store.getIncidents(o.id, 500);
+    const alerts = store.getAlerts(o.id, 500);
+    const now = new Date();
+    const weekAgo = new Date(now - 7 * 24 * 60 * 60 * 1000);
+    const recentIncidents = incidents.filter(i => new Date(i.detected_at) >= weekAgo);
+    const critical = recentIncidents.filter(i => i.severity === 'critical').length;
+    return {
+      id: o.id, name: o.name, city: o.city, district: o.district,
+      risk_level: o.risk_level, status: o.status,
+      incidents_7d: recentIncidents.length, critical_7d: critical,
+      unresolved_alerts: alerts.filter(a => !a.acknowledged).length,
+      score: critical * 3 + recentIncidents.length + alerts.filter(a => !a.acknowledged).length
+    };
+  }).sort((a, b) => b.score - a.score).slice(0, 10);
+  res.json(results);
+});
+
+app.get('/api/analytics/ai-model-stats', (req, res) => {
+  const incidents = store.getIncidents(req.query.orphanage_id, 500);
+  const models = {};
+  incidents.forEach(i => {
+    const m = i.ai_model || 'Unknown';
+    if (!models[m]) models[m] = { model: m, detections: 0, totalConf: 0, types: {} };
+    models[m].detections++;
+    models[m].totalConf += i.confidence || 0;
+    models[m].types[i.type] = (models[m].types[i.type] || 0) + 1;
+  });
+  res.json(Object.values(models).map(m => ({
+    ...m, avg_confidence: m.detections > 0 ? Math.round(m.totalConf / m.detections * 10) / 10 : 0,
+    top_type: Object.entries(m.types).sort((a, b) => b[1] - a[1])[0]?.[0]?.replace(/_/g, ' ') || 'N/A'
+  })).sort((a, b) => b.detections - a.detections));
+});
+
+app.get('/api/analytics/district-breakdown', (req, res) => {
+  const orphanages = store.getOrphanages();
+  const districts = {};
+  orphanages.forEach(o => {
+    const d = o.district || o.city;
+    if (!districts[d]) districts[d] = { district: d, orphanages: 0, children: 0, incidents: 0, online: 0 };
+    districts[d].orphanages++;
+    districts[d].children += o.total_children || 0;
+    if (o.status === 'online') districts[d].online++;
+    districts[d].incidents += store.getIncidents(o.id, 500).length;
+  });
+  res.json(Object.values(districts).sort((a, b) => b.incidents - a.incidents));
+});
+
+app.get('/api/analytics/response-metrics', (req, res) => {
+  const incidents = store.getIncidents(null, 500);
+  const alerts = store.getAlerts(null, 500);
+  const total = incidents.length;
+  const reviewed = incidents.filter(i => i.reviewed).length;
+  const critical = incidents.filter(i => i.severity === 'critical').length;
+  const criticalReviewed = incidents.filter(i => i.severity === 'critical' && i.reviewed).length;
+  const acked = alerts.filter(a => a.acknowledged).length;
+  res.json({
+    total_incidents: total,
+    reviewed_incidents: reviewed,
+    review_rate: total > 0 ? Math.round(reviewed / total * 100) : 0,
+    total_critical: critical,
+    critical_reviewed: criticalReviewed,
+    critical_response_rate: critical > 0 ? Math.round(criticalReviewed / critical * 100) : 0,
+    total_alerts: alerts.length,
+    acknowledged_alerts: acked,
+    alert_ack_rate: alerts.length > 0 ? Math.round(acked / alerts.length * 100) : 0,
+  });
+});
+
 app.get('/api/analytics/anomalies', (req, res) => {
   const orphanages = store.getOrphanages();
   const now = new Date();
