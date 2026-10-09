@@ -37,20 +37,19 @@ function broadcast(data) {
 const aiModels = [
   { name: 'ViolenceNet v2.1', type: 'action_recognition', backbone: 'SlowFast-R50' },
   { name: 'PoseGuard v1.4', type: 'pose_analysis', backbone: 'YOLOv8-pose + GRU' },
-  { name: 'FaceEmotion v3.0', type: 'facial_expression', backbone: 'HSEmotion-ResNet34' },
   { name: 'ProximityAI v1.2', type: 'spatial_analysis', backbone: 'DeepSORT + ReID' },
   { name: 'AudioSense v2.0', type: 'audio_classification', backbone: 'YAMNet + LSTM' },
 ];
 
 const violenceTypes = [
   { type: 'physical_violence', severity: 'critical', label: 'Physical Violence', desc: 'Hitting/pushing detected between individuals', model: 0, weight: 8, minConf: 82 },
-  { type: 'verbal_abuse', severity: 'high', label: 'Verbal Abuse', desc: 'Aggressive shouting/screaming pattern detected', model: 4, weight: 15, minConf: 71 },
+  { type: 'verbal_abuse', severity: 'high', label: 'Verbal Abuse', desc: 'Aggressive shouting/screaming pattern detected', model: 3, weight: 15, minConf: 71 },
   { type: 'harassment', severity: 'critical', label: 'Harassment', desc: 'Inappropriate physical contact detected', model: 1, weight: 5, minConf: 85 },
   { type: 'bullying', severity: 'high', label: 'Bullying', desc: 'Repeated aggressive behavior toward same individual', model: 0, weight: 12, minConf: 74 },
-  { type: 'neglect', severity: 'medium', label: 'Neglect Indicator', desc: 'Child isolated/unattended for extended period', model: 3, weight: 25, minConf: 68 },
-  { type: 'distress', severity: 'high', label: 'Child Distress', desc: 'Crying/distress pattern detected in child', model: 2, weight: 20, minConf: 72 },
+  { type: 'neglect', severity: 'medium', label: 'Neglect Indicator', desc: 'Child isolated/unattended for extended period', model: 2, weight: 25, minConf: 68 },
+  { type: 'distress', severity: 'high', label: 'Child Distress', desc: 'Crying/screaming audio pattern detected', model: 3, weight: 20, minConf: 72 },
   { type: 'rough_handling', severity: 'high', label: 'Rough Handling', desc: 'Staff using excessive force with child', model: 1, weight: 10, minConf: 79 },
-  { type: 'unauthorized_contact', severity: 'critical', label: 'Unauthorized Contact', desc: 'Unknown adult in close proximity to children unsupervised', model: 3, weight: 5, minConf: 88 },
+  { type: 'unauthorized_contact', severity: 'critical', label: 'Unauthorized Contact', desc: 'Unknown adult in close proximity to children unsupervised', model: 2, weight: 5, minConf: 88 },
 ];
 
 const cameraNames = ['CAM-A1 Main Hall', 'CAM-A2 Corridor', 'CAM-B1 Dormitory', 'CAM-B2 Washroom Entry', 'CAM-C1 Kitchen', 'CAM-C2 Dining', 'CAM-D1 Playground', 'CAM-D2 Garden', 'CAM-E1 Main Gate', 'CAM-E2 Back Gate', 'CAM-F1 Study Room', 'CAM-F2 Library', 'CAM-G1 Staff Room', 'CAM-G2 Office'];
@@ -173,60 +172,6 @@ function startAIDetection() {
       }
     }
 
-    // Emotion detection (5% chance per tick)
-    if (Math.random() < 0.05) {
-      const onlineOrgs = orphanages.filter(o => o.status === 'online');
-      const org = onlineOrgs[Math.floor(Math.random() * onlineOrgs.length)];
-      if (org) {
-        const zones = store.getZones(org.id);
-        const zone = zones.length > 0 ? zones[Math.floor(Math.random() * zones.length)] : null;
-        const children = store.getChildren(org.id);
-        const child = children.length > 0 ? children[Math.floor(Math.random() * children.length)] : null;
-        const camera = cameraNames[Math.floor(Math.random() * Math.min(org.cameras, cameraNames.length))];
-        const emotions = [
-          { emotion: 'distressed', severity: 'high', action: 'Staff notified for immediate check. Caretaker dispatched.', weight: 5, valence: -0.8 },
-          { emotion: 'crying', severity: 'high', action: 'Caretaker dispatched. Audio pattern confirms vocal distress.', weight: 8, valence: -0.7 },
-          { emotion: 'anxious', severity: 'medium', action: 'Monitoring frequency increased to 10s intervals.', weight: 10, valence: -0.4 },
-          { emotion: 'fearful', severity: 'high', action: 'Security alert raised. Sending team for headcount verification.', weight: 4, valence: -0.9 },
-          { emotion: 'happy', severity: 'low', action: 'No action needed. Positive environment confirmed.', weight: 30, valence: 0.8 },
-          { emotion: 'neutral', severity: 'low', action: 'Normal behavior. Baseline updated.', weight: 25, valence: 0.0 },
-          { emotion: 'excited', severity: 'low', action: 'No action needed. Group activity detected.', weight: 12, valence: 0.6 },
-          { emotion: 'sad', severity: 'medium', action: 'Counselor notification sent. Follow-up scheduled.', weight: 6, valence: -0.5 },
-        ];
-        const emo = weightedRandom(emotions);
-        const confidence = (68 + Math.random() * 31).toFixed(1);
-        const emotionScores = {};
-        emotions.forEach(e => { emotionScores[e.emotion] = e.emotion === emo.emotion ? parseFloat(confidence) : parseFloat((Math.random() * 25).toFixed(1)); });
-        const detection = store.addEmotionDetection({
-          child_name: child ? child.name : `Child-${Math.floor(Math.random() * 200) + 1}`,
-          child_id: child ? child.id : null,
-          emotion: emo.emotion,
-          confidence: parseFloat(confidence),
-          emotional_valence: emo.valence,
-          emotion_scores: emotionScores,
-          severity: emo.severity,
-          zone: zone ? zone.name : 'Unknown',
-          camera_id: camera,
-          orphanage_id: org.id,
-          orphanage_name: org.name,
-          ai_model: 'FaceEmotion v3.0',
-          action_taken: emo.action,
-          inference_ms: Math.floor(Math.random() * 40) + 15,
-        });
-        broadcast({ type: 'emotion_detection', detection });
-
-        if (['distressed', 'crying', 'fearful'].includes(emo.emotion)) {
-          const notif = store.addNotification({
-            type: 'emotion_alert',
-            title: `EMOTION ALERT: ${child ? '"' + child.name + '"' : 'Child'} showing signs of ${emo.emotion}`,
-            message: `[${camera}] at ${org.name}, ${org.city}. Emotional confidence: ${confidence}%. ${emo.action}`,
-            severity: emo.severity,
-            orphanage_id: org.id,
-          });
-          broadcast({ type: 'notification', notification: notif });
-        }
-      }
-    }
   }, 5000);
 }
 
@@ -324,8 +269,6 @@ app.get('/api/notifications/unread-count', (req, res) => res.json({ count: store
 app.put('/api/notifications/:id/read', (req, res) => { store.markNotificationRead(req.params.id); res.json({ ok: true }); });
 app.put('/api/notifications/read-all', (req, res) => { store.markAllNotificationsRead(); res.json({ ok: true }); });
 
-// Emotion detections
-app.get('/api/emotions', (req, res) => res.json(store.getEmotionDetections(req.query.orphanage_id)));
 
 // Analytics/Charts data
 app.get('/api/analytics/incidents-timeline', (req, res) => {

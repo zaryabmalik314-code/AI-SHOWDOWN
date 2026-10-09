@@ -25,7 +25,6 @@ function connectWS() {
       case 'risk_update': updateOrphanageRisk(data.orphanage_id, data.risk_level); break;
       case 'visitor_checkin': case 'visitor_checkout': loadVisitors(); loadStats(); break;
       case 'child_added': loadChildren(); loadStats(); break;
-      case 'emotion_detection': handleEmotionDetection(data.detection); break;
       case 'notification': handleNewNotification(data.notification); break;
     }
   };
@@ -52,7 +51,6 @@ function navigateTo(page) {
   if (page === 'portal') loadPortal();
   if (page === 'activity') loadActivity();
   if (page === 'analytics') loadAnalytics();
-  if (page === 'emotions') loadEmotions();
   if (page === 'anomalies') loadAnomalies();
   if (page === 'briefing') loadBriefing();
 }
@@ -1491,7 +1489,6 @@ function navigateToPage(page) {
   if (page === 'portal') loadPortal();
   if (page === 'activity') loadActivity();
   if (page === 'analytics') loadAnalytics();
-  if (page === 'emotions') loadEmotions();
   if (page === 'anomalies') loadAnomalies();
   if (page === 'briefing') loadBriefing();
 }
@@ -1656,9 +1653,9 @@ async function loadNotifications() {
     }
     list.innerHTML = notifs.map(n => {
       const time = timeAgo(new Date(n.created_at));
-      const icons = { security_alert: '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="var(--danger)" stroke-width="2"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>', ai_detection: '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="var(--purple)" stroke-width="2"><path d="M12 9v4m0 4h.01M3.26 19h17.48a1 1 0 0 0 .87-1.5L13.37 3.5a1 1 0 0 0-1.74 0L3.39 17.5a1 1 0 0 0 .87 1.5z"/></svg>', emotion_alert: '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="var(--warning)" stroke-width="2"><circle cx="12" cy="12" r="10"/><path d="M16 16s-1.5-2-4-2-4 2-4 2"/><line x1="9" y1="9" x2="9.01" y2="9"/><line x1="15" y1="9" x2="15.01" y2="9"/></svg>' };
+      const icons = { security_alert: '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="var(--danger)" stroke-width="2"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>', ai_detection: '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="var(--purple)" stroke-width="2"><path d="M12 9v4m0 4h.01M3.26 19h17.48a1 1 0 0 0 .87-1.5L13.37 3.5a1 1 0 0 0-1.74 0L3.39 17.5a1 1 0 0 0 .87 1.5z"/></svg>' };
       const icon = icons[n.type] || '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="var(--accent)" stroke-width="2"><path d="M18 8A6 6 0 006 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 01-3.46 0"/></svg>';
-      const bgColors = { security_alert: 'rgba(239,68,68,0.15)', ai_detection: 'rgba(139,92,246,0.15)', emotion_alert: 'rgba(251,191,36,0.15)' };
+      const bgColors = { security_alert: 'rgba(239,68,68,0.15)', ai_detection: 'rgba(139,92,246,0.15)' };
       return `<div class="notif-item ${n.read ? '' : 'unread'} ${n.severity || ''}" onclick="markNotifRead(${n.id})">
         <div class="notif-icon" style="background:${bgColors[n.type] || 'rgba(16,185,129,0.15)'}">${icon}</div>
         <div class="notif-info">
@@ -1879,60 +1876,6 @@ async function addGrowthRecord(e) {
   });
   const name = document.getElementById('growth-modal-title').textContent.replace('Growth Tracker - ', '');
   viewGrowth(childId, name);
-}
-
-// ====== EMOTION DETECTION ======
-const emotionLabels = {
-  distressed: '<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="var(--danger)" stroke-width="2"><circle cx="12" cy="12" r="10"/><path d="M16 16s-1.5-2-4-2-4 2-4 2"/><line x1="9" y1="9" x2="9.01" y2="9"/><line x1="15" y1="9" x2="15.01" y2="9"/></svg>',
-  crying: '<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="var(--danger)" stroke-width="2"><circle cx="12" cy="12" r="10"/><path d="M16 16s-1.5-2-4-2-4 2-4 2"/><line x1="9" y1="9" x2="9.01" y2="9"/><line x1="15" y1="9" x2="15.01" y2="9"/></svg>',
-  anxious: '<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="var(--warning)" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="8" y1="15" x2="16" y2="15"/><line x1="9" y1="9" x2="9.01" y2="9"/><line x1="15" y1="9" x2="15.01" y2="9"/></svg>',
-  fearful: '<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="var(--danger)" stroke-width="2"><circle cx="12" cy="12" r="10"/><circle cx="12" cy="15" r="2"/><line x1="9" y1="9" x2="9.01" y2="9"/><line x1="15" y1="9" x2="15.01" y2="9"/></svg>',
-  happy: '<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="var(--success)" stroke-width="2"><circle cx="12" cy="12" r="10"/><path d="M8 14s1.5 2 4 2 4-2 4-2"/><line x1="9" y1="9" x2="9.01" y2="9"/><line x1="15" y1="9" x2="15.01" y2="9"/></svg>',
-  neutral: '<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="var(--cyan)" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="8" y1="15" x2="16" y2="15"/><line x1="9" y1="9" x2="9.01" y2="9"/><line x1="15" y1="9" x2="15.01" y2="9"/></svg>',
-  excited: '<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="var(--success)" stroke-width="2"><circle cx="12" cy="12" r="10"/><path d="M8 14s1.5 2 4 2 4-2 4-2"/><line x1="9" y1="9" x2="9.01" y2="9"/><line x1="15" y1="9" x2="15.01" y2="9"/></svg>',
-  sad: '<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="var(--warning)" stroke-width="2"><circle cx="12" cy="12" r="10"/><path d="M16 16s-1.5-2-4-2-4 2-4 2"/><line x1="9" y1="9" x2="9.01" y2="9"/><line x1="15" y1="9" x2="15.01" y2="9"/></svg>'
-};
-
-async function loadEmotions() {
-  try {
-    const res = await fetch('/api/emotions' + qs(currentFilter));
-    const detections = await res.json();
-
-    const counts = {};
-    detections.forEach(d => { counts[d.emotion] = (counts[d.emotion] || 0) + 1; });
-    const distressed = (counts.distressed || 0) + (counts.crying || 0) + (counts.fearful || 0);
-    const positive = (counts.happy || 0) + (counts.excited || 0);
-    const neutral = counts.neutral || 0;
-    const concerned = (counts.anxious || 0) + (counts.sad || 0);
-
-    document.getElementById('emotion-stats').innerHTML = `
-      <div class="emo-stat"><div class="emo-icon">${emotionLabels.distressed}</div><div class="emo-val" style="color:var(--danger)">${distressed}</div><div class="emo-label">Distressed</div></div>
-      <div class="emo-stat"><div class="emo-icon">${emotionLabels.sad}</div><div class="emo-val" style="color:var(--warning)">${concerned}</div><div class="emo-label">Concerned</div></div>
-      <div class="emo-stat"><div class="emo-icon">${emotionLabels.neutral}</div><div class="emo-val" style="color:var(--cyan)">${neutral}</div><div class="emo-label">Neutral</div></div>
-      <div class="emo-stat"><div class="emo-icon">${emotionLabels.happy}</div><div class="emo-val" style="color:var(--success)">${positive}</div><div class="emo-label">Positive</div></div>
-    `;
-
-    document.getElementById('emotion-feed').innerHTML = detections.map(d => {
-      const emoji = emotionLabels[d.emotion] || emotionLabels.neutral;
-      const time = timeAgo(new Date(d.detected_at));
-      const sevClass = d.severity === 'high' ? 'high' : d.severity === 'medium' ? 'medium' : '';
-      return `<div class="emotion-item">
-        <div class="emotion-emoji">${emoji}</div>
-        <div class="emotion-info">
-          <div class="emotion-label">${d.child_name} - <span style="text-transform:capitalize">${d.emotion}</span></div>
-          <div class="emotion-meta">${d.orphanage_name} &middot; ${d.zone} &middot; ${d.confidence}% confidence &middot; ${time}</div>
-        </div>
-        <div class="emotion-action ${sevClass}">${d.action_taken}</div>
-      </div>`;
-    }).join('') || '<p style="color:var(--text-secondary);padding:20px">No emotion detections yet.</p>';
-  } catch (e) { console.error(e); }
-}
-
-function handleEmotionDetection(detection) {
-  const feed = document.getElementById('emotion-feed');
-  if (feed && document.getElementById('page-emotions').classList.contains('active')) {
-    loadEmotions();
-  }
 }
 
 // ====== ANOMALY DETECTION ======
@@ -2166,7 +2109,7 @@ td{padding:8px 10px;border-bottom:1px solid #eee}.grade{font-weight:700;padding:
 </tbody></table></div>
 
 <div class="section"><h2>AI Detection Summary</h2>
-<p style="font-size:13px;color:#666;margin-bottom:10px">ViolenceNet v2.1 and EmotionNet analyzed ${incidents.reduce((s,i)=>s+i.frame_count,0).toLocaleString()} video frames across all monitored facilities.</p>
+<p style="font-size:13px;color:#666;margin-bottom:10px">ViolenceNet, PoseGuard, and AudioSense analyzed ${incidents.reduce((s,i)=>s+i.frame_count,0).toLocaleString()} video and audio frames across all monitored facilities.</p>
 <table><thead><tr><th>Type</th><th>Count</th><th>Avg Confidence</th></tr></thead>
 <tbody>${Object.entries(incidents.reduce((acc,i)=>{if(!acc[i.type])acc[i.type]={count:0,conf:0};acc[i.type].count++;acc[i.type].conf+=i.confidence;return acc},{})).map(([type,d])=>`<tr><td style="text-transform:capitalize">${type.replace(/_/g,' ')}</td><td>${d.count}</td><td>${(d.conf/d.count).toFixed(1)}%</td></tr>`).join('')}
 </tbody></table></div>

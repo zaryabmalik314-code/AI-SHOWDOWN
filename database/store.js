@@ -259,14 +259,14 @@ const defaultData = {
       { type: 'bullying', label: 'Bullying', severity: 'high', orphanage_id: 19, days_ago: 1, confidence: 82.1, ai_model: 'ViolenceNet v2.1', camera_id: 'CAM-D1 Playground', zone: 'Garden', persons: 4, reviewed: false },
       { type: 'neglect', label: 'Neglect Indicator', severity: 'medium', orphanage_id: 41, days_ago: 2, confidence: 74.6, ai_model: 'ProximityAI v1.2', camera_id: 'CAM-B1 Dormitory', zone: 'Dormitory A', persons: 1, reviewed: true },
       { type: 'rough_handling', label: 'Rough Handling', severity: 'high', orphanage_id: 19, days_ago: 3, confidence: 85.9, ai_model: 'PoseGuard v1.4', camera_id: 'CAM-A2 Corridor', zone: 'Main Hall', persons: 2, reviewed: true },
-      { type: 'distress', label: 'Child Distress', severity: 'high', orphanage_id: 38, days_ago: 2, confidence: 79.2, ai_model: 'FaceEmotion v3.0', camera_id: 'CAM-B1 Dormitory', zone: 'Dormitory A', persons: 1, reviewed: false },
+      { type: 'distress', label: 'Child Distress', severity: 'high', orphanage_id: 38, days_ago: 2, confidence: 79.2, ai_model: 'AudioSense v2.0', camera_id: 'CAM-B1 Dormitory', zone: 'Dormitory A', persons: 1, reviewed: false },
       { type: 'harassment', label: 'Harassment', severity: 'critical', orphanage_id: 77, days_ago: 4, confidence: 88.7, ai_model: 'PoseGuard v1.4', camera_id: 'CAM-B2 Washroom Entry', zone: 'Dormitory B', persons: 2, reviewed: true },
       { type: 'unauthorized_contact', label: 'Unauthorized Contact', severity: 'critical', orphanage_id: 38, days_ago: 5, confidence: 92.4, ai_model: 'ProximityAI v1.2', camera_id: 'CAM-E1 Main Gate', zone: 'Main Gate', persons: 3, reviewed: true },
       { type: 'verbal_abuse', label: 'Verbal Abuse', severity: 'high', orphanage_id: 69, days_ago: 1, confidence: 73.8, ai_model: 'AudioSense v2.0', camera_id: 'CAM-C1 Kitchen', zone: 'Kitchen', persons: 2, reviewed: false },
       { type: 'physical_violence', label: 'Physical Violence', severity: 'critical', orphanage_id: 35, days_ago: 3, confidence: 87.2, ai_model: 'ViolenceNet v2.1', camera_id: 'CAM-D1 Playground', zone: 'Garden', persons: 2, reviewed: true },
       { type: 'neglect', label: 'Neglect Indicator', severity: 'medium', orphanage_id: 82, days_ago: 2, confidence: 71.3, ai_model: 'ProximityAI v1.2', camera_id: 'CAM-F1 Study Room', zone: 'Study Room', persons: 1, reviewed: false },
       { type: 'bullying', label: 'Bullying', severity: 'high', orphanage_id: 24, days_ago: 0, confidence: 76.9, ai_model: 'ViolenceNet v2.1', camera_id: 'CAM-D1 Playground', zone: 'Garden', persons: 3, reviewed: false },
-      { type: 'distress', label: 'Child Distress', severity: 'high', orphanage_id: 15, days_ago: 4, confidence: 81.5, ai_model: 'FaceEmotion v3.0', camera_id: 'CAM-B1 Dormitory', zone: 'Dormitory B', persons: 1, reviewed: true },
+      { type: 'distress', label: 'Child Distress', severity: 'high', orphanage_id: 15, days_ago: 4, confidence: 81.5, ai_model: 'AudioSense v2.0', camera_id: 'CAM-B1 Dormitory', zone: 'Dormitory B', persons: 1, reviewed: true },
       { type: 'rough_handling', label: 'Rough Handling', severity: 'high', orphanage_id: 49, days_ago: 6, confidence: 80.1, ai_model: 'PoseGuard v1.4', camera_id: 'CAM-A1 Main Hall', zone: 'Main Hall', persons: 2, reviewed: true },
       { type: 'verbal_abuse', label: 'Verbal Abuse', severity: 'high', orphanage_id: 19, days_ago: 5, confidence: 75.0, ai_model: 'AudioSense v2.0', camera_id: 'CAM-C2 Dining', zone: 'Kitchen', persons: 2, reviewed: true },
       { type: 'physical_violence', label: 'Physical Violence', severity: 'critical', orphanage_id: 41, days_ago: 6, confidence: 89.6, ai_model: 'ViolenceNet v2.1', camera_id: 'CAM-A2 Corridor', zone: 'Main Hall', persons: 2, reviewed: true },
@@ -302,8 +302,7 @@ const defaultData = {
   activity_log: [],
   growth_records: [],
   notifications: [],
-  emotion_detections: [],
-  counters: { children: 60, health_records: 8, visitors: 18, alerts: 14, incidents: 20, activity_log: 0, orphanages: 85, growth_records: 0, notifications: 0, emotion_detections: 0 }
+  counters: { children: 60, health_records: 8, visitors: 18, alerts: 14, incidents: 20, activity_log: 0, orphanages: 85, growth_records: 0, notifications: 0 }
 };
 
 class Store {
@@ -316,8 +315,6 @@ class Store {
     if (!this.data.counters.growth_records) this.data.counters.growth_records = 0;
     if (!this.data.notifications) this.data.notifications = [];
     if (!this.data.counters.notifications) this.data.counters.notifications = 0;
-    if (!this.data.emotion_detections) this.data.emotion_detections = [];
-    if (!this.data.counters.emotion_detections) this.data.counters.emotion_detections = 0;
     this.data.orphanages.forEach(o => {
       if (o.compliance_score == null) {
         const base = o.risk_level === 'high' ? 45 : o.risk_level === 'medium' ? 68 : 82;
@@ -551,22 +548,6 @@ class Store {
 
   getUnreadCount() {
     return this.data.notifications.filter(n => !n.read).length;
-  }
-
-  // Emotion Detections
-  getEmotionDetections(orphanageId, limit = 50) {
-    let list = this.data.emotion_detections;
-    if (orphanageId) list = list.filter(e => e.orphanage_id === parseInt(orphanageId));
-    return list.sort((a, b) => new Date(b.detected_at) - new Date(a.detected_at)).slice(0, limit);
-  }
-
-  addEmotionDetection(detection) {
-    detection.id = this.nextId('emotion_detections');
-    detection.detected_at = new Date().toISOString();
-    this.data.emotion_detections.push(detection);
-    if (this.data.emotion_detections.length > 500) this.data.emotion_detections = this.data.emotion_detections.slice(-250);
-    this.save();
-    return detection;
   }
 
   // Rankings
