@@ -27,7 +27,7 @@
         </div>
         <h1 class="login-title">OrphanGuard AI</h1>
         <p class="login-subtitle">Punjab Child Protection Command Center</p>
-        <div class="login-badge">Government of Punjab — Social Welfare Department</div>
+        <div class="login-badge">Prototype — For Demonstration Only</div>
         <form id="login-form" onsubmit="handleLogin(event)">
           <div class="login-field">
             <label>Officer ID / Email</label>
@@ -50,9 +50,9 @@
         <h2>Protecting Punjab's Children</h2>
         <p>AI-powered real-time monitoring across orphanages in Punjab province</p>
         <div class="login-stats-row">
-          <div class="login-stat"><div class="login-stat-val">10</div><div class="login-stat-label">Orphanages Monitored</div></div>
-          <div class="login-stat"><div class="login-stat-val">448</div><div class="login-stat-label">Children Protected</div></div>
-          <div class="login-stat"><div class="login-stat-val">79</div><div class="login-stat-label">AI Cameras Active</div></div>
+          <div class="login-stat"><div class="login-stat-val" id="login-stat-orphanages">85</div><div class="login-stat-label">Orphanages Monitored</div></div>
+          <div class="login-stat"><div class="login-stat-val" id="login-stat-children">3,200+</div><div class="login-stat-label">Children Protected</div></div>
+          <div class="login-stat"><div class="login-stat-val" id="login-stat-cameras">450+</div><div class="login-stat-label">AI Cameras Active</div></div>
         </div>
         <div class="login-features">
           <div class="login-feature"><span><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg></span> Violence & Harassment Detection (ViolenceNet v2.1)</div>
@@ -62,8 +62,8 @@
           <div class="login-feature"><span><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/></svg></span> Automated Compliance Reporting</div>
         </div>
         <div class="login-org-badges">
-          <span>Aligned with UNICEF Child Protection Standards</span>
-          <span>Punjab Child Protection Bureau</span>
+          <span>Built for Punjab Child Protection</span>
+          <span>Open Source &middot; Non-Commercial</span>
         </div>
       </div>
     </div>
@@ -270,10 +270,6 @@
           <button class="btn btn-outline btn-sm" onclick="generatePDFReport()" style="gap:6px;display:flex;align-items:center">
             <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/></svg>
             Download Report
-          </button>
-          <button class="btn btn-outline btn-sm" onclick="toggleWhatsAppPanel()" style="gap:6px;display:flex;align-items:center;border-color:#25D366;color:#25D366">
-            <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor"><path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347z"/><path d="M12 0C5.373 0 0 5.373 0 12c0 2.625.846 5.059 2.284 7.034L.789 23.492l4.625-1.468A11.93 11.93 0 0 0 12 24c6.627 0 12-5.373 12-12S18.627 0 12 0zm0 21.75c-2.16 0-4.163-.676-5.813-1.828l-.416-.279-2.746.872.735-2.668-.304-.438A9.712 9.712 0 0 1 2.25 12c0-5.385 4.365-9.75 9.75-9.75S21.75 6.615 21.75 12s-4.365 9.75-9.75 9.75z"/></svg>
-            WhatsApp Alerts
           </button>
           <div class="header-time">
             <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
@@ -501,7 +497,7 @@
       <div class="page-header">
         <h2>Emotion Detection AI</h2>
         <div style="display:flex;gap:8px;align-items:center">
-          <span class="badge-status detection-active">EmotionNet v1.0 Active</span>
+          <span class="badge-status detection-active">FaceEmotion v3.0 Active</span>
           <button class="btn btn-outline" onclick="loadEmotions()">Refresh</button>
         </div>
       </div>
@@ -679,57 +675,6 @@
     </div>
   </div>
 
-  <!-- WhatsApp Alert Simulation Panel -->
-  <div class="whatsapp-panel" id="whatsapp-panel">
-    <div class="wa-header">
-      <div style="display:flex;align-items:center;gap:10px">
-        <svg width="20" height="20" viewBox="0 0 24 24" fill="#25D366"><path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347z"/></svg>
-        <span style="font-weight:600;color:#fff">WhatsApp Alert Channel</span>
-      </div>
-      <button onclick="toggleWhatsAppPanel()" style="background:none;border:none;color:#aaa;cursor:pointer;font-size:18px">&times;</button>
-    </div>
-    <div class="wa-chat" id="wa-chat">
-      <div class="wa-date-divider">Today</div>
-      <div class="wa-msg system">
-        <div class="wa-msg-body">OrphanGuard AI Alert System activated. Critical alerts will be sent to all registered officials.</div>
-        <div class="wa-msg-time">System</div>
-      </div>
-      <div class="wa-msg incoming">
-        <div class="wa-msg-sender">OrphanGuard AI Bot</div>
-        <div class="wa-msg-body"><strong>[ALERT]</strong> Headcount mismatch detected at SOS Children Village, Lahore. Expected: 12, Detected: 9. Zone: Main Hall</div>
-        <div class="wa-msg-time">2:34 PM</div>
-      </div>
-      <div class="wa-msg incoming">
-        <div class="wa-msg-sender">OrphanGuard AI Bot</div>
-        <div class="wa-msg-body"><strong>[AI DETECTION]</strong> Possible verbal abuse detected at Dar-ul-Sukoon, Faisalabad. Confidence: 87%. ViolenceNet v2.1 flagged aggressive vocal patterns in Kitchen area.</div>
-        <div class="wa-msg-time">2:41 PM</div>
-      </div>
-      <div class="wa-msg incoming">
-        <div class="wa-msg-sender">OrphanGuard AI Bot</div>
-        <div class="wa-msg-body"><strong>[EMOTION ALERT]</strong> Child "Ahmed K." showing signs of distress at SOS Children Village. EmotionNet confidence: 91%. Caregiver notification sent.</div>
-        <div class="wa-msg-time">2:45 PM</div>
-      </div>
-      <div class="wa-msg outgoing">
-        <div class="wa-msg-body">Acknowledged. Sending team to Main Hall for headcount verification.</div>
-        <div class="wa-msg-time">2:47 PM &#10003;&#10003;</div>
-      </div>
-      <div class="wa-msg incoming">
-        <div class="wa-msg-sender">OrphanGuard AI Bot</div>
-        <div class="wa-msg-body"><strong>[RESOLVED]</strong> Alert resolved. Headcount verified: 12/12 present at SOS Children Village Main Hall. Discrepancy was due to children in washroom.</div>
-        <div class="wa-msg-time">3:02 PM</div>
-      </div>
-    </div>
-    <div class="wa-footer">
-      <div class="wa-recipient-info">
-        <strong>Alert Recipients:</strong> DG Social Welfare, District Officers (9), CPB Inspectors (4)
-      </div>
-      <div style="display:flex;gap:8px;align-items:center;margin-top:8px">
-        <input type="text" class="wa-input" placeholder="Type a response..." id="wa-input">
-        <button class="wa-send" onclick="sendWAMessage()">Send</button>
-      </div>
-    </div>
-  </div>
-
   <!-- INSTITUTIONAL FOOTER -->
   <footer class="institutional-footer" id="app-footer">
     <div class="footer-content">
@@ -741,14 +686,14 @@
         </div>
       </div>
       <div class="footer-links">
-        <span>Aligned with Punjab Child Protection Bureau Standards</span>
+        <span>Prototype System — Not Yet Deployed</span>
         <span class="footer-sep">|</span>
-        <span>UNICEF Child Protection Framework Compliant</span>
+        <span>Built by Zaryab Malik, LGU</span>
         <span class="footer-sep">|</span>
-        <span>Data encrypted under PECA 2016</span>
+        <span>Non-Commercial &middot; Open for Government Adoption</span>
       </div>
       <div class="footer-bottom">
-        <span>Developed for the Government of Punjab, Social Welfare & Bait-ul-Maal Department</span>
+        <span>Contact: zaryabmalik314@gmail.com</span>
         <span class="footer-sep">|</span>
         <span>Emergency: 1121 (Child Protection Helpline)</span>
       </div>

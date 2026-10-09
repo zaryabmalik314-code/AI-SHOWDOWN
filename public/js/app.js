@@ -906,7 +906,7 @@ let cameraOrgFilter = '';
 let cameraStream = null;
 let cameraDetectionInterval = null;
 
-async function initCameras() {
+function initCameras() {
   const filter = document.getElementById('camera-org-filter');
   filter.innerHTML = '<option value="">All Orphanages</option>' + orphanages.map(o => `<option value="${o.id}" ${cameraOrgFilter == o.id ? 'selected' : ''}>${o.name} — ${o.city}</option>`).join('');
   filter.onchange = (e) => { cameraOrgFilter = e.target.value; initCameras(); };
@@ -954,8 +954,7 @@ async function initCameras() {
         </div>
       </div>
       <div class="feed-body" id="feed-${i}">
-        ${i === 0 && z.orgStatus === 'online' ? '<video id="cam-live" autoplay muted playsinline></video>' :
-          z.orgStatus === 'online' ?
+        ${z.orgStatus === 'online' ?
             `<div class="sim-feed" id="sim-feed-${i}"><canvas class="sim-canvas" id="sim-canvas-${i}"></canvas></div>` :
             '<div class="no-feed"><svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="var(--danger)" stroke-width="1.5"><line x1="1" y1="1" x2="23" y2="23"/><path d="M21 21H3a2 2 0 01-2-2V8a2 2 0 012-2h3l2-3h6"/><path d="M16.5 16.5a5 5 0 10-7.07-7.07"/></svg><span>Feed Unavailable</span><span style="font-size:10px;color:var(--danger)">Orphanage Offline</span></div>'
         }
@@ -967,21 +966,8 @@ async function initCameras() {
   if (cameraDetectionInterval) clearInterval(cameraDetectionInterval);
   if (cameraStream) { cameraStream.getTracks().forEach(t => t.stop()); cameraStream = null; }
 
-  const firstOnline = allZones.findIndex(z => z.orgStatus === 'online');
-  if (firstOnline === 0) {
-    try {
-      cameraStream = await navigator.mediaDevices.getUserMedia({ video: { width: 640, height: 480 } });
-      const v = document.getElementById('cam-live');
-      if (v) v.srcObject = cameraStream;
-    } catch (e) {
-      const f = document.getElementById('feed-0');
-      if (f) f.innerHTML = '<div class="sim-feed" id="sim-feed-0"><canvas class="sim-canvas" id="sim-canvas-0"></canvas></div><div class="feed-overlay"><span>AI: Simulated</span><span id="feed-count-0">Persons: 0</span></div>';
-    }
-  }
-
   allZones.forEach((z, i) => {
     if (z.orgStatus !== 'online') return;
-    if (i === 0 && document.getElementById('cam-live')) return;
     const canvas = document.getElementById('sim-canvas-' + i);
     if (canvas) drawSimFeed(canvas, z.name);
   });
@@ -1033,70 +1019,6 @@ function drawSimFeed(canvas, label) {
 
 function startDetectionSim() {
   if (cameraDetectionInterval) clearInterval(cameraDetectionInterval);
-  const analysisCanvas = document.createElement('canvas');
-  const analysisCtx = analysisCanvas.getContext('2d', { willReadFrequently: true });
-
-  function detectPersonRegions(video) {
-    if (!video || !video.videoWidth) return [];
-    const w = 160, h = 120;
-    analysisCanvas.width = w; analysisCanvas.height = h;
-    analysisCtx.drawImage(video, 0, 0, w, h);
-    let imgData;
-    try { imgData = analysisCtx.getImageData(0, 0, w, h); } catch (e) { return []; }
-    const d = imgData.data;
-    const grid = [];
-    const cellW = 10, cellH = 10;
-    const cols = Math.floor(w / cellW), rows = Math.floor(h / cellH);
-    for (let r = 0; r < rows; r++) {
-      for (let c = 0; c < cols; c++) {
-        let skinCount = 0, total = 0;
-        for (let y = r * cellH; y < (r + 1) * cellH; y++) {
-          for (let x = c * cellW; x < (c + 1) * cellW; x++) {
-            const i = (y * w + x) * 4;
-            const R = d[i], G = d[i+1], B = d[i+2];
-            if (R > 80 && G > 40 && B > 20 && R > G && R > B && Math.abs(R - G) > 15 && R - B > 15) skinCount++;
-            total++;
-          }
-        }
-        grid.push({ r, c, ratio: skinCount / total });
-      }
-    }
-    const regions = [];
-    const visited = new Set();
-    for (let r = 0; r < rows; r++) {
-      for (let c = 0; c < cols; c++) {
-        const idx = r * cols + c;
-        if (visited.has(idx) || grid[idx].ratio < 0.25) continue;
-        let minR = r, maxR = r, minC = c, maxC = c;
-        const queue = [idx];
-        visited.add(idx);
-        while (queue.length) {
-          const cur = queue.shift();
-          const cr = Math.floor(cur / cols), cc = cur % cols;
-          minR = Math.min(minR, cr); maxR = Math.max(maxR, cr);
-          minC = Math.min(minC, cc); maxC = Math.max(maxC, cc);
-          for (const [dr, dc] of [[-1,0],[1,0],[0,-1],[0,1]]) {
-            const nr = cr + dr, nc = cc + dc;
-            if (nr < 0 || nr >= rows || nc < 0 || nc >= cols) continue;
-            const ni = nr * cols + nc;
-            if (!visited.has(ni) && grid[ni].ratio >= 0.2) { visited.add(ni); queue.push(ni); }
-          }
-        }
-        const bw = (maxC - minC + 1) * cellW, bh = (maxR - minR + 1) * cellH;
-        if (bw >= 15 && bh >= 20) {
-          const padX = bw * 0.3, padY = bh * 0.6;
-          regions.push({
-            x: Math.max(0, (minC * cellW - padX) / w * 100),
-            y: Math.max(0, (minR * cellH - padY) / h * 100),
-            w: Math.min(100, (bw + padX * 2) / w * 100),
-            h: Math.min(100, (bh + padY * 2) / h * 100),
-          });
-        }
-      }
-    }
-    regions.sort((a, b) => (b.w * b.h) - (a.w * a.h));
-    return regions.slice(0, 4);
-  }
 
   cameraDetectionInterval = setInterval(() => {
     cameraFeeds.forEach((z, i) => {
@@ -1106,32 +1028,17 @@ function startDetectionSim() {
       feed.querySelectorAll('.detection-box').forEach(b => b.remove());
       const countEl = document.getElementById('feed-count-' + i);
 
-      if (i === 0 && document.getElementById('cam-live')) {
-        const video = document.getElementById('cam-live');
-        const regions = detectPersonRegions(video);
-        if (countEl) countEl.textContent = 'Persons: ' + regions.length;
-        regions.forEach(reg => {
-          const conf = (82 + Math.random() * 17).toFixed(0);
-          const box = document.createElement('div');
-          box.className = 'detection-box';
-          const mirroredX = 100 - reg.x - reg.w;
-          box.style.cssText = `left:${mirroredX}%;top:${reg.y}%;width:${reg.w}%;height:${reg.h}%`;
-          box.innerHTML = `<div class="det-label">Person ${conf}%</div>`;
-          feed.appendChild(box);
-        });
-      } else {
-        const simCount = Math.floor(Math.random() * 5) + 1;
-        if (countEl) countEl.textContent = 'Persons: ' + simCount;
-        for (let j = 0; j < Math.min(simCount, 2); j++) {
-          const conf = (78 + Math.random() * 21).toFixed(0);
-          const box = document.createElement('div');
-          box.className = 'detection-box';
-          const bx = 15 + j * 30 + Math.random() * 15;
-          const by = 10 + Math.random() * 25;
-          box.style.cssText = `left:${bx}%;top:${by}%;width:${18 + Math.random() * 10}%;height:${30 + Math.random() * 20}%`;
-          box.innerHTML = `<div class="det-label">Person ${conf}%</div>`;
-          feed.appendChild(box);
-        }
+      const simCount = Math.floor(Math.random() * 5) + 1;
+      if (countEl) countEl.textContent = 'Persons: ' + simCount;
+      for (let j = 0; j < Math.min(simCount, 2); j++) {
+        const conf = (78 + Math.random() * 21).toFixed(0);
+        const box = document.createElement('div');
+        box.className = 'detection-box';
+        const bx = 15 + j * 30 + Math.random() * 15;
+        const by = 10 + Math.random() * 25;
+        box.style.cssText = `left:${bx}%;top:${by}%;width:${18 + Math.random() * 10}%;height:${30 + Math.random() * 20}%`;
+        box.innerHTML = `<div class="det-label">Person ${conf}%</div>`;
+        feed.appendChild(box);
       }
     });
   }, 2500);
@@ -2196,26 +2103,6 @@ function submitComplaint(e) {
   document.getElementById('complaint-success').style.display = '';
 }
 
-// ====== WHATSAPP PANEL ======
-function toggleWhatsAppPanel() {
-  document.getElementById('whatsapp-panel').classList.toggle('open');
-}
-
-function sendWAMessage() {
-  const input = document.getElementById('wa-input');
-  const msg = input.value.trim();
-  if (!msg) return;
-  const chat = document.getElementById('wa-chat');
-  const now = new Date().toLocaleTimeString('en-PK', { hour: '2-digit', minute: '2-digit' });
-  chat.insertAdjacentHTML('beforeend', `<div class="wa-msg outgoing"><div class="wa-msg-body">${msg}</div><div class="wa-msg-time">${now}</div></div>`);
-  input.value = '';
-  chat.scrollTop = chat.scrollHeight;
-  setTimeout(() => {
-    chat.insertAdjacentHTML('beforeend', `<div class="wa-msg incoming"><div class="wa-msg-sender">OrphanGuard AI Bot</div><div class="wa-msg-body"><strong>[OK]</strong> Message received. Forwarding to relevant district officer.</div><div class="wa-msg-time">${now}</div></div>`);
-    chat.scrollTop = chat.scrollHeight;
-  }, 1500);
-}
-
 // ====== PDF REPORT GENERATION ======
 async function generatePDFReport() {
   const btn = event.target.closest('button');
@@ -2256,7 +2143,7 @@ td{padding:8px 10px;border-bottom:1px solid #eee}.grade{font-weight:700;padding:
 <h1>OrphanGuard AI</h1>
 <p>Monthly Safety & Compliance Report — Punjab Province</p>
 <p style="font-size:12px;color:#888;margin-top:4px">Generated: ${new Date().toLocaleDateString('en-PK', { weekday:'long', year:'numeric', month:'long', day:'numeric' })}</p>
-<span class="badge">OFFICIAL — Government of Punjab</span>
+<span class="badge">PROTOTYPE — OrphanGuard AI</span>
 </div>
 
 <div class="section"><h2>Executive Summary</h2>
@@ -2296,7 +2183,7 @@ ${rankings.filter(r=>r.cameraCoverage<80).map(r=>`<li><strong>${r.name}</strong>
 
 <div class="footer">
 <p><strong>OrphanGuard AI</strong> — Punjab Child Protection Command Center</p>
-<p>Government of Punjab | Social Welfare & Bait-ul-Maal Department</p>
+<p>OrphanGuard AI — Prototype by Zaryab Malik, LGU</p>
 <p style="margin-top:8px">Emergency Helpline: 1121 | Punjab Child Protection Bureau</p>
 </div>
 </body></html>`;
