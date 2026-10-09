@@ -904,7 +904,7 @@ let cameraOrgFilter = '';
 let cameraStream = null;
 let cameraDetectionInterval = null;
 
-function initCameras() {
+async function initCameras() {
   const filter = document.getElementById('camera-org-filter');
   filter.innerHTML = '<option value="">All Orphanages</option>' + orphanages.map(o => `<option value="${o.id}" ${cameraOrgFilter == o.id ? 'selected' : ''}>${o.name} — ${o.city}</option>`).join('');
   filter.onchange = (e) => { cameraOrgFilter = e.target.value; initCameras(); };
