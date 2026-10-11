@@ -85,16 +85,16 @@
       border-radius: var(--radius); overflow: hidden; border: 1px solid var(--border);
       height: 500px; margin-bottom: 40px;
     }
-    .pub-map-wrap .leaflet-popup-content-wrapper { background: #fff; color: #1a1a2e; border: none; border-radius: 10px; box-shadow: 0 4px 20px rgba(0,0,0,0.25); }
-    .pub-map-wrap .leaflet-popup-tip { background: #fff; }
+    .pub-map-wrap .leaflet-popup-content-wrapper { background: var(--bg-card); color: var(--text); border: 1px solid var(--border); border-radius: 10px; box-shadow: 0 8px 32px rgba(0,0,0,0.5); }
+    .pub-map-wrap .leaflet-popup-tip { background: var(--bg-card); }
     .pub-map-wrap .leaflet-popup-content { margin: 0; font-size: 13px; min-width: 200px; }
-    .pub-map-wrap .leaflet-popup-close-button { color: #888 !important; font-size: 18px; top: 6px !important; right: 8px !important; }
+    .pub-map-wrap .leaflet-popup-close-button { color: var(--text-secondary) !important; font-size: 18px; top: 6px !important; right: 8px !important; }
 
     .map-popup { padding: 12px 14px; }
-    .map-popup-name { font-weight: 700; font-size: 14px; line-height: 1.3; color: #111; }
-    .map-popup-loc { font-size: 12px; color: #888; margin: 2px 0 6px; }
+    .map-popup-name { font-weight: 700; font-size: 14px; line-height: 1.3; color: var(--text); }
+    .map-popup-loc { font-size: 12px; color: var(--text-secondary); margin: 2px 0 6px; }
     .map-popup-status { margin-bottom: 6px; font-size: 13px; }
-    .map-popup-stats-line { font-size: 12px; color: #555; margin-bottom: 8px; }
+    .map-popup-stats-line { font-size: 12px; color: var(--text-secondary); margin-bottom: 8px; }
     .map-popup-btn { display: block; width: 100%; margin-top: 6px; padding: 7px 16px; background: #34d399; color: #000; border: none; border-radius: 6px; cursor: pointer; font-weight: 600; font-size: 13px; text-align: center; text-decoration: none; }
     .map-popup-btn:hover { background: #2dd48a; }
 
@@ -655,7 +655,7 @@ function getGradeHex(grade) {
 
 function initMap() {
   if (pubMap) return;
-  pubMap = L.map('pub-map', { scrollWheelZoom: false, zoomControl: true }).setView([31.0, 72.5], 7);
+  pubMap = L.map('pub-map', { scrollWheelZoom: true, zoomControl: true }).setView([31.0, 72.5], 7);
   L.tileLayer('https://tiles.stadiamaps.com/tiles/alidade_smooth_dark/{z}/{x}/{y}{r}.png', {
     attribution: '&copy; OpenStreetMap &copy; Stadia Maps', maxZoom: 18
   }).addTo(pubMap);
