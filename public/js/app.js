@@ -36,23 +36,30 @@ connectWS();
 // Navigation
 function navigateTo(page) {
   document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
-  document.querySelectorAll('.page-section').forEach(p => p.classList.remove('active'));
   const navItem = document.querySelector(`.nav-item[data-page="${page}"]`);
   if (navItem) navItem.classList.add('active');
-  const pageEl = document.getElementById('page-' + page);
-  if (pageEl) pageEl.classList.add('active');
-  if (page === 'map') initMap();
-  if (page === 'cameras') initCameras();
-  if (page === 'children') loadChildren();
-  if (page === 'visitors') loadVisitors();
-  if (page === 'alerts') loadAlerts();
-  if (page === 'incidents') loadIncidents();
-  if (page === 'rankings') loadRankings();
-  if (page === 'portal') loadPortal();
-  if (page === 'activity') loadActivity();
-  if (page === 'analytics') loadAnalytics();
-  if (page === 'anomalies') loadAnomalies();
-  if (page === 'briefing') loadBriefing();
+
+  const current = document.querySelector('.page-section.active');
+  const next = document.getElementById('page-' + page);
+  if (!next) return;
+
+  let shown = false;
+  function showNext() {
+    if (shown) return;
+    shown = true;
+    document.querySelectorAll('.page-section').forEach(p => { p.classList.remove('active'); p.classList.remove('page-exit'); });
+    next.classList.add('active');
+    const loaders = { map: initMap, cameras: initCameras, children: loadChildren, visitors: loadVisitors, alerts: loadAlerts, incidents: loadIncidents, rankings: loadRankings, portal: loadPortal, activity: loadActivity, analytics: loadAnalytics, anomalies: loadAnomalies, briefing: loadBriefing };
+    if (loaders[page]) loaders[page]();
+  }
+
+  if (current && current !== next) {
+    current.classList.add('page-exit');
+    current.addEventListener('animationend', () => showNext(), { once: true });
+    setTimeout(showNext, 200);
+  } else {
+    showNext();
+  }
 }
 
 function viewOrphanage(id) {
@@ -205,39 +212,69 @@ async function openOrphanageDetail(id) {
   currentDetailOrphanage = o;
 
   document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
-  document.querySelectorAll('.page-section').forEach(p => p.classList.remove('active'));
-  document.getElementById('page-detail').classList.add('active');
+  const current = document.querySelector('.page-section.active');
+  const detailPage = document.getElementById('page-detail');
+  if (current && current !== detailPage) {
+    let transitioned = false;
+    function showDetail() {
+      if (transitioned) return;
+      transitioned = true;
+      document.querySelectorAll('.page-section').forEach(p => { p.classList.remove('active'); p.classList.remove('page-exit'); });
+      detailPage.classList.add('active');
+    }
+    current.classList.add('page-exit');
+    current.addEventListener('animationend', showDetail, { once: true });
+    setTimeout(showDetail, 200);
+  } else {
+    document.querySelectorAll('.page-section').forEach(p => p.classList.remove('active'));
+    detailPage.classList.add('active');
+  }
 
-  document.getElementById('detail-title').textContent = o.name;
-  const dot = document.getElementById('detail-status-dot');
-  dot.style.background = o.status === 'online' ? 'var(--success)' : 'var(--danger)';
-  document.getElementById('detail-status-text').textContent = o.status.toUpperCase();
+  const riskColor = o.risk_level === 'high' ? 'var(--danger)' : o.risk_level === 'medium' ? 'var(--warning)' : 'var(--success)';
+  const statusColor = o.status === 'online' ? 'var(--success)' : 'var(--danger)';
 
-  document.getElementById('detail-header-info').innerHTML = `
-    <div class="detail-info-bar">
-      <div class="detail-info-item">
-        <div class="dii-icon" style="background:rgba(79,140,255,0.15)"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="var(--blue)" stroke-width="2"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0118 0z"/><circle cx="12" cy="10" r="3"/></svg></div>
-        <div><div class="dii-label">Location</div><div class="dii-value" style="font-size:14px">${o.address}</div></div>
+  document.getElementById('detail-hero-header').innerHTML = `
+    <div class="detail-header">
+      <button class="detail-back-btn" onclick="closeDetail()">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M19 12H5"/><polyline points="12 19 5 12 12 5"/></svg>
+      </button>
+      <div class="detail-header-main">
+        <div class="detail-header-top">
+          <h2 class="detail-header-name">${o.name}</h2>
+          <div class="detail-header-badges">
+            <span class="detail-header-status" style="background:${statusColor}15;color:${statusColor};border:1px solid ${statusColor}30">
+              <span class="detail-status-pulse" style="background:${statusColor}"></span>
+              ${o.status.toUpperCase()}
+            </span>
+            <span class="risk-badge ${o.risk_level}" style="font-size:12px;padding:4px 12px">${o.risk_level.toUpperCase()} RISK</span>
+          </div>
+        </div>
+        <div class="detail-header-meta">
+          <span><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0118 0z"/><circle cx="12" cy="10" r="3"/></svg> ${o.city}, ${o.district}</span>
+          <span><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0118 0z"/><circle cx="12" cy="10" r="3"/></svg> ${o.address}</span>
+        </div>
       </div>
-      <div class="detail-info-item">
-        <div class="dii-icon" style="background:rgba(52,211,153,0.15)"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="var(--success)" stroke-width="2"><path d="M17 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 00-3-3.87"/><path d="M16 3.13a4 4 0 010 7.75"/></svg></div>
-        <div><div class="dii-label">Children</div><div class="dii-value" style="color:var(--success)">${o.total_children}</div></div>
+    </div>
+    <div class="detail-metrics-row">
+      <div class="detail-metric">
+        <div class="detail-metric-icon" style="background:rgba(52,211,153,0.12)"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="var(--success)" stroke-width="2"><path d="M17 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 00-3-3.87"/><path d="M16 3.13a4 4 0 010 7.75"/></svg></div>
+        <div class="detail-metric-val" style="color:var(--success)">${o.total_children}</div>
+        <div class="detail-metric-label">Children</div>
       </div>
-      <div class="detail-info-item">
-        <div class="dii-icon" style="background:rgba(167,139,250,0.15)"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="var(--purple)" stroke-width="2"><path d="M20 21v-2a4 4 0 00-4-4H8a4 4 0 00-4 4v2"/><circle cx="12" cy="7" r="4"/></svg></div>
-        <div><div class="dii-label">Staff</div><div class="dii-value" style="color:var(--purple)">${o.staff_count}</div></div>
+      <div class="detail-metric">
+        <div class="detail-metric-icon" style="background:rgba(167,139,250,0.12)"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="var(--purple)" stroke-width="2"><path d="M20 21v-2a4 4 0 00-4-4H8a4 4 0 00-4 4v2"/><circle cx="12" cy="7" r="4"/></svg></div>
+        <div class="detail-metric-val" style="color:var(--purple)">${o.staff_count}</div>
+        <div class="detail-metric-label">Staff</div>
       </div>
-      <div class="detail-info-item">
-        <div class="dii-icon" style="background:rgba(251,191,36,0.15)"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="var(--warning)" stroke-width="2"><path d="M23 7l-7 5 7 5V7z"/><rect x="1" y="5" width="15" height="14" rx="2" ry="2"/></svg></div>
-        <div><div class="dii-label">Cameras</div><div class="dii-value" style="color:var(--warning)">${o.cameras}</div></div>
+      <div class="detail-metric">
+        <div class="detail-metric-icon" style="background:rgba(251,191,36,0.12)"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="var(--warning)" stroke-width="2"><path d="M23 7l-7 5 7 5V7z"/><rect x="1" y="5" width="15" height="14" rx="2" ry="2"/></svg></div>
+        <div class="detail-metric-val" style="color:var(--warning)">${o.cameras}</div>
+        <div class="detail-metric-label">Cameras</div>
       </div>
-      <div class="detail-info-item">
-        <div class="dii-icon" style="background:${o.risk_level === 'high' ? 'rgba(239,68,68,0.15)' : o.risk_level === 'medium' ? 'rgba(251,191,36,0.15)' : 'rgba(52,211,153,0.15)'}"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="${o.risk_level === 'high' ? 'var(--danger)' : o.risk_level === 'medium' ? 'var(--warning)' : 'var(--success)'}" stroke-width="2"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg></div>
-        <div><div class="dii-label">Risk Level</div><div class="dii-value"><span class="risk-badge ${o.risk_level}" style="font-size:13px;padding:4px 12px">${o.risk_level.toUpperCase()}</span></div></div>
-      </div>
-      <div class="detail-info-item">
-        <div class="dii-icon" style="background:rgba(79,140,255,0.15)"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="var(--blue)" stroke-width="2"><polygon points="1 6 1 22 8 18 16 22 23 18 23 2 16 6 8 2 1 6"/><line x1="8" y1="2" x2="8" y2="18"/><line x1="16" y1="6" x2="16" y2="22"/></svg></div>
-        <div><div class="dii-label">City / District</div><div class="dii-value" style="font-size:14px">${o.city}, ${o.district}</div></div>
+      <div class="detail-metric">
+        <div class="detail-metric-icon" style="background:${riskColor}15"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="${riskColor}" stroke-width="2"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg></div>
+        <div class="detail-metric-val" style="color:${riskColor}">${o.risk_level.charAt(0).toUpperCase() + o.risk_level.slice(1)}</div>
+        <div class="detail-metric-label">Risk Level</div>
       </div>
     </div>
   `;
@@ -247,10 +284,7 @@ async function openOrphanageDetail(id) {
 
 function closeDetail() {
   currentDetailOrphanage = null;
-  document.querySelectorAll('.page-section').forEach(p => p.classList.remove('active'));
-  document.getElementById('page-command').classList.add('active');
-  document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
-  document.querySelector('.nav-item[data-page="command"]').classList.add('active');
+  navigateTo('command');
 }
 
 async function switchDetailTab(tab) {
@@ -909,20 +943,20 @@ async function initCameras() {
   filter.innerHTML = '<option value="">All Orphanages</option>' + orphanages.map(o => `<option value="${o.id}" ${cameraOrgFilter == o.id ? 'selected' : ''}>${o.name} — ${o.city}</option>`).join('');
   filter.onchange = (e) => { cameraOrgFilter = e.target.value; initCameras(); };
 
-  const allZones = [];
   const orgList = cameraOrgFilter ? orphanages.filter(o => o.id === parseInt(cameraOrgFilter)) : orphanages;
-  for (const o of orgList) {
+
+  const grid = document.getElementById('camera-grid');
+  grid.innerHTML = '<div class="camera-loading"><div class="camera-loading-spinner"></div><span>Loading ' + orgList.length + ' orphanage feeds...</span></div>';
+
+  const results = await Promise.all(orgList.map(async o => {
     try {
       const res = await fetch('/api/zones?orphanage_id=' + o.id);
       const zones = await res.json();
-      zones.forEach(z => allZones.push({ ...z, orgName: o.name, orgStatus: o.status, orgId: o.id }));
-      if (zones.length === 0) {
-        for (let i = 0; i < Math.min(o.cameras, 4); i++) {
-          allZones.push({ name: `Camera ${i + 1}`, description: 'General surveillance', orgName: o.name, orgStatus: o.status, orgId: o.id });
-        }
-      }
-    } catch (e) { /* skip */ }
-  }
+      if (zones.length > 0) return zones.map(z => ({ ...z, orgName: o.name, orgStatus: o.status, orgId: o.id }));
+      return Array.from({ length: Math.min(o.cameras, 4) }, (_, i) => ({ name: `Camera ${i + 1}`, description: 'General surveillance', orgName: o.name, orgStatus: o.status, orgId: o.id }));
+    } catch (e) { return []; }
+  }));
+  const allZones = results.flat();
   cameraFeeds = allZones;
 
   const totalCams = orgList.reduce((s, o) => s + o.cameras, 0);
@@ -938,7 +972,6 @@ async function initCameras() {
     </div>
   `;
 
-  const grid = document.getElementById('camera-grid');
   grid.innerHTML = allZones.map((z, i) => `
     <div class="camera-feed ${z.orgStatus !== 'online' ? 'cam-offline' : ''}">
       <div class="feed-header">
@@ -1015,6 +1048,9 @@ function drawSimFeed(canvas, label) {
   render();
 }
 
+const aiModels = ['ViolenceNet', 'PoseGuard', 'ProximityAI', 'AudioSense'];
+const modelColors = { ViolenceNet: '#ef4444', PoseGuard: '#10b981', ProximityAI: '#3b82f6', AudioSense: '#f59e0b' };
+
 function startDetectionSim() {
   if (cameraDetectionInterval) clearInterval(cameraDetectionInterval);
 
@@ -1023,19 +1059,24 @@ function startDetectionSim() {
       if (z.orgStatus !== 'online') return;
       const feed = document.getElementById('feed-' + i);
       if (!feed) return;
-      feed.querySelectorAll('.detection-box').forEach(b => b.remove());
+      feed.querySelectorAll('.detection-box').forEach(b => {
+        b.classList.add('det-fade-out');
+        setTimeout(() => b.remove(), 300);
+      });
       const countEl = document.getElementById('feed-count-' + i);
 
       const simCount = Math.floor(Math.random() * 5) + 1;
       if (countEl) countEl.textContent = 'Persons: ' + simCount;
       for (let j = 0; j < Math.min(simCount, 2); j++) {
         const conf = (78 + Math.random() * 21).toFixed(0);
+        const model = aiModels[Math.floor(Math.random() * aiModels.length)];
+        const color = modelColors[model];
         const box = document.createElement('div');
-        box.className = 'detection-box';
+        box.className = 'detection-box det-fade-in';
         const bx = 15 + j * 30 + Math.random() * 15;
         const by = 10 + Math.random() * 25;
-        box.style.cssText = `left:${bx}%;top:${by}%;width:${18 + Math.random() * 10}%;height:${30 + Math.random() * 20}%`;
-        box.innerHTML = `<div class="det-label">Person ${conf}%</div>`;
+        box.style.cssText = `left:${bx}%;top:${by}%;width:${18 + Math.random() * 10}%;height:${30 + Math.random() * 20}%;border-color:${color};box-shadow:0 0 10px ${color}40`;
+        box.innerHTML = `<div class="det-label" style="background:${color}"><span class="det-model">${model}</span> ${conf}%</div><div class="det-conf-bar"><div class="det-conf-fill" style="width:${conf}%;background:${color}"></div></div>`;
         feed.appendChild(box);
       }
     });
