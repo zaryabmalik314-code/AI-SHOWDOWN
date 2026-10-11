@@ -2072,14 +2072,38 @@ async function loadBriefing() {
 }
 
 // ====== LOGIN SYSTEM ======
+// ====== LANDING PAGE ======
+function showLoginFromLanding() {
+  const landing = document.getElementById('landing-page');
+  landing.style.transition = 'opacity 0.4s, transform 0.4s';
+  landing.style.opacity = '0';
+  landing.style.transform = 'scale(0.98)';
+  setTimeout(() => {
+    landing.style.display = 'none';
+    document.getElementById('login-screen').style.display = '';
+  }, 400);
+}
+
+function showLanding() {
+  const landing = document.getElementById('landing-page');
+  landing.style.display = '';
+  landing.style.opacity = '1';
+  landing.style.transform = '';
+  document.getElementById('login-screen').style.display = 'none';
+}
+
 function handleLogin(e) {
   e.preventDefault();
   const email = document.getElementById('login-email').value;
   const password = document.getElementById('login-password').value;
   if ((email === 'admin' && password === 'admin123') || email.includes('@')) {
     document.getElementById('login-screen').style.display = 'none';
+    document.getElementById('landing-page').style.display = 'none';
     document.body.style.overflow = '';
     sessionStorage.setItem('og_auth', '1');
+    if (!sessionStorage.getItem('og_demo_seen')) {
+      setTimeout(showDemoBanner, 1500);
+    }
   } else {
     const btn = e.target.querySelector('button[type="submit"]');
     btn.textContent = 'Invalid credentials';
@@ -2091,15 +2115,147 @@ function handleLogin(e) {
 function checkAuth() {
   if (sessionStorage.getItem('og_auth') === '1') {
     document.getElementById('login-screen').style.display = 'none';
+    document.getElementById('landing-page').style.display = 'none';
   }
 }
 
 function logout() {
   sessionStorage.removeItem('og_auth');
-  document.getElementById('login-screen').style.display = '';
+  sessionStorage.removeItem('og_demo_seen');
+  showLanding();
 }
 
 checkAuth();
+
+// ====== GUIDED DEMO MODE ======
+let demoStep = 0;
+const demoSteps = [
+  {
+    target: '.stats-grid',
+    title: 'Live Statistics',
+    desc: 'Real-time metrics across all 85 orphanages — total children, active alerts, safety scores, and camera status update every second via WebSocket.',
+    position: 'bottom'
+  },
+  {
+    target: '.sidebar .nav-item:nth-child(2)',
+    title: 'Orphanage Rankings',
+    desc: 'Every orphanage is scored 0-100 and graded A through F based on incidents, staff ratios, camera coverage, and compliance history.',
+    position: 'right'
+  },
+  {
+    target: '.sidebar .nav-item:nth-child(3)',
+    title: 'Live Camera Feeds',
+    desc: 'Multi-camera grid with AI detection overlays. Each feed runs through ViolenceNet, PoseGuard, and ProximityAI in real-time.',
+    position: 'right'
+  },
+  {
+    target: '.sidebar .nav-item:nth-child(5)',
+    title: 'Interactive Map',
+    desc: 'Geographic view of all 85 orphanages across 36 Punjab districts. Color-coded markers show safety grades at a glance.',
+    position: 'right'
+  },
+  {
+    target: '.sidebar .nav-item:nth-child(7)',
+    title: 'Analytics Dashboard',
+    desc: 'Deep analytics — incident trends, district breakdowns, AI model performance, hotspot identification, and risk distribution charts.',
+    position: 'right'
+  },
+  {
+    target: '.sidebar .nav-item:nth-child(9)',
+    title: 'Anomaly Detection',
+    desc: 'Statistical analysis flags orphanages with unusual week-over-week incident spikes — catching emerging problems before they escalate.',
+    position: 'right'
+  },
+  {
+    target: '.alert-feed',
+    title: 'Real-Time Alert Feed',
+    desc: 'AI detections stream in live — each alert shows the model that flagged it, the confidence score, severity, and the orphanage it came from.',
+    position: 'left'
+  }
+];
+
+function showDemoBanner() {
+  const existing = document.getElementById('demo-start-banner');
+  if (existing) existing.remove();
+  const banner = document.createElement('div');
+  banner.className = 'demo-start-banner';
+  banner.id = 'demo-start-banner';
+  banner.innerHTML = `
+    <p>First time here? Take a <strong style="color:var(--accent)">guided tour</strong> of the command center.</p>
+    <button onclick="startDemo()">Start Tour</button>
+    <button class="demo-dismiss" onclick="dismissDemoBanner()">&times;</button>
+  `;
+  document.body.appendChild(banner);
+}
+
+function dismissDemoBanner() {
+  const banner = document.getElementById('demo-start-banner');
+  if (banner) { banner.style.opacity = '0'; setTimeout(() => banner.remove(), 300); }
+  sessionStorage.setItem('og_demo_seen', '1');
+}
+
+function startDemo() {
+  dismissDemoBanner();
+  demoStep = 0;
+  document.getElementById('demo-overlay').style.display = '';
+  showDemoStep();
+}
+
+function endDemo() {
+  document.getElementById('demo-overlay').style.display = 'none';
+  sessionStorage.setItem('og_demo_seen', '1');
+}
+
+function nextDemoStep() {
+  if (demoStep < demoSteps.length - 1) { demoStep++; showDemoStep(); }
+  else endDemo();
+}
+
+function prevDemoStep() {
+  if (demoStep > 0) { demoStep--; showDemoStep(); }
+}
+
+function showDemoStep() {
+  const step = demoSteps[demoStep];
+  const el = document.querySelector(step.target);
+  if (!el) { if (demoStep < demoSteps.length - 1) { demoStep++; showDemoStep(); } else endDemo(); return; }
+
+  el.scrollIntoView({ behavior: 'smooth', block: 'center' });
+
+  setTimeout(() => {
+    const rect = el.getBoundingClientRect();
+    const pad = 6;
+    const spotlight = document.getElementById('demo-spotlight');
+    spotlight.style.left = (rect.left - pad) + 'px';
+    spotlight.style.top = (rect.top - pad) + 'px';
+    spotlight.style.width = (rect.width + pad * 2) + 'px';
+    spotlight.style.height = (rect.height + pad * 2) + 'px';
+
+    const tooltip = document.getElementById('demo-tooltip');
+    document.getElementById('demo-step-indicator').textContent = `STEP ${demoStep + 1} OF ${demoSteps.length}`;
+    document.getElementById('demo-tooltip-title').textContent = step.title;
+    document.getElementById('demo-tooltip-desc').textContent = step.desc;
+
+    document.getElementById('demo-prev-btn').style.display = demoStep === 0 ? 'none' : '';
+    document.getElementById('demo-next-btn').textContent = demoStep === demoSteps.length - 1 ? 'Finish' : 'Next';
+
+    let tLeft, tTop;
+    if (step.position === 'bottom') {
+      tLeft = rect.left + rect.width / 2 - 170;
+      tTop = rect.bottom + 16;
+    } else if (step.position === 'right') {
+      tLeft = rect.right + 16;
+      tTop = rect.top;
+    } else {
+      tLeft = rect.left - 356;
+      tTop = rect.top;
+    }
+    tLeft = Math.max(16, Math.min(tLeft, window.innerWidth - 360));
+    tTop = Math.max(16, Math.min(tTop, window.innerHeight - 260));
+    tooltip.style.left = tLeft + 'px';
+    tooltip.style.top = tTop + 'px';
+  }, 300);
+}
 
 // ====== COMPLAINT PORTAL ======
 function showComplaintPortal() {
