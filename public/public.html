@@ -258,6 +258,65 @@
     /* Empty */
     .pub-empty { text-align: center; padding: 40px; color: var(--text-tertiary); font-size: 14px; }
 
+    /* Rankings */
+    .rank-summary {
+      display: grid; grid-template-columns: repeat(4, 1fr); gap: 12px; margin-bottom: 28px;
+    }
+    .rank-summary-card {
+      background: var(--bg-card); border: 1px solid var(--border); border-radius: var(--radius);
+      padding: 18px; text-align: center; transition: border-color 0.2s;
+    }
+    .rank-summary-card:hover { border-color: rgba(16,185,129,0.3); }
+    .rank-summary-val { font-size: 28px; font-weight: 800; }
+    .rank-summary-label { font-size: 11px; color: var(--text-secondary); text-transform: uppercase; letter-spacing: 0.6px; margin-top: 4px; }
+    .rank-summary-sub { font-size: 11px; color: var(--text-tertiary); margin-top: 2px; }
+
+    .rank-list { display: flex; flex-direction: column; gap: 8px; }
+
+    .pub-rank-card {
+      background: var(--bg-card); border: 1px solid var(--border); border-radius: var(--radius);
+      padding: 16px 20px; display: flex; align-items: center; gap: 16px;
+      transition: all 0.25s; cursor: default;
+    }
+    .pub-rank-card:hover { border-color: rgba(16,185,129,0.3); transform: translateX(4px); box-shadow: 0 0 20px rgba(16,185,129,0.05); }
+    .pub-rank-card.top-3 { border-left: 3px solid var(--accent); }
+
+    .pub-rank-pos { text-align: center; min-width: 44px; }
+    .pub-rank-num { font-size: 20px; font-weight: 900; color: var(--text-tertiary); }
+    .pub-rank-card.top-3 .pub-rank-num { color: var(--accent); }
+    .pub-rank-medal { font-size: 16px; margin-top: 2px; }
+
+    .pub-rank-info { flex: 1; min-width: 0; }
+    .pub-rank-name {
+      font-size: 14px; font-weight: 700; display: flex; align-items: center; gap: 8px;
+      white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+    }
+    .pub-rank-name .status-dot {
+      width: 8px; height: 8px; border-radius: 50%; flex-shrink: 0;
+    }
+    .pub-rank-name .status-dot.online { background: var(--success); box-shadow: 0 0 6px rgba(16,185,129,0.5); }
+    .pub-rank-name .status-dot.offline { background: var(--danger); }
+    .pub-rank-city { font-size: 12px; color: var(--text-secondary); margin-top: 2px; }
+
+    .pub-rank-metrics { display: flex; gap: 16px; }
+    .pub-rank-metric { text-align: center; }
+    .pub-rank-metric .rm-val { font-size: 14px; font-weight: 800; }
+    .pub-rank-metric .rm-label { font-size: 9px; color: var(--text-tertiary); text-transform: uppercase; letter-spacing: 0.4px; }
+
+    .pub-rank-score-area { display: flex; flex-direction: column; align-items: center; gap: 6px; min-width: 80px; }
+    .pub-rank-grade {
+      width: 36px; height: 36px; border-radius: 8px; display: flex; align-items: center; justify-content: center;
+      font-weight: 800; font-size: 16px; border: 2px solid;
+    }
+    .pub-rank-bar { width: 70px; height: 5px; border-radius: 3px; background: rgba(255,255,255,0.06); overflow: hidden; }
+    .pub-rank-bar-fill { height: 100%; border-radius: 3px; transition: width 0.8s ease; }
+    .pub-rank-score-val { font-size: 11px; font-weight: 700; }
+
+    .pub-rank-risk {
+      font-size: 9px; font-weight: 700; padding: 3px 10px; border-radius: 10px;
+      text-transform: uppercase; letter-spacing: 0.4px;
+    }
+
     /* Responsive */
     @media (max-width: 768px) {
       .pub-nav-links { display: none; }
@@ -269,6 +328,9 @@
       .pub-grid { grid-template-columns: 1fr; }
       .pub-districts { grid-template-columns: repeat(2, 1fr); }
       .pub-help { padding: 30px 20px; }
+      .rank-summary { grid-template-columns: repeat(2, 1fr); }
+      .pub-rank-metrics { display: none; }
+      .pub-rank-card { flex-wrap: wrap; gap: 10px; }
     }
     @media (max-width: 480px) {
       .pub-districts { grid-template-columns: 1fr; }
@@ -281,8 +343,8 @@
     <div class="pub-nav-brand"><span>OrphanGuard</span> AI</div>
     <div class="pub-nav-links">
       <a href="#map">Map</a>
+      <a href="#rankings">Rankings</a>
       <a href="#orphanages">Orphanages</a>
-      <a href="#districts">Districts</a>
       <a href="#help">How to Help</a>
     </div>
     <button class="pub-nav-cta" onclick="document.getElementById('help').scrollIntoView({behavior:'smooth'})">Donate / Volunteer</button>
@@ -313,6 +375,18 @@
         <div class="map-legend-item" style="margin-top:6px;padding-top:6px;border-top:1px solid var(--border)"><div class="map-legend-dot" style="background:#555;opacity:0.5"></div> Offline</div>
       </div>
       <div class="map-stats-overlay" id="map-stats-overlay"></div>
+    </div>
+  </section>
+
+  <section class="pub-section" id="rankings">
+    <div class="pub-section-header">
+      <h2>Safety Rankings</h2>
+      <p>All 85 orphanages ranked by AI safety score — real-time leaderboard</p>
+    </div>
+    <div class="rank-summary" id="rank-summary"></div>
+    <div class="rank-list" id="rank-list"></div>
+    <div style="text-align:center;margin-top:16px">
+      <button class="pub-filter-btn" id="rank-toggle" onclick="toggleRankings()">Show All Rankings</button>
     </div>
   </section>
 
@@ -409,6 +483,7 @@ async function init() {
 
   buildFilters();
   renderCards();
+  renderRankings();
   renderDistricts();
   initMap();
 }
@@ -499,6 +574,70 @@ function renderCards() {
 
 function filterCards() { renderCards(); }
 function sortCards() { renderCards(); }
+
+let showAllRanks = false;
+
+function renderRankings() {
+  const sorted = [...rankings].sort((a, b) => a.rank - b.rank);
+  const avgScore = sorted.length ? Math.round(sorted.reduce((s, r) => s + r.score, 0) / sorted.length) : 0;
+  const gradeA = sorted.filter(r => r.grade === 'A').length;
+  const gradeDF = sorted.filter(r => r.grade === 'D' || r.grade === 'F').length;
+  const avgResponse = sorted.length ? Math.round(sorted.reduce((s, r) => s + r.responseRate, 0) / sorted.length) : 0;
+
+  document.getElementById('rank-summary').innerHTML = `
+    <div class="rank-summary-card"><div class="rank-summary-val" style="color:var(--accent)">${avgScore}</div><div class="rank-summary-label">Avg Safety Score</div><div class="rank-summary-sub">Out of 100</div></div>
+    <div class="rank-summary-card"><div class="rank-summary-val" style="color:var(--success)">${gradeA}</div><div class="rank-summary-label">Grade A</div><div class="rank-summary-sub">Top performers</div></div>
+    <div class="rank-summary-card"><div class="rank-summary-val" style="color:var(--danger)">${gradeDF}</div><div class="rank-summary-label">Grade D/F</div><div class="rank-summary-sub">Need urgent support</div></div>
+    <div class="rank-summary-card"><div class="rank-summary-val" style="color:var(--blue)">${avgResponse}%</div><div class="rank-summary-label">Avg Response Rate</div><div class="rank-summary-sub">To AI alerts</div></div>
+  `;
+
+  const display = showAllRanks ? sorted : sorted.slice(0, 15);
+
+  document.getElementById('rank-list').innerHTML = display.map(r => {
+    const gc = getGradeColor(r.grade);
+    const gcHex = r.grade === 'A' ? '#10b981' : r.grade === 'B' ? '#3b82f6' : r.grade === 'C' ? '#f59e0b' : '#ef4444';
+    const sc = getScoreColor(r.score);
+    const medal = r.rank === 1 ? '&#x1F947;' : r.rank === 2 ? '&#x1F948;' : r.rank === 3 ? '&#x1F949;' : '';
+    const riskColor = r.criticalIncidents > 0 ? 'var(--danger)' : 'var(--success)';
+    const o = orphanages.find(x => x.id === r.id);
+    const riskLevel = o ? o.risk_level : 'low';
+    const riskBadgeColor = riskLevel === 'high' ? '#ef4444' : riskLevel === 'medium' ? '#f59e0b' : '#10b981';
+
+    return `
+    <div class="pub-rank-card ${r.rank <= 3 ? 'top-3' : ''}">
+      <div class="pub-rank-pos">
+        <div class="pub-rank-num">#${r.rank}</div>
+        ${medal ? `<div class="pub-rank-medal">${medal}</div>` : ''}
+      </div>
+      <div class="pub-rank-info">
+        <div class="pub-rank-name">
+          <span class="status-dot ${r.status}"></span>
+          ${r.name}
+        </div>
+        <div class="pub-rank-city">${r.city}, ${r.district}</div>
+      </div>
+      <div class="pub-rank-metrics">
+        <div class="pub-rank-metric"><div class="rm-val" style="color:var(--success)">${r.total_children}</div><div class="rm-label">Children</div></div>
+        <div class="pub-rank-metric"><div class="rm-val">${r.staffRatio}%</div><div class="rm-label">Staff</div></div>
+        <div class="pub-rank-metric"><div class="rm-val">${r.cameraCoverage}%</div><div class="rm-label">Camera</div></div>
+        <div class="pub-rank-metric"><div class="rm-val">${r.responseRate}%</div><div class="rm-label">Response</div></div>
+        <div class="pub-rank-metric"><div class="rm-val" style="color:${riskColor}">${r.criticalIncidents}</div><div class="rm-label">Critical</div></div>
+      </div>
+      <div class="pub-rank-score-area">
+        <div class="pub-rank-grade" style="color:${gc};border-color:${gc};background:${gcHex}15">${r.grade}</div>
+        <div class="pub-rank-bar"><div class="pub-rank-bar-fill" style="width:${r.score}%;background:${gcHex}"></div></div>
+        <div class="pub-rank-score-val" style="color:${gc}">${r.score}/100</div>
+      </div>
+    </div>`;
+  }).join('');
+
+  document.getElementById('rank-toggle').textContent = showAllRanks ? 'Show Top 15' : `Show All ${sorted.length} Rankings`;
+}
+
+function toggleRankings() {
+  showAllRanks = !showAllRanks;
+  renderRankings();
+}
 
 function renderDistricts() {
   const districtMap = {};
