@@ -1,0 +1,492 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>OrphanGuard AI — Punjab Orphanage Transparency Portal</title>
+  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+  <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+  <style>
+    :root {
+      --bg: #0a0a0f;
+      --bg-card: #12131a;
+      --bg-card-hover: #1a1b24;
+      --border: #1e1f2a;
+      --accent: #10b981;
+      --accent-glow: rgba(16,185,129,0.15);
+      --text: #e4e4e7;
+      --text-secondary: #8a8a9a;
+      --text-tertiary: #55555f;
+      --danger: #ef4444;
+      --warning: #f59e0b;
+      --blue: #3b82f6;
+      --purple: #8b5cf6;
+      --success: #10b981;
+      --cyan: #06b6d4;
+      --radius: 12px;
+    }
+
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; background: var(--bg); color: var(--text); line-height: 1.6; }
+    a { color: var(--accent); text-decoration: none; }
+
+    /* Nav */
+    .pub-nav {
+      position: fixed; top: 0; left: 0; right: 0; z-index: 100;
+      background: rgba(10,10,15,0.85); backdrop-filter: blur(20px);
+      border-bottom: 1px solid var(--border);
+      padding: 0 24px; height: 60px;
+      display: flex; align-items: center; justify-content: space-between;
+    }
+    .pub-nav-brand { display: flex; align-items: center; gap: 10px; font-weight: 800; font-size: 18px; }
+    .pub-nav-brand span { color: var(--accent); }
+    .pub-nav-links { display: flex; gap: 24px; }
+    .pub-nav-links a { color: var(--text-secondary); font-size: 14px; font-weight: 500; transition: color 0.2s; }
+    .pub-nav-links a:hover { color: var(--accent); }
+    .pub-nav-cta {
+      background: var(--accent); color: #000; padding: 8px 20px; border-radius: 8px;
+      font-weight: 700; font-size: 13px; border: none; cursor: pointer; transition: opacity 0.2s;
+    }
+    .pub-nav-cta:hover { opacity: 0.9; }
+
+    /* Hero */
+    .pub-hero {
+      padding: 120px 24px 60px; text-align: center;
+      background: radial-gradient(ellipse at 50% 0%, rgba(16,185,129,0.08) 0%, transparent 60%);
+    }
+    .pub-hero-badge {
+      display: inline-flex; align-items: center; gap: 6px;
+      background: var(--accent-glow); border: 1px solid rgba(16,185,129,0.2);
+      padding: 6px 16px; border-radius: 20px; font-size: 12px; color: var(--accent);
+      font-weight: 600; margin-bottom: 20px;
+    }
+    .pub-hero-badge::before { content: ''; width: 6px; height: 6px; background: var(--accent); border-radius: 50%; animation: pulse-dot 2s ease-in-out infinite; }
+    @keyframes pulse-dot { 0%,100% { opacity: 1; } 50% { opacity: 0.4; } }
+    .pub-hero h1 { font-size: clamp(28px, 5vw, 48px); font-weight: 800; line-height: 1.15; margin-bottom: 16px; }
+    .pub-hero h1 em { font-style: normal; color: var(--accent); }
+    .pub-hero p { font-size: 17px; color: var(--text-secondary); max-width: 600px; margin: 0 auto 32px; }
+
+    .pub-hero-stats {
+      display: flex; justify-content: center; gap: 40px; flex-wrap: wrap;
+      padding: 24px 0; margin-top: 20px;
+    }
+    .pub-hero-stat { text-align: center; }
+    .pub-hero-stat .val { font-size: 36px; font-weight: 800; }
+    .pub-hero-stat .label { font-size: 12px; color: var(--text-secondary); text-transform: uppercase; letter-spacing: 0.8px; margin-top: 4px; }
+
+    /* Sections */
+    .pub-section { padding: 60px 24px; max-width: 1200px; margin: 0 auto; }
+    .pub-section-header { text-align: center; margin-bottom: 40px; }
+    .pub-section-header h2 { font-size: 28px; font-weight: 800; margin-bottom: 8px; }
+    .pub-section-header p { color: var(--text-secondary); font-size: 15px; }
+
+    /* Map */
+    .pub-map-wrap {
+      border-radius: var(--radius); overflow: hidden; border: 1px solid var(--border);
+      height: 500px; margin-bottom: 40px;
+    }
+    .pub-map-wrap .leaflet-popup-content-wrapper { background: var(--bg-card); color: var(--text); border: 1px solid var(--border); border-radius: 8px; }
+    .pub-map-wrap .leaflet-popup-tip { background: var(--bg-card); }
+    .pub-map-wrap .leaflet-popup-content { margin: 12px 16px; font-size: 13px; }
+
+    /* Filters */
+    .pub-filters {
+      display: flex; gap: 12px; justify-content: center; flex-wrap: wrap; margin-bottom: 30px;
+    }
+    .pub-filter-btn {
+      background: var(--bg-card); border: 1px solid var(--border); color: var(--text-secondary);
+      padding: 8px 18px; border-radius: 8px; font-size: 13px; cursor: pointer; transition: all 0.2s;
+      font-weight: 500;
+    }
+    .pub-filter-btn:hover, .pub-filter-btn.active { background: var(--accent-glow); border-color: var(--accent); color: var(--accent); }
+
+    .pub-search {
+      display: flex; justify-content: center; margin-bottom: 24px;
+    }
+    .pub-search input {
+      background: var(--bg-card); border: 1px solid var(--border); color: var(--text);
+      padding: 10px 18px; border-radius: 8px; font-size: 14px; width: 100%; max-width: 400px;
+      outline: none; transition: border-color 0.2s;
+    }
+    .pub-search input:focus { border-color: var(--accent); }
+    .pub-search input::placeholder { color: var(--text-tertiary); }
+
+    /* Orphanage Cards */
+    .pub-grid {
+      display: grid; grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
+      gap: 16px;
+    }
+    .pub-card {
+      background: var(--bg-card); border: 1px solid var(--border); border-radius: var(--radius);
+      padding: 20px; transition: all 0.25s; cursor: default;
+    }
+    .pub-card:hover { border-color: rgba(16,185,129,0.3); transform: translateY(-2px); background: var(--bg-card-hover); }
+
+    .pub-card-top { display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 12px; }
+    .pub-card-name { font-size: 15px; font-weight: 700; line-height: 1.3; flex: 1; margin-right: 10px; }
+    .pub-card-grade {
+      width: 38px; height: 38px; border-radius: 8px; display: flex; align-items: center; justify-content: center;
+      font-weight: 800; font-size: 16px; flex-shrink: 0;
+    }
+    .pub-card-meta { font-size: 12px; color: var(--text-secondary); margin-bottom: 14px; display: flex; gap: 12px; align-items: center; }
+    .pub-card-meta svg { opacity: 0.5; }
+
+    .pub-card-stats { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; margin-bottom: 14px; }
+    .pub-card-stat { text-align: center; padding: 10px 0; background: rgba(255,255,255,0.02); border-radius: 8px; }
+    .pub-card-stat .val { font-size: 18px; font-weight: 800; }
+    .pub-card-stat .label { font-size: 10px; color: var(--text-tertiary); text-transform: uppercase; letter-spacing: 0.5px; margin-top: 2px; }
+
+    .pub-card-score { margin-bottom: 12px; }
+    .pub-card-score-header { display: flex; justify-content: space-between; font-size: 12px; margin-bottom: 6px; }
+    .pub-card-score-header .score-label { color: var(--text-secondary); }
+    .pub-card-score-header .score-val { font-weight: 700; }
+    .pub-card-bar { height: 6px; background: rgba(255,255,255,0.06); border-radius: 3px; overflow: hidden; }
+    .pub-card-bar-fill { height: 100%; border-radius: 3px; transition: width 0.8s ease; }
+
+    .pub-card-badges { display: flex; gap: 6px; flex-wrap: wrap; }
+    .pub-badge {
+      font-size: 10px; font-weight: 700; padding: 3px 10px; border-radius: 12px;
+      text-transform: uppercase; letter-spacing: 0.5px;
+    }
+    .pub-badge-online { background: rgba(16,185,129,0.12); color: var(--success); }
+    .pub-badge-offline { background: rgba(239,68,68,0.12); color: var(--danger); }
+    .pub-badge-risk-low { background: rgba(16,185,129,0.12); color: var(--success); }
+    .pub-badge-risk-medium { background: rgba(251,191,36,0.12); color: var(--warning); }
+    .pub-badge-risk-high { background: rgba(239,68,68,0.12); color: var(--danger); }
+
+    /* District breakdown */
+    .pub-districts {
+      display: grid; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+      gap: 12px; margin-top: 30px;
+    }
+    .pub-district-card {
+      background: var(--bg-card); border: 1px solid var(--border); border-radius: 10px;
+      padding: 16px; transition: border-color 0.2s;
+    }
+    .pub-district-card:hover { border-color: rgba(16,185,129,0.3); }
+    .pub-district-name { font-size: 14px; font-weight: 700; margin-bottom: 4px; }
+    .pub-district-count { font-size: 12px; color: var(--text-secondary); }
+
+    /* How to help */
+    .pub-help {
+      background: linear-gradient(135deg, rgba(16,185,129,0.08), rgba(59,130,246,0.06));
+      border: 1px solid rgba(16,185,129,0.15); border-radius: 16px;
+      padding: 40px; text-align: center; margin-top: 60px;
+    }
+    .pub-help h3 { font-size: 22px; margin-bottom: 12px; }
+    .pub-help p { color: var(--text-secondary); font-size: 14px; max-width: 500px; margin: 0 auto 24px; }
+    .pub-help-actions { display: flex; gap: 12px; justify-content: center; flex-wrap: wrap; }
+    .pub-help-btn {
+      padding: 12px 28px; border-radius: 10px; font-weight: 700; font-size: 14px; cursor: pointer;
+      border: none; transition: all 0.2s;
+    }
+    .pub-help-btn.primary { background: var(--accent); color: #000; }
+    .pub-help-btn.primary:hover { opacity: 0.9; }
+    .pub-help-btn.secondary { background: transparent; border: 1px solid var(--border); color: var(--text); }
+    .pub-help-btn.secondary:hover { border-color: var(--accent); color: var(--accent); }
+
+    /* Footer */
+    .pub-footer {
+      border-top: 1px solid var(--border); padding: 30px 24px; text-align: center;
+      font-size: 12px; color: var(--text-tertiary); margin-top: 60px;
+    }
+    .pub-footer a { color: var(--text-secondary); }
+
+    /* Sort */
+    .pub-sort {
+      display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px;
+      font-size: 13px; color: var(--text-secondary);
+    }
+    .pub-sort select {
+      background: var(--bg-card); border: 1px solid var(--border); color: var(--text);
+      padding: 6px 12px; border-radius: 6px; font-size: 13px; outline: none; cursor: pointer;
+    }
+
+    /* Loading */
+    .pub-loading { text-align: center; padding: 80px 20px; color: var(--text-secondary); }
+    .pub-spinner { width: 32px; height: 32px; border: 3px solid var(--border); border-top-color: var(--accent); border-radius: 50%; animation: spin 0.8s linear infinite; margin: 0 auto 12px; }
+    @keyframes spin { to { transform: rotate(360deg); } }
+
+    /* Empty */
+    .pub-empty { text-align: center; padding: 40px; color: var(--text-tertiary); font-size: 14px; }
+
+    /* Responsive */
+    @media (max-width: 768px) {
+      .pub-nav-links { display: none; }
+      .pub-hero { padding: 90px 16px 40px; }
+      .pub-hero-stats { gap: 24px; }
+      .pub-hero-stat .val { font-size: 28px; }
+      .pub-section { padding: 40px 16px; }
+      .pub-map-wrap { height: 350px; }
+      .pub-grid { grid-template-columns: 1fr; }
+      .pub-districts { grid-template-columns: repeat(2, 1fr); }
+      .pub-help { padding: 30px 20px; }
+    }
+    @media (max-width: 480px) {
+      .pub-districts { grid-template-columns: 1fr; }
+    }
+  </style>
+</head>
+<body>
+
+  <nav class="pub-nav">
+    <div class="pub-nav-brand"><span>OrphanGuard</span> AI</div>
+    <div class="pub-nav-links">
+      <a href="#map">Map</a>
+      <a href="#orphanages">Orphanages</a>
+      <a href="#districts">Districts</a>
+      <a href="#help">How to Help</a>
+    </div>
+    <button class="pub-nav-cta" onclick="document.getElementById('help').scrollIntoView({behavior:'smooth'})">Donate / Volunteer</button>
+  </nav>
+
+  <section class="pub-hero">
+    <div class="pub-hero-badge">AI-Monitored &middot; Real-Time Safety Data</div>
+    <h1>Punjab Orphanage<br><em>Transparency Portal</em></h1>
+    <p>Real-time safety scores, AI monitoring status, and verified data for all 85 registered orphanages across 36 districts of Punjab. Know where your help matters most.</p>
+    <div class="pub-hero-stats" id="hero-stats">
+      <div class="pub-loading"><div class="pub-spinner"></div></div>
+    </div>
+  </section>
+
+  <section class="pub-section" id="map">
+    <div class="pub-section-header">
+      <h2>Orphanage Map</h2>
+      <p>All monitored orphanages across Punjab province</p>
+    </div>
+    <div class="pub-map-wrap" id="pub-map"></div>
+  </section>
+
+  <section class="pub-section" id="orphanages">
+    <div class="pub-section-header">
+      <h2>Orphanage Directory</h2>
+      <p>Safety scores verified by AI monitoring — updated in real time</p>
+    </div>
+
+    <div class="pub-search">
+      <input type="text" id="pub-search" placeholder="Search orphanages by name, city, or district..." oninput="filterCards()">
+    </div>
+
+    <div class="pub-filters" id="pub-filters"></div>
+
+    <div class="pub-sort">
+      <span id="pub-count">Loading...</span>
+      <select id="pub-sort" onchange="sortCards()">
+        <option value="score-desc">Highest Safety Score</option>
+        <option value="score-asc">Lowest Safety Score (Most Need)</option>
+        <option value="children-desc">Most Children</option>
+        <option value="name-asc">Name A-Z</option>
+      </select>
+    </div>
+
+    <div class="pub-grid" id="pub-grid">
+      <div class="pub-loading"><div class="pub-spinner"></div>Loading orphanages...</div>
+    </div>
+  </section>
+
+  <section class="pub-section" id="districts">
+    <div class="pub-section-header">
+      <h2>District Coverage</h2>
+      <p>Orphanages monitored per district across Punjab</p>
+    </div>
+    <div class="pub-districts" id="pub-districts"></div>
+  </section>
+
+  <section class="pub-section" id="help">
+    <div class="pub-help">
+      <h3>How You Can Help</h3>
+      <p>Every orphanage needs support — from basic supplies to educational resources. Use the safety data above to find where your help matters most.</p>
+      <div class="pub-help-actions">
+        <button class="pub-help-btn primary" onclick="document.getElementById('orphanages').scrollIntoView({behavior:'smooth'})">Find an Orphanage</button>
+        <a href="mailto:contact@orphanguard.org" class="pub-help-btn secondary">Contact Us</a>
+      </div>
+      <p style="margin-top:20px;font-size:12px;color:var(--text-tertiary)">OrphanGuard AI monitors safety only. We do not handle donations directly.<br>Contact each orphanage for donation and volunteer opportunities.</p>
+    </div>
+  </section>
+
+  <footer class="pub-footer">
+    <p><strong>OrphanGuard AI</strong> — Punjab Child Protection Monitoring System</p>
+    <p style="margin-top:6px">Prototype by Zaryab Malik &middot; Lahore Garrison University</p>
+    <p style="margin-top:6px">Emergency Child Helpline: <strong>1121</strong> &middot; Punjab Child Protection Bureau</p>
+  </footer>
+
+<script>
+let orphanages = [];
+let rankings = [];
+let currentFilter = '';
+let pubMap = null;
+
+const districtCoords = {
+  'Lahore': [31.5497, 74.3436], 'Rawalpindi': [33.5651, 73.0169], 'Faisalabad': [31.4504, 73.135],
+  'Multan': [30.1575, 71.5249], 'Gujranwala': [32.1877, 74.1945], 'Sialkot': [32.4945, 74.5229],
+  'Bahawalpur': [29.3956, 71.6722], 'Sargodha': [32.0836, 72.6711], 'Jhang': [31.2681, 72.3181],
+  'Dera Ghazi Khan': [30.0489, 70.6455], 'Sahiwal': [30.6682, 73.1114], 'Okara': [30.8138, 73.4534],
+  'Gujrat': [32.5742, 74.0789], 'Jhelum': [32.9425, 73.7257], 'Kasur': [31.1194, 74.4552],
+  'Mianwali': [32.5853, 71.5436], 'Khanewal': [30.3019, 71.932], 'Hafizabad': [32.0712, 73.6883],
+  'Muzaffargarh': [30.0772, 71.1924], 'Attock': [33.766, 72.3609], 'Vehari': [30.0452, 72.3489],
+  'Layyah': [30.9693, 70.9428], 'Chiniot': [31.7167, 72.9781], 'Toba Tek Singh': [30.9667, 72.4833],
+  'Bhakkar': [31.6333, 71.0667], 'Pakpattan': [30.3494, 73.3903], 'Nankana Sahib': [31.45, 73.7],
+  'Rahim Yar Khan': [28.4202, 70.2952], 'Rajanpur': [29.1044, 70.3301], 'Lodhran': [29.5333, 71.6333],
+  'Khushab': [32.2917, 72.3519], 'Sheikhupura': [31.7131, 73.985], 'Mandi Bahauddin': [32.5861, 73.4917],
+  'Narowal': [32.1019, 74.873], 'Chakwal': [32.93, 72.85], 'Bahawalnagar': [29.9944, 73.2536]
+};
+
+async function init() {
+  const [orphRes, rankRes, statsRes] = await Promise.all([
+    fetch('/api/orphanages'), fetch('/api/rankings'), fetch('/api/stats')
+  ]);
+  orphanages = await orphRes.json();
+  rankings = await rankRes.json();
+  const stats = await statsRes.json();
+
+  const totalCameras = orphanages.reduce((s, o) => s + o.cameras, 0);
+  document.getElementById('hero-stats').innerHTML = `
+    <div class="pub-hero-stat"><div class="val" style="color:var(--accent)">${stats.totalOrphanages}</div><div class="label">Orphanages</div></div>
+    <div class="pub-hero-stat"><div class="val" style="color:var(--cyan)">${stats.totalChildren}</div><div class="label">Children</div></div>
+    <div class="pub-hero-stat"><div class="val" style="color:var(--purple)">${Object.keys(districtCoords).length}</div><div class="label">Districts</div></div>
+    <div class="pub-hero-stat"><div class="val" style="color:var(--blue)">${stats.onlineOrphanages}</div><div class="label">AI Monitored</div></div>
+    <div class="pub-hero-stat"><div class="val" style="color:var(--success)">${totalCameras}</div><div class="label">Cameras</div></div>
+  `;
+
+  buildFilters();
+  renderCards();
+  renderDistricts();
+  initMap();
+}
+
+function buildFilters() {
+  const districts = [...new Set(orphanages.map(o => o.district))].sort();
+  document.getElementById('pub-filters').innerHTML =
+    `<button class="pub-filter-btn active" onclick="setFilter('')">All</button>` +
+    districts.map(d => {
+      const count = orphanages.filter(o => o.district === d).length;
+      return `<button class="pub-filter-btn" onclick="setFilter('${d}')">${d} (${count})</button>`;
+    }).join('');
+}
+
+function setFilter(district) {
+  currentFilter = district;
+  document.querySelectorAll('.pub-filter-btn').forEach(b => b.classList.toggle('active',
+    (district === '' && b.textContent === 'All') || b.textContent.startsWith(district + ' ')));
+  renderCards();
+}
+
+function getGradeColor(grade) {
+  return grade === 'A' ? 'var(--success)' : grade === 'B' ? 'var(--blue)' : grade === 'C' ? 'var(--warning)' : 'var(--danger)';
+}
+function getScoreColor(score) {
+  return score >= 80 ? 'var(--success)' : score >= 60 ? 'var(--warning)' : 'var(--danger)';
+}
+
+function renderCards() {
+  const search = document.getElementById('pub-search').value.toLowerCase();
+  let list = orphanages.filter(o => {
+    if (currentFilter && o.district !== currentFilter) return false;
+    if (search && !o.name.toLowerCase().includes(search) && !o.city.toLowerCase().includes(search) && !o.district.toLowerCase().includes(search)) return false;
+    return true;
+  });
+
+  list = list.map(o => {
+    const rank = rankings.find(r => r.id === o.id);
+    return { ...o, score: rank ? rank.score : 0, grade: rank ? rank.grade : '-', rank: rank ? rank.rank : 999 };
+  });
+
+  const sortVal = document.getElementById('pub-sort').value;
+  if (sortVal === 'score-desc') list.sort((a, b) => b.score - a.score);
+  else if (sortVal === 'score-asc') list.sort((a, b) => a.score - b.score);
+  else if (sortVal === 'children-desc') list.sort((a, b) => b.total_children - a.total_children);
+  else if (sortVal === 'name-asc') list.sort((a, b) => a.name.localeCompare(b.name));
+
+  document.getElementById('pub-count').textContent = `${list.length} orphanage${list.length !== 1 ? 's' : ''} found`;
+
+  if (list.length === 0) {
+    document.getElementById('pub-grid').innerHTML = '<div class="pub-empty">No orphanages match your search.</div>';
+    return;
+  }
+
+  document.getElementById('pub-grid').innerHTML = list.map(o => {
+    const gc = getGradeColor(o.grade);
+    const sc = getScoreColor(o.score);
+    return `
+    <div class="pub-card">
+      <div class="pub-card-top">
+        <div class="pub-card-name">${o.name}</div>
+        <div class="pub-card-grade" style="background:${gc}15;color:${gc};border:2px solid ${gc}30">${o.grade}</div>
+      </div>
+      <div class="pub-card-meta">
+        <span><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0118 0z"/><circle cx="12" cy="10" r="3"/></svg> ${o.city}, ${o.district}</span>
+        <span class="pub-badge ${o.status === 'online' ? 'pub-badge-online' : 'pub-badge-offline'}">${o.status === 'online' ? 'AI Active' : 'Offline'}</span>
+      </div>
+      <div class="pub-card-stats">
+        <div class="pub-card-stat"><div class="val" style="color:var(--success)">${o.total_children}</div><div class="label">Children</div></div>
+        <div class="pub-card-stat"><div class="val" style="color:var(--purple)">${o.staff_count}</div><div class="label">Staff</div></div>
+        <div class="pub-card-stat"><div class="val" style="color:var(--warning)">${o.cameras}</div><div class="label">Cameras</div></div>
+      </div>
+      <div class="pub-card-score">
+        <div class="pub-card-score-header">
+          <span class="score-label">Safety Score</span>
+          <span class="score-val" style="color:${sc}">${o.score}/100</span>
+        </div>
+        <div class="pub-card-bar"><div class="pub-card-bar-fill" style="width:${o.score}%;background:${sc}"></div></div>
+      </div>
+      <div class="pub-card-badges">
+        <span class="pub-badge pub-badge-risk-${o.risk_level}">${o.risk_level} risk</span>
+        ${o.score < 50 ? '<span class="pub-badge" style="background:rgba(239,68,68,0.12);color:var(--danger)">Needs Support</span>' : ''}
+        ${o.total_children > 100 ? '<span class="pub-badge" style="background:rgba(6,182,212,0.12);color:var(--cyan)">Large Facility</span>' : ''}
+      </div>
+    </div>`;
+  }).join('');
+}
+
+function filterCards() { renderCards(); }
+function sortCards() { renderCards(); }
+
+function renderDistricts() {
+  const districtMap = {};
+  orphanages.forEach(o => {
+    if (!districtMap[o.district]) districtMap[o.district] = { count: 0, children: 0 };
+    districtMap[o.district].count++;
+    districtMap[o.district].children += o.total_children;
+  });
+
+  const sorted = Object.entries(districtMap).sort((a, b) => b[1].count - a[1].count);
+  document.getElementById('pub-districts').innerHTML = sorted.map(([d, info]) => `
+    <div class="pub-district-card" onclick="setFilter('${d}');document.getElementById('orphanages').scrollIntoView({behavior:'smooth'});" style="cursor:pointer">
+      <div class="pub-district-name">${d}</div>
+      <div class="pub-district-count">${info.count} orphanage${info.count > 1 ? 's' : ''} &middot; ${info.children} children</div>
+    </div>
+  `).join('');
+}
+
+function initMap() {
+  if (pubMap) return;
+  pubMap = L.map('pub-map', { scrollWheelZoom: false }).setView([31.0, 72.5], 7);
+  L.tileLayer('https://tiles.stadiamaps.com/tiles/alidade_smooth_dark/{z}/{x}/{y}{r}.png', {
+    attribution: '&copy; OpenStreetMap &copy; Stadia Maps', maxZoom: 18
+  }).addTo(pubMap);
+
+  orphanages.forEach(o => {
+    const coords = districtCoords[o.district];
+    if (!coords) return;
+    const lat = coords[0] + (Math.random() - 0.5) * 0.15;
+    const lng = coords[1] + (Math.random() - 0.5) * 0.15;
+    const rank = rankings.find(r => r.id === o.id);
+    const grade = rank ? rank.grade : '-';
+    const score = rank ? rank.score : 0;
+    const color = o.status === 'online' ? '#10b981' : '#ef4444';
+
+    const icon = L.divIcon({
+      className: '',
+      html: `<div style="width:12px;height:12px;background:${color};border-radius:50%;border:2px solid ${color}40;box-shadow:0 0 8px ${color}60"></div>`,
+      iconSize: [12, 12], iconAnchor: [6, 6]
+    });
+
+    L.marker([lat, lng], { icon }).addTo(pubMap)
+      .bindPopup(`<strong>${o.name}</strong><br>${o.city}, ${o.district}<br>Children: ${o.total_children} | Staff: ${o.staff_count}<br>Safety: <strong style="color:${getScoreColor(score)}">${score}/100 (${grade})</strong><br>Status: <span style="color:${color}">${o.status}</span>`);
+  });
+}
+
+init();
+</script>
+</body>
+</html>
