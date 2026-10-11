@@ -1163,15 +1163,27 @@ async function loadPortalDashboard() {
 
   const container = document.getElementById('portal-content');
   container.innerHTML = `
-    <div class="page-header">
-      <div style="display:flex;align-items:center;gap:12px">
-        <button class="btn btn-outline btn-sm" onclick="exitPortal()">&#8592; Switch</button>
-        <h2>${o.name}</h2>
-        <span class="risk-badge ${o.risk_level}" style="margin-left:4px">${o.risk_level} risk</span>
+    <div class="portal-header">
+      <div class="portal-header-left">
+        <button class="portal-back-btn" onclick="exitPortal()">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="15 18 9 12 15 6"/></svg>
+          Switch
+        </button>
+        <div class="portal-header-info">
+          <div class="portal-header-name">
+            <h2>${o.name}</h2>
+            <span class="risk-badge ${o.risk_level}">${o.risk_level} risk</span>
+          </div>
+          <div class="portal-header-meta">
+            <span><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0118 0z"/><circle cx="12" cy="10" r="3"/></svg> ${o.city}, ${o.district}</span>
+            <span>&middot;</span>
+            <span>${o.total_children} children &middot; ${o.staff_count} staff &middot; ${o.cameras} cameras</span>
+          </div>
+        </div>
       </div>
-      <div class="header-time">
-        <div class="live-dot" style="background:${o.status === 'online' ? 'var(--success)' : 'var(--danger)'}"></div>
-        <span>${o.status.toUpperCase()} &middot; ${o.city}, ${o.district}</span>
+      <div class="portal-header-status ${o.status}">
+        <div class="portal-status-dot"></div>
+        ${o.status.toUpperCase()}
       </div>
     </div>
 
@@ -1218,12 +1230,42 @@ async function loadPortalDashboard() {
       </div>
     </div>` : ''}
 
-    <div class="stats-grid" style="grid-template-columns:repeat(5,minmax(0,1fr))">
-      <div class="stat-card green"><div class="label">Children</div><div class="value">${stats.totalChildren}</div><div class="sub">Registered</div></div>
-      <div class="stat-card yellow"><div class="label">Visitors</div><div class="value">${activeVisitors.length}</div><div class="sub">On premises</div></div>
-      <div class="stat-card red"><div class="label">Alerts</div><div class="value">${unresolvedAlerts.length}</div><div class="sub">Unresolved</div></div>
-      <div class="stat-card purple"><div class="label">AI Incidents</div><div class="value">${openIncs.length}</div><div class="sub">Open</div></div>
-      <div class="stat-card blue"><div class="label">Zones</div><div class="value">${zones.length}</div><div class="sub">Monitored</div></div>
+    <div class="portal-metrics">
+      <div class="portal-metric">
+        <div class="portal-metric-icon" style="background:var(--success-glow);color:var(--success)">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 00-3-3.87"/><path d="M16 3.13a4 4 0 010 7.75"/></svg>
+        </div>
+        <div class="portal-metric-val">${stats.totalChildren}</div>
+        <div class="portal-metric-label">Children</div>
+      </div>
+      <div class="portal-metric">
+        <div class="portal-metric-icon" style="background:var(--purple-glow);color:var(--purple)">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 21v-2a4 4 0 00-4-4H8a4 4 0 00-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
+        </div>
+        <div class="portal-metric-val">${activeVisitors.length}</div>
+        <div class="portal-metric-label">Visitors</div>
+      </div>
+      <div class="portal-metric">
+        <div class="portal-metric-icon" style="background:var(--danger-glow);color:var(--danger)">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 8A6 6 0 006 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 01-3.46 0"/></svg>
+        </div>
+        <div class="portal-metric-val" style="${unresolvedAlerts.length > 0 ? 'color:var(--danger)' : ''}">${unresolvedAlerts.length}</div>
+        <div class="portal-metric-label">Alerts</div>
+      </div>
+      <div class="portal-metric">
+        <div class="portal-metric-icon" style="background:var(--warning-glow);color:var(--warning)">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 9v4m0 4h.01M3.26 19h17.48a1 1 0 0 0 .87-1.5L13.37 3.5a1 1 0 0 0-1.74 0L3.39 17.5a1 1 0 0 0 .87 1.5z"/></svg>
+        </div>
+        <div class="portal-metric-val" style="${openIncs.length > 0 ? 'color:var(--warning)' : ''}">${openIncs.length}</div>
+        <div class="portal-metric-label">Incidents</div>
+      </div>
+      <div class="portal-metric">
+        <div class="portal-metric-icon" style="background:rgba(6,182,212,0.1);color:var(--cyan)">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="1" y="5" width="22" height="14" rx="2" ry="2"/><path d="M12 12h.01"/></svg>
+        </div>
+        <div class="portal-metric-val">${zones.length}</div>
+        <div class="portal-metric-label">Zones</div>
+      </div>
     </div>
 
     <div class="portal-grid">
@@ -1309,6 +1351,34 @@ async function loadPortalDashboard() {
         </div>
       </div>
     </div>
+
+    ${children.length > 0 ? `
+    <div class="portal-section" style="margin-top:14px">
+      <div class="portal-section-header">
+        <span>Registered Children</span>
+        <span class="portal-check-count">${children.length} total</span>
+      </div>
+      <div class="portal-section-body" style="padding:0">
+        <table class="portal-children-table">
+          <thead><tr><th>Name</th><th>Age</th><th>Gender</th><th>Status</th><th>Health</th><th>Enrolled</th></tr></thead>
+          <tbody>
+            ${children.slice(0, 8).map(c => {
+              const statusColor = c.status === 'active' ? 'var(--success)' : c.status === 'transferred' ? 'var(--warning)' : 'var(--text-tertiary)';
+              const healthColor = c.health_status === 'healthy' ? 'var(--success)' : c.health_status === 'needs_attention' ? 'var(--warning)' : 'var(--danger)';
+              return `<tr>
+                <td><strong>${c.name}</strong></td>
+                <td>${c.age}</td>
+                <td>${c.gender}</td>
+                <td><span style="color:${statusColor};font-weight:600;text-transform:capitalize;font-size:11px">${c.status}</span></td>
+                <td><span style="color:${healthColor};font-weight:600;text-transform:capitalize;font-size:11px">${(c.health_status || 'healthy').replace('_', ' ')}</span></td>
+                <td style="color:var(--text-tertiary);font-size:11px">${new Date(c.enrolled_date || c.created_at || Date.now()).toLocaleDateString('en-PK', {month:'short',year:'numeric'})}</td>
+              </tr>`;
+            }).join('')}
+          </tbody>
+        </table>
+        ${children.length > 8 ? `<div style="text-align:center;padding:10px;border-top:1px solid var(--border)"><span style="color:var(--text-tertiary);font-size:12px">+${children.length - 8} more children</span></div>` : ''}
+      </div>
+    </div>` : ''}
 
     ${unresolvedAlerts.length > 0 ? `
     <div class="portal-section" style="margin-top:14px">
