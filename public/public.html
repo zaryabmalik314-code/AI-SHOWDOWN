@@ -98,6 +98,55 @@
     .map-popup-btn { display: block; width: 100%; margin-top: 6px; padding: 7px 16px; background: #34d399; color: #000; border: none; border-radius: 6px; cursor: pointer; font-weight: 600; font-size: 13px; text-align: center; text-decoration: none; }
     .map-popup-btn:hover { background: #2dd48a; }
 
+    /* Detail Modal */
+    .pub-modal-overlay {
+      display: none; position: fixed; inset: 0; z-index: 9999;
+      background: rgba(0,0,0,0.7); backdrop-filter: blur(6px);
+      justify-content: center; align-items: center; padding: 24px;
+    }
+    .pub-modal-overlay.open { display: flex; }
+    .pub-modal {
+      background: var(--bg-card); border: 1px solid var(--border); border-radius: 16px;
+      max-width: 480px; width: 100%; max-height: 85vh; overflow-y: auto;
+      box-shadow: 0 24px 64px rgba(0,0,0,0.6); animation: modalIn 0.25s ease;
+    }
+    @keyframes modalIn { from { opacity: 0; transform: scale(0.92) translateY(20px); } to { opacity: 1; transform: none; } }
+    .pub-modal-header {
+      padding: 20px 24px 0; display: flex; justify-content: space-between; align-items: flex-start;
+    }
+    .pub-modal-header h3 { font-size: 18px; font-weight: 700; margin: 0; line-height: 1.3; }
+    .pub-modal-close {
+      background: none; border: none; color: var(--text-secondary); font-size: 22px;
+      cursor: pointer; padding: 0 0 0 12px; line-height: 1;
+    }
+    .pub-modal-close:hover { color: var(--text); }
+    .pub-modal-body { padding: 16px 24px 24px; }
+    .pub-modal-loc { font-size: 13px; color: var(--text-secondary); margin-bottom: 16px; display: flex; align-items: center; gap: 6px; }
+    .pub-modal-badges { display: flex; gap: 6px; flex-wrap: wrap; margin-bottom: 16px; }
+    .pub-modal-badge {
+      font-size: 11px; padding: 3px 10px; border-radius: 20px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.3px;
+    }
+    .pub-modal-grid {
+      display: grid; grid-template-columns: repeat(2, 1fr); gap: 10px; margin-bottom: 16px;
+    }
+    .pub-modal-stat {
+      background: rgba(255,255,255,0.03); border: 1px solid var(--border); border-radius: 10px;
+      padding: 12px; text-align: center;
+    }
+    .pub-modal-stat .icon { font-size: 18px; margin-bottom: 4px; }
+    .pub-modal-stat .val { font-size: 22px; font-weight: 800; }
+    .pub-modal-stat .label { font-size: 10px; color: var(--text-secondary); text-transform: uppercase; letter-spacing: 0.5px; margin-top: 2px; }
+    .pub-modal-score-row {
+      display: flex; align-items: center; gap: 12px; padding: 12px 16px;
+      background: rgba(255,255,255,0.03); border: 1px solid var(--border); border-radius: 10px; margin-bottom: 12px;
+    }
+    .pub-modal-score-label { font-size: 12px; color: var(--text-secondary); white-space: nowrap; }
+    .pub-modal-score-bar { flex: 1; height: 8px; background: rgba(255,255,255,0.06); border-radius: 4px; overflow: hidden; }
+    .pub-modal-score-bar-fill { height: 100%; border-radius: 4px; transition: width 0.5s ease; }
+    .pub-modal-score-val { font-size: 18px; font-weight: 800; min-width: 36px; text-align: right; }
+    .pub-modal-info { font-size: 12px; color: var(--text-secondary); }
+    .pub-modal-info span { color: var(--text); font-weight: 600; }
+
     .map-marker {
       border-radius: 50%; border: 2px solid #fff;
       transition: transform 0.2s;
@@ -688,7 +737,7 @@ function initMap() {
         Risk: <span style="color:${color};font-weight:700">${o.risk_level.toUpperCase()}</span>
       </div>
       <div class="map-popup-stats-line">Children: ${o.total_children} | Staff: ${o.staff_count} | Cameras: ${o.cameras}</div>
-      <a class="map-popup-btn" href="#directory" onclick="document.getElementById('pub-search').value='${o.name.replace(/'/g, "\\'")}';filterCards()">View Details &rarr;</a>
+      <button class="map-popup-btn" onclick="openDetail(${o.id})">View Details &rarr;</button>
     </div>`;
 
     L.marker([lat, lng], { icon }).addTo(pubMap).bindPopup(popupHtml, { maxWidth: 260, closeButton: true });
@@ -701,7 +750,82 @@ function initMap() {
   `;
 }
 
+function openDetail(id) {
+  const o = orphanages.find(x => x.id === id);
+  if (!o) return;
+  const rank = rankings.find(r => r.id === id);
+  const grade = rank ? rank.grade : '-';
+  const score = rank ? rank.score : 0;
+  const gc = getGradeHex(grade);
+  const sc = getScoreColor(score);
+  const color = o.risk_level === 'high' ? '#ef4444' : o.risk_level === 'medium' ? '#fbbf24' : '#34d399';
+  const isOnline = o.status === 'online';
+  const staffRatio = o.staff_count > 0 ? (o.total_children / o.staff_count).toFixed(1) : '-';
+
+  document.getElementById('pub-detail-modal').innerHTML = `
+    <div class="pub-modal" onclick="event.stopPropagation()">
+      <div class="pub-modal-header">
+        <h3>${o.name}</h3>
+        <button class="pub-modal-close" onclick="closeDetail()">&times;</button>
+      </div>
+      <div class="pub-modal-body">
+        <div class="pub-modal-loc">
+          <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0118 0z"/><circle cx="12" cy="10" r="3"/></svg>
+          ${o.city}, ${o.district}
+        </div>
+        <div class="pub-modal-badges">
+          <span class="pub-modal-badge" style="background:${isOnline ? '#10b98118' : '#ef444418'};color:${isOnline ? '#10b981' : '#ef4444'}">${isOnline ? 'AI Active' : 'Offline'}</span>
+          <span class="pub-modal-badge" style="background:${color}18;color:${color}">${o.risk_level} risk</span>
+          <span class="pub-modal-badge" style="background:${gc}18;color:${gc}">Grade ${grade}</span>
+        </div>
+        <div class="pub-modal-grid">
+          <div class="pub-modal-stat">
+            <div class="icon" style="color:var(--success)">&#x1F466;</div>
+            <div class="val" style="color:var(--success)">${o.total_children}</div>
+            <div class="label">Children</div>
+          </div>
+          <div class="pub-modal-stat">
+            <div class="icon" style="color:var(--purple)">&#x1F464;</div>
+            <div class="val" style="color:var(--purple)">${o.staff_count}</div>
+            <div class="label">Staff</div>
+          </div>
+          <div class="pub-modal-stat">
+            <div class="icon" style="color:var(--warning)">&#x1F4F7;</div>
+            <div class="val" style="color:var(--warning)">${o.cameras}</div>
+            <div class="label">Cameras</div>
+          </div>
+          <div class="pub-modal-stat">
+            <div class="icon" style="color:var(--cyan)">&#x1F465;</div>
+            <div class="val" style="color:var(--cyan)">${staffRatio}</div>
+            <div class="label">Child/Staff</div>
+          </div>
+        </div>
+        <div class="pub-modal-score-row">
+          <div class="pub-modal-score-label">Safety Score</div>
+          <div class="pub-modal-score-bar"><div class="pub-modal-score-bar-fill" style="width:${score}%;background:${gc}"></div></div>
+          <div class="pub-modal-score-val" style="color:${gc}">${score}</div>
+        </div>
+        ${o.compliance_score ? `<div class="pub-modal-score-row">
+          <div class="pub-modal-score-label">Compliance</div>
+          <div class="pub-modal-score-bar"><div class="pub-modal-score-bar-fill" style="width:${o.compliance_score}%;background:var(--blue)"></div></div>
+          <div class="pub-modal-score-val" style="color:var(--blue)">${o.compliance_score}</div>
+        </div>` : ''}
+        <div class="pub-modal-info">
+          ${o.address ? `<div style="margin-bottom:4px">Address: <span>${o.address}</span></div>` : ''}
+          ${o.last_inspection ? `<div>Last Inspection: <span>${new Date(o.last_inspection).toLocaleDateString('en-PK', {year:'numeric',month:'short',day:'numeric'})}</span></div>` : ''}
+        </div>
+      </div>
+    </div>
+  `;
+  document.getElementById('pub-detail-modal').classList.add('open');
+}
+
+function closeDetail() {
+  document.getElementById('pub-detail-modal').classList.remove('open');
+}
+
 init();
 </script>
+<div class="pub-modal-overlay" id="pub-detail-modal" onclick="closeDetail()"></div>
 </body>
 </html>
