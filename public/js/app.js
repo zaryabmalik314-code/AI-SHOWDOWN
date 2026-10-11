@@ -2101,9 +2101,7 @@ function handleLogin(e) {
     document.getElementById('landing-page').style.display = 'none';
     document.body.style.overflow = '';
     sessionStorage.setItem('og_auth', '1');
-    if (!sessionStorage.getItem('og_demo_seen')) {
-      setTimeout(showDemoBanner, 1500);
-    }
+    setTimeout(showDemoBanner, 1500);
   } else {
     const btn = e.target.querySelector('button[type="submit"]');
     btn.textContent = 'Invalid credentials';
