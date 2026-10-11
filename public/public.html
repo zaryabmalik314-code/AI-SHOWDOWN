@@ -85,30 +85,24 @@
       border-radius: var(--radius); overflow: hidden; border: 1px solid var(--border);
       height: 500px; margin-bottom: 40px;
     }
-    .pub-map-wrap .leaflet-popup-content-wrapper { background: var(--bg-card); color: var(--text); border: 1px solid var(--border); border-radius: 10px; box-shadow: 0 8px 32px rgba(0,0,0,0.5); }
-    .pub-map-wrap .leaflet-popup-tip { background: var(--bg-card); }
-    .pub-map-wrap .leaflet-popup-content { margin: 0; font-size: 13px; min-width: 220px; }
+    .pub-map-wrap .leaflet-popup-content-wrapper { background: #fff; color: #1a1a2e; border: none; border-radius: 10px; box-shadow: 0 4px 20px rgba(0,0,0,0.25); }
+    .pub-map-wrap .leaflet-popup-tip { background: #fff; }
+    .pub-map-wrap .leaflet-popup-content { margin: 0; font-size: 13px; min-width: 200px; }
+    .pub-map-wrap .leaflet-popup-close-button { color: #888 !important; font-size: 18px; top: 6px !important; right: 8px !important; }
 
-    .map-popup { padding: 14px 16px; }
-    .map-popup-header { display: flex; justify-content: space-between; align-items: flex-start; gap: 10px; margin-bottom: 10px; }
-    .map-popup-name { font-weight: 700; font-size: 14px; line-height: 1.3; }
-    .map-popup-grade { width: 32px; height: 32px; border-radius: 6px; display: flex; align-items: center; justify-content: center; font-weight: 800; font-size: 14px; flex-shrink: 0; }
-    .map-popup-loc { font-size: 11px; color: var(--text-secondary); margin-bottom: 10px; display: flex; align-items: center; gap: 4px; }
-    .map-popup-stats { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; margin-bottom: 10px; }
-    .map-popup-stat { text-align: center; background: rgba(255,255,255,0.03); padding: 6px 4px; border-radius: 6px; }
-    .map-popup-stat .v { font-size: 16px; font-weight: 800; }
-    .map-popup-stat .l { font-size: 9px; color: var(--text-tertiary); text-transform: uppercase; letter-spacing: 0.3px; }
-    .map-popup-score { display: flex; align-items: center; gap: 8px; }
-    .map-popup-bar { flex: 1; height: 5px; background: rgba(255,255,255,0.06); border-radius: 3px; overflow: hidden; }
-    .map-popup-bar-fill { height: 100%; border-radius: 3px; }
-    .map-popup-score-val { font-size: 12px; font-weight: 700; min-width: 32px; text-align: right; }
+    .map-popup { padding: 12px 14px; }
+    .map-popup-name { font-weight: 700; font-size: 14px; line-height: 1.3; color: #111; }
+    .map-popup-loc { font-size: 12px; color: #888; margin: 2px 0 6px; }
+    .map-popup-status { margin-bottom: 6px; font-size: 13px; }
+    .map-popup-stats-line { font-size: 12px; color: #555; margin-bottom: 8px; }
+    .map-popup-btn { display: block; width: 100%; margin-top: 6px; padding: 7px 16px; background: #34d399; color: #000; border: none; border-radius: 6px; cursor: pointer; font-weight: 600; font-size: 13px; text-align: center; text-decoration: none; }
+    .map-popup-btn:hover { background: #2dd48a; }
 
     .map-marker {
-      border-radius: 50%; border: 2px solid; display: flex; align-items: center; justify-content: center;
-      font-weight: 800; font-size: 10px; color: #fff; text-shadow: 0 1px 2px rgba(0,0,0,0.6);
+      border-radius: 50%; border: 2px solid #fff;
       transition: transform 0.2s;
     }
-    .map-marker:hover { transform: scale(1.3); z-index: 999 !important; }
+    .map-marker:hover { transform: scale(1.4); z-index: 999 !important; }
     .map-marker.online { animation: map-pulse 3s ease-in-out infinite; }
     @keyframes map-pulse {
       0%, 100% { box-shadow: 0 0 6px var(--marker-color); }
@@ -367,11 +361,10 @@
     <div class="pub-map-wrap" style="position:relative">
       <div id="pub-map" style="height:100%"></div>
       <div class="map-legend">
-        <div class="map-legend-title">Safety Grade</div>
-        <div class="map-legend-item"><div class="map-legend-dot" style="background:#10b981"></div> Grade A (80-100)</div>
-        <div class="map-legend-item"><div class="map-legend-dot" style="background:#3b82f6"></div> Grade B (60-79)</div>
-        <div class="map-legend-item"><div class="map-legend-dot" style="background:#f59e0b"></div> Grade C (40-59)</div>
-        <div class="map-legend-item"><div class="map-legend-dot" style="background:#ef4444"></div> Grade D/F (&lt;40)</div>
+        <div class="map-legend-title">Risk Level</div>
+        <div class="map-legend-item"><div class="map-legend-dot" style="background:#34d399"></div> Low Risk</div>
+        <div class="map-legend-item"><div class="map-legend-dot" style="background:#fbbf24"></div> Medium Risk</div>
+        <div class="map-legend-item"><div class="map-legend-dot" style="background:#ef4444"></div> High Risk</div>
         <div class="map-legend-item" style="margin-top:6px;padding-top:6px;border-top:1px solid var(--border)"><div class="map-legend-dot" style="background:#555;opacity:0.5"></div> Offline</div>
       </div>
       <div class="map-stats-overlay" id="map-stats-overlay"></div>
@@ -674,52 +667,31 @@ function initMap() {
     if (!coords) return;
     const lat = coords[0] + (Math.random() - 0.5) * 0.12;
     const lng = coords[1] + (Math.random() - 0.5) * 0.12;
-    const rank = rankings.find(r => r.id === o.id);
-    const grade = rank ? rank.grade : '-';
-    const score = rank ? rank.score : 0;
-    const gc = getGradeHex(grade);
-    const sc = getScoreColor(score);
     const isOnline = o.status === 'online';
     if (isOnline) onlineCount++; else offlineCount++;
     if (o.risk_level === 'high') highRisk++;
 
-    const size = Math.max(20, Math.min(36, 16 + o.total_children / 10));
-    const markerColor = isOnline ? gc : '#555';
+    const color = o.risk_level === 'high' ? '#ef4444' : o.risk_level === 'medium' ? '#fbbf24' : '#34d399';
+    const markerColor = isOnline ? color : '#555';
 
     const icon = L.divIcon({
       className: '',
-      html: `<div class="map-marker ${isOnline ? 'online' : ''}" style="width:${size}px;height:${size}px;background:${markerColor};border-color:${markerColor}80;--marker-color:${markerColor}">${grade}</div>`,
-      iconSize: [size, size], iconAnchor: [size/2, size/2]
+      html: `<div class="map-marker ${isOnline ? 'online' : ''}" style="width:14px;height:14px;background:${markerColor};box-shadow:0 0 8px ${markerColor};--marker-color:${markerColor}"></div>`,
+      iconSize: [14, 14], iconAnchor: [7, 7]
     });
 
-    const riskColor = o.risk_level === 'high' ? '#ef4444' : o.risk_level === 'medium' ? '#f59e0b' : '#10b981';
-
     const popupHtml = `<div class="map-popup">
-      <div class="map-popup-header">
-        <div class="map-popup-name">${o.name}</div>
-        <div class="map-popup-grade" style="background:${gc}20;color:${gc};border:1.5px solid ${gc}40">${grade}</div>
+      <div class="map-popup-name">${o.name}</div>
+      <div class="map-popup-loc">${o.city}, ${o.district}</div>
+      <div class="map-popup-status">
+        <span style="color:${isOnline ? '#34d399' : '#ef4444'};font-weight:600">${isOnline ? 'ONLINE' : 'OFFLINE'}</span> &bull;
+        Risk: <span style="color:${color};font-weight:700">${o.risk_level.toUpperCase()}</span>
       </div>
-      <div class="map-popup-loc">
-        <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0118 0z"/><circle cx="12" cy="10" r="3"/></svg>
-        ${o.city}, ${o.district}
-      </div>
-      <div class="map-popup-stats">
-        <div class="map-popup-stat"><div class="v" style="color:#10b981">${o.total_children}</div><div class="l">Children</div></div>
-        <div class="map-popup-stat"><div class="v" style="color:#8b5cf6">${o.staff_count}</div><div class="l">Staff</div></div>
-        <div class="map-popup-stat"><div class="v" style="color:#f59e0b">${o.cameras}</div><div class="l">Cameras</div></div>
-      </div>
-      <div class="map-popup-score">
-        <span style="font-size:11px;color:var(--text-secondary)">Safety</span>
-        <div class="map-popup-bar"><div class="map-popup-bar-fill" style="width:${score}%;background:${gc}"></div></div>
-        <div class="map-popup-score-val" style="color:${gc}">${score}</div>
-      </div>
-      <div style="margin-top:8px;display:flex;gap:4px">
-        <span style="font-size:9px;padding:2px 8px;border-radius:10px;background:${isOnline ? '#10b98118' : '#ef444418'};color:${isOnline ? '#10b981' : '#ef4444'};font-weight:600">${isOnline ? 'AI ACTIVE' : 'OFFLINE'}</span>
-        <span style="font-size:9px;padding:2px 8px;border-radius:10px;background:${riskColor}18;color:${riskColor};font-weight:600;text-transform:uppercase">${o.risk_level} risk</span>
-      </div>
+      <div class="map-popup-stats-line">Children: ${o.total_children} | Staff: ${o.staff_count} | Cameras: ${o.cameras}</div>
+      <a class="map-popup-btn" href="#directory" onclick="document.getElementById('pub-search').value='${o.name.replace(/'/g, "\\'")}';filterCards()">View Details &rarr;</a>
     </div>`;
 
-    L.marker([lat, lng], { icon }).addTo(pubMap).bindPopup(popupHtml, { maxWidth: 260, closeButton: false });
+    L.marker([lat, lng], { icon }).addTo(pubMap).bindPopup(popupHtml, { maxWidth: 260, closeButton: true });
   });
 
   document.getElementById('map-stats-overlay').innerHTML = `
