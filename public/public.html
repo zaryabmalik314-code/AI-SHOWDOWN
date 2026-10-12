@@ -712,10 +712,9 @@ function initMap() {
   let onlineCount = 0, offlineCount = 0, highRisk = 0;
 
   orphanages.forEach(o => {
-    const coords = districtCoords[o.district];
-    if (!coords) return;
-    const lat = coords[0] + (Math.random() - 0.5) * 0.12;
-    const lng = coords[1] + (Math.random() - 0.5) * 0.12;
+    if (!o.lat || !o.lng) return;
+    const lat = o.lat;
+    const lng = o.lng;
     const isOnline = o.status === 'online';
     if (isOnline) onlineCount++; else offlineCount++;
     if (o.risk_level === 'high') highRisk++;
