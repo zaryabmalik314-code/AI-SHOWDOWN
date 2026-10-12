@@ -258,6 +258,43 @@
     .pub-district-name { font-size: 14px; font-weight: 700; margin-bottom: 4px; }
     .pub-district-count { font-size: 12px; color: var(--text-secondary); }
 
+    /* Impact Section */
+    .impact-grid {
+      display: grid; grid-template-columns: 1fr auto 1fr; gap: 0; align-items: stretch;
+    }
+    .impact-col { display: flex; flex-direction: column; gap: 12px; }
+    .impact-label {
+      font-size: 14px; font-weight: 700; text-transform: uppercase; letter-spacing: 1px;
+      color: #ef4444; margin-bottom: 8px; padding-bottom: 10px; border-bottom: 2px solid #ef444430;
+    }
+    .impact-label.after-label { color: var(--accent); border-color: rgba(16,185,129,0.3); }
+    .impact-item {
+      display: flex; gap: 12px; align-items: flex-start;
+      background: var(--bg-card); border: 1px solid var(--border); border-radius: 10px; padding: 14px 16px;
+    }
+    .impact-icon { font-size: 20px; flex-shrink: 0; width: 28px; text-align: center; line-height: 1.4; }
+    .impact-text { flex: 1; }
+    .impact-val { font-size: 15px; font-weight: 700; color: var(--text); margin-bottom: 2px; }
+    .impact-val.accent { color: var(--accent); }
+    .impact-desc { font-size: 12px; color: var(--text-secondary); line-height: 1.4; }
+    .impact-divider {
+      display: flex; flex-direction: column; align-items: center; justify-content: center;
+      padding: 0 24px; gap: 8px;
+    }
+    .impact-divider-line { width: 2px; flex: 1; background: linear-gradient(to bottom, transparent, var(--border), transparent); }
+    .impact-vs {
+      font-size: 12px; font-weight: 800; color: var(--text-secondary);
+      background: var(--bg-card); border: 1px solid var(--border); border-radius: 50%;
+      width: 40px; height: 40px; display: flex; align-items: center; justify-content: center;
+    }
+    .before .impact-item { border-left: 3px solid #ef444440; }
+    .after .impact-item { border-left: 3px solid rgba(16,185,129,0.4); }
+    @media (max-width: 768px) {
+      .impact-grid { grid-template-columns: 1fr; }
+      .impact-divider { flex-direction: row; padding: 16px 0; }
+      .impact-divider-line { height: 2px; width: 100%; }
+    }
+
     /* How to help */
     .pub-help {
       background: linear-gradient(135deg, rgba(16,185,129,0.08), rgba(59,130,246,0.06));
@@ -459,7 +496,33 @@
     </div>
   </section>
 
-<section class="pub-section" id="help">
+  <section class="pub-section" id="impact">
+    <div class="pub-section-header">
+      <h2>Why OrphanGuard?</h2>
+      <p>The gap between how child safety works today and what AI makes possible</p>
+    </div>
+    <div class="impact-grid">
+      <div class="impact-col before">
+        <div class="impact-label">Before OrphanGuard</div>
+        <div class="impact-item"><div class="impact-icon">&#x23F3;</div><div class="impact-text"><div class="impact-val">Days to Weeks</div><div class="impact-desc">Incidents detected only when media reports surface</div></div></div>
+        <div class="impact-item"><div class="impact-icon">&#x1F4F0;</div><div class="impact-text"><div class="impact-val">0 Real-Time Alerts</div><div class="impact-desc">No automated detection — fully dependent on human reporting</div></div></div>
+        <div class="impact-item"><div class="impact-icon">&#x1F6AB;</div><div class="impact-text"><div class="impact-val">Zero Centralized Oversight</div><div class="impact-desc">85 orphanages monitored in isolation with no unified system</div></div></div>
+        <div class="impact-item"><div class="impact-icon">&#x1F4CB;</div><div class="impact-text"><div class="impact-val">17% Conviction Rate</div><div class="impact-desc">Lack of evidence makes prosecution nearly impossible</div></div></div>
+        <div class="impact-item"><div class="impact-icon">&#x1F50D;</div><div class="impact-text"><div class="impact-val">3,630 Cases/Year</div><div class="impact-desc">Sahil NGO documented from just 81 newspapers — real number far higher</div></div></div>
+      </div>
+      <div class="impact-divider"><div class="impact-divider-line"></div><div class="impact-vs">VS</div><div class="impact-divider-line"></div></div>
+      <div class="impact-col after">
+        <div class="impact-label after-label">With OrphanGuard AI</div>
+        <div class="impact-item"><div class="impact-icon">&#x26A1;</div><div class="impact-text"><div class="impact-val accent">Under 5 Seconds</div><div class="impact-desc">AI detects violence, distress, and unauthorized access in real time</div></div></div>
+        <div class="impact-item"><div class="impact-icon">&#x1F6A8;</div><div class="impact-text"><div class="impact-val accent">4 AI Models Active</div><div class="impact-desc">ViolenceNet, PoseGuard, ProximityAI, AudioSense — 24/7 monitoring</div></div></div>
+        <div class="impact-item"><div class="impact-icon">&#x1F3DB;</div><div class="impact-text"><div class="impact-val accent">1 Command Center</div><div class="impact-desc">All 85 orphanages across 36 districts in a single live dashboard</div></div></div>
+        <div class="impact-item"><div class="impact-icon">&#x1F4F9;</div><div class="impact-text"><div class="impact-val accent">AI-Verified Evidence</div><div class="impact-desc">Timestamped detections with model confidence — court-admissible data</div></div></div>
+        <div class="impact-item"><div class="impact-icon">&#x1F6E1;</div><div class="impact-text"><div class="impact-val accent">Deterrence Effect</div><div class="impact-desc">Visible AI monitoring discourages misconduct before it happens</div></div></div>
+      </div>
+    </div>
+  </section>
+
+  <section class="pub-section" id="help">
     <div class="pub-help">
       <h3>How You Can Help</h3>
       <p>Every orphanage needs support — from basic supplies to educational resources. Use the safety data above to find where your help matters most.</p>
