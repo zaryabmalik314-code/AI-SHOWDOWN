@@ -459,15 +459,7 @@
     </div>
   </section>
 
-  <section class="pub-section" id="districts">
-    <div class="pub-section-header">
-      <h2>District Coverage</h2>
-      <p>Orphanages monitored per district across Punjab</p>
-    </div>
-    <div class="pub-districts" id="pub-districts"></div>
-  </section>
-
-  <section class="pub-section" id="help">
+<section class="pub-section" id="help">
     <div class="pub-help">
       <h3>How You Can Help</h3>
       <p>Every orphanage needs support — from basic supplies to educational resources. Use the safety data above to find where your help matters most.</p>
@@ -526,7 +518,6 @@ async function init() {
   buildFilters();
   renderCards();
   renderRankings();
-  renderDistricts();
   initMap();
 }
 
@@ -681,22 +672,6 @@ function toggleRankings() {
   renderRankings();
 }
 
-function renderDistricts() {
-  const districtMap = {};
-  orphanages.forEach(o => {
-    if (!districtMap[o.district]) districtMap[o.district] = { count: 0, children: 0 };
-    districtMap[o.district].count++;
-    districtMap[o.district].children += o.total_children;
-  });
-
-  const sorted = Object.entries(districtMap).sort((a, b) => b[1].count - a[1].count);
-  document.getElementById('pub-districts').innerHTML = sorted.map(([d, info]) => `
-    <div class="pub-district-card" onclick="setFilter('${d}');document.getElementById('orphanages').scrollIntoView({behavior:'smooth'});" style="cursor:pointer">
-      <div class="pub-district-name">${d}</div>
-      <div class="pub-district-count">${info.count} orphanage${info.count > 1 ? 's' : ''} &middot; ${info.children} children</div>
-    </div>
-  `).join('');
-}
 
 function getGradeHex(grade) {
   return grade === 'A' ? '#10b981' : grade === 'B' ? '#3b82f6' : grade === 'C' ? '#f59e0b' : '#ef4444';
